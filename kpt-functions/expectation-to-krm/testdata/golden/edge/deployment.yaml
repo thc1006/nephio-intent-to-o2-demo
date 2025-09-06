@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: edge-du-cluster-01
+  namespace: o-ran-edge
+  annotations:
+    expectation.28312.3gpp.org/id: "edge-latency-expectation-001"
+    expectation.28312.3gpp.org/object-type: "O-RAN-DU"
+    expectation.28312.3gpp.org/deployment-mode: "edge"
+    o2ims.o-ran.org/provider: "edge-o2ims-001"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: o-ran-du
+      instance: edge-du-cluster-01
+  template:
+    metadata:
+      labels:
+        app: o-ran-du
+        instance: edge-du-cluster-01
+        deployment-mode: edge
+        location: cell-site-tower-001
+    spec:
+      containers:
+      - name: o-ran-du
+        image: o-ran/du:latest
+        resources:
+          requests:
+            cpu: "4"
+            memory: "8Gi"
+          limits:
+            cpu: "4"
+            memory: "8Gi"
+        env:
+        - name: DEPLOYMENT_MODE
+          value: "edge"
+        - name: LOCATION
+          value: "cell-site-tower-001"
+      volumes:
+      - name: storage
+        persistentVolumeClaim:
+          claimName: edge-du-cluster-01-storage

@@ -1,0 +1,65 @@
+# Sigstore policy-controller ClusterImagePolicy
+# Enforces image signatures in non-dev namespaces
+apiVersion: policy.sigstore.dev/v1beta1
+kind: ClusterImagePolicy
+metadata:
+  name: reject-unsigned-images
+spec:
+  # Match all images
+  images:
+  - glob: "**"
+  # Authorities define how to verify images
+  authorities:
+  # Allow keyless signatures (e.g., from distroless)
+  - keyless:
+      identities:
+      - issuer: "https://accounts.google.com"
+        subject: "keyless@distroless.iam.gserviceaccount.com"
+      url: https://rekor.sigstore.dev
+  # Allow images signed with a specific key
+  - key:
+      data: |
+        -----BEGIN PUBLIC KEY-----
+        MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE8nXRh950IZbRj8Ra/N9sbqOPZrfM
+        5/KAQN0/KjHcorm/J5yctVd7iEcnessRQjU917hmKO6JWVGHpDguIyakZA==
+        -----END PUBLIC KEY-----
+  # Policy mode
+  mode: enforce
+---
+# Namespace exclusion policy - allow unsigned in dev namespaces
+apiVersion: policy.sigstore.dev/v1beta1
+kind: ClusterImagePolicy
+metadata:
+  name: allow-unsigned-dev
+spec:
+  # Match all images in dev namespaces
+  images:
+  - glob: "**"
+  # Use namespace selector
+  namespaceSelector:
+    matchLabels:
+      environment: dev
+  # No authorities = allow all
+  authorities: []
+  mode: warn  # Only warn, don't block
+---
+# ConfigMap to configure policy-controller webhook
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: policy-controller-config
+  namespace: cosign-system
+data:
+  # Exclude system namespaces from enforcement
+  config-policy-controller.yaml: |
+    no-match-policy: warn
+    exclude:
+      namespaces:
+      - dev
+      - kube-system
+      - kube-public
+      - kube-node-lease
+      - cert-manager
+      - cosign-system
+      - kyverno
+      - local-path-storage

@@ -1,0 +1,23 @@
+# Test values for Kyverno policy testing
+# These are intentionally unsigned images that should FAIL when policies are enforced
+
+policies:
+  - verify-images.yaml
+
+resources:
+  - resource.yaml
+
+results:
+  - policy: verify-images
+    rule: verify-image-signatures
+    resource: test-unsigned-pod
+    namespace: production
+    kind: Pod
+    result: fail  # Should fail because nginx:latest is unsigned
+    
+  - policy: verify-images
+    rule: verify-image-signatures
+    resource: test-dev-pod
+    namespace: dev
+    kind: Pod
+    result: pass  # Should pass because dev namespace is exempt

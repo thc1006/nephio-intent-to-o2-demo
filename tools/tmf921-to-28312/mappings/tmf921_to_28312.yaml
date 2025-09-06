@@ -1,0 +1,147 @@
+# TMF921 to 3GPP TS 28.312 Field Mapping Configuration
+# This file defines explicit mappings between TMF921 Intent format and 3GPP TS 28.312 IntentExpectation format
+# Reference: 3GPP TS 28.312 V17.1.0 (2022-03) - Intent driven management services for mobile networks
+
+version: "1.0"
+metadata:
+  title: "TMF921 to 3GPP TS 28.312 Mapping Rules"
+  description: "Explicit field mappings with rationale based on 3GPP TS 28.312 specification"
+  reference: "3GPP TS 28.312 V17.1.0 clause references provided"
+  created: "2024-01-01"
+
+# Target condition mappings from TMF921 to 28.312 enum values
+target_conditions:
+  lessThan: "LESS_THAN"
+  greaterThan: "GREATER_THAN"
+  equalTo: "EQUAL"
+  between: "BETWEEN"
+  notEqual: "NOT_EQUAL"
+  lessThanOrEqual: "LESS_THAN_OR_EQUAL"
+  greaterThanOrEqual: "GREATER_THAN_OR_EQUAL"
+
+# Expectation type mappings from TMF921 to 3GPP TS 28.312
+# Reference: TS 28.312 clause 6.2.2.2 - IntentExpectationType
+expectation_types:
+  deliver: "ServicePerformance"
+  avoid: "ServicePerformance"
+  maintain: "ServicePerformance"
+  cease: "ServicePerformance"
+  restore: "ServicePerformance"
+
+# Object type mappings from TMF921 to 3GPP TS 28.312
+# Reference: TS 28.312 clause 6.2.2.6 - IntentExpectationObject
+object_types:
+  service: "Service"
+  networkSlice: "NetworkSlice"
+  resource: "Resource"
+  function: "NetworkFunction"
+  slice: "NetworkSlice"
+
+# Field mappings from TMF921 to 3GPP TS 28.312 IntentExpectation
+# Reference: TS 28.312 clause 6.2.2 - IntentExpectation data type
+field_mappings:
+  # Top-level intent fields
+  id: 
+    target: "intentExpectationId"
+    transform: "append_suffix"
+    suffix: "-exp-{index}"
+    rationale: "TS 28.312 requires unique expectation IDs, append index for multiple expectations"
+  
+  name:
+    target: "_internal_name"
+    rationale: "Store for context but no direct mapping in 28.312 IntentExpectation"
+    
+  description:
+    target: "_internal_description"
+    rationale: "Store for context but no direct mapping in 28.312 IntentExpectation"
+    
+  intentType:
+    target: "_internal_intent_type"
+    rationale: "Used to determine expectation type but no direct mapping"
+
+  # IntentSpecification -> IntentExpectation mappings
+  intentSpecification.intentExpectations:
+    target: "multiple_expectations"
+    rationale: "Each TMF921 expectation becomes a separate 28.312 IntentExpectation"
+
+  # Expectation-level mappings
+  expectationType:
+    target: "intentExpectationType"
+    transform: "lookup_expectation_type"
+    rationale: "Map TMF921 expectation types to TS 28.312 IntentExpectationType enum"
+
+  expectationObject:
+    target: "intentExpectationObject"
+    rationale: "Direct mapping with type transformation"
+    sub_mappings:
+      objectType:
+        target: "objectType"
+        transform: "lookup_object_type"
+      objectInstance:
+        target: "objectInstance"
+
+  expectationTargets:
+    target: "intentExpectationTarget"
+    rationale: "Single target supported in 28.312, use first target if multiple"
+    sub_mappings:
+      targetName:
+        target: "targetAttribute"
+        rationale: "Direct mapping to target attribute"
+      targetCondition:
+        target: "targetCondition"
+        transform: "lookup_target_condition"
+      targetValue:
+        target: "targetValue"
+        transform: "combine_value_unit"
+      targetUnit:
+        target: "_combine_with_value"
+        rationale: "Combined with targetValue in 28.312"
+
+  expectationContext:
+    target: "intentExpectationContext"
+    rationale: "Map context parameters to 28.312 context structure"
+    sub_mappings:
+      contextParameter:
+        target: "contextAttribute"
+      contextValue:
+        target: "contextValueRange"
+        transform: "to_array"
+
+# Unmapped fields - these will be reported in delta
+unmapped_fields:
+  - "validFor"
+  - "intentSpecification.validFor" 
+  - "intentSpecification.intentExpectations.*.validFor"
+  - "category"
+  - "priority"
+  - "state"
+  - "@type"
+  - "@baseType"
+  - "@schemaLocation"
+  - "customField"
+  - "intentSpecification.intentExpectations.*.customExpectationField"
+  - "intentSpecification.intentExpectations.*.expectationTargets.*.customTargetField"
+
+# Output templates for 3GPP TS 28.312 structures
+templates:
+  intent_expectation:
+    intentExpectationId: "{generated}"
+    intentExpectationType: "{mapped}"
+    intentExpectationContext:
+      contextAttribute: "{mapped}"
+      contextCondition: "EQUAL"
+      contextValueRange: ["{mapped}"]
+    intentExpectationTarget:
+      targetAttribute: "{mapped}"
+      targetCondition: "{mapped}"
+      targetValue: "{mapped}"
+    intentExpectationObject:
+      objectType: "{mapped}"
+      objectInstance: "{mapped}"
+
+  intent_report:
+    intentReportId: "{generated}"
+    intentExpectationId: "{reference}"
+    intentReportStatus: "NOT_FULFILLED"
+    timestamp: "{current_timestamp}"
+    notFulfilledReason: "PENDING_MEASUREMENT"
