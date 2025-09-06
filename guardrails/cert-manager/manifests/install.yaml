@@ -1,0 +1,28 @@
+# Static install manifest for cert-manager
+# This references the official cert-manager release
+# Version: v1.13.3
+#
+# To install cert-manager:
+# kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.13.3/cert-manager.yaml
+#
+# This file serves as documentation for the exact version used
+# The actual manifest is too large to include directly (>3000 lines)
+#
+# Key components installed:
+# - cert-manager namespace
+# - cert-manager CRDs (Certificate, Issuer, ClusterIssuer, etc.)
+# - cert-manager controller deployment
+# - cert-manager webhook deployment
+# - cert-manager cainjector deployment
+# - RBAC resources (ServiceAccounts, Roles, ClusterRoles, etc.)
+#
+# After installation, apply the cluster-issuer.yaml to create issuers
+
+---
+# Namespace for cert-manager (if not using the full install)
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cert-manager
+  labels:
+    cert-manager.io/disable-validation: "true"

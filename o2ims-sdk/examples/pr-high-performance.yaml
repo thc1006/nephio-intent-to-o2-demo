@@ -1,0 +1,19 @@
+apiVersion: o2ims.provisioning.oran.org/v1alpha1
+kind: ProvisioningRequest
+metadata:
+  name: high-performance-pr
+  namespace: ran-workloads
+  labels:
+    workload-type: high-performance
+    priority: critical
+spec:
+  targetCluster: edge-cluster-01
+  description: "High-performance provisioning request for real-time 5G processing"
+  resourceRequirements:
+    cpu: "16000m"  # 16 CPU cores
+    memory: "32Gi"  # 32GB RAM
+    storage: "100Gi"  # 100GB NVMe storage
+  networkConfig:
+    vlan: 200
+    subnet: "10.0.200.0/24"
+    gateway: "10.0.200.1"

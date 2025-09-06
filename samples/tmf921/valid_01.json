@@ -1,0 +1,114 @@
+{
+  "id": "intent-low-latency-001",
+  "href": "/serviceIntent/intent-low-latency-001",
+  "intentType": "ServiceIntent",
+  "name": "Low Latency Service Intent",
+  "description": "Ensure low latency performance for critical 5G services in network slice",
+  "version": "1.0",
+  "validFor": {
+    "startDateTime": "2024-01-01T00:00:00Z",
+    "endDateTime": "2024-12-31T23:59:59Z"
+  },
+  "lifecycleStatus": "Active",
+  "category": "Performance",
+  "priority": "High",
+  "intentSpecification": {
+    "id": "spec-low-latency-001",
+    "href": "/intentSpecification/spec-low-latency-001",
+    "name": "Low Latency Specification",
+    "description": "Specification for low latency service requirements",
+    "version": "1.0",
+    "intentExpectations": [
+      {
+        "id": "expectation-latency-001",
+        "name": "Latency Expectation",
+        "description": "Maximum allowed latency for service requests",
+        "expectationType": "deliver",
+        "expectationObject": {
+          "objectType": "service",
+          "objectInstance": "service-critical-001",
+          "objectDescription": "Critical 5G service requiring low latency"
+        },
+        "expectationTargets": [
+          {
+            "targetName": "latency",
+            "targetDescription": "End-to-end latency measurement",
+            "targetCondition": "lessThan",
+            "targetValue": "10",
+            "targetUnit": "ms",
+            "targetValueType": "numeric"
+          }
+        ],
+        "expectationContext": [
+          {
+            "contextParameter": "networkSlice",
+            "contextValue": "slice-urllc-001",
+            "contextDescription": "Ultra-reliable low-latency communication slice"
+          },
+          {
+            "contextParameter": "geographicArea",
+            "contextValue": "urban-zone-001",
+            "contextDescription": "Urban deployment area"
+          }
+        ]
+      },
+      {
+        "id": "expectation-throughput-001", 
+        "name": "Throughput Expectation",
+        "description": "Minimum required throughput for service",
+        "expectationType": "deliver",
+        "expectationObject": {
+          "objectType": "service",
+          "objectInstance": "service-critical-001"
+        },
+        "expectationTargets": [
+          {
+            "targetName": "throughput",
+            "targetDescription": "Minimum service throughput",
+            "targetCondition": "greaterThan",
+            "targetValue": "100",
+            "targetUnit": "Mbps",
+            "targetValueType": "numeric"
+          }
+        ],
+        "expectationContext": [
+          {
+            "contextParameter": "networkSlice",
+            "contextValue": "slice-urllc-001"
+          }
+        ]
+      }
+    ]
+  },
+  "intentCharacteristic": [
+    {
+      "name": "serviceType",
+      "value": "URLLC",
+      "description": "Ultra-reliable low-latency communications service type"
+    },
+    {
+      "name": "priority",
+      "value": "critical",
+      "description": "Critical priority level for service"
+    }
+  ],
+  "intentRelationship": [
+    {
+      "relationshipType": "dependsOn",
+      "relatedIntent": {
+        "id": "intent-slice-management-001",
+        "href": "/serviceIntent/intent-slice-management-001"
+      }
+    }
+  ],
+  "party": [
+    {
+      "id": "operator-001",
+      "role": "RequestingParty",
+      "name": "Telco Operator Alpha"
+    }
+  ],
+  "@type": "ServiceIntent",
+  "@schemaLocation": "https://tmforum.org/schemas/TMF921/ServiceIntent.schema.json",
+  "@baseType": "Intent"
+}

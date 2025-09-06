@@ -1,0 +1,290 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.tmforum.org/Intent/v5.0.0/schema/Intent.schema.json",
+  "title": "TMF921 Intent Management API v5.0.0 - Intent Schema",
+  "description": "JSON Schema for TMF921 Intent Management API v5.0 Intent resource",
+  "type": "object",
+  "required": [
+    "id",
+    "intentType",
+    "state",
+    "@baseType",
+    "@type"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier of the intent",
+      "pattern": "^[a-zA-Z0-9_-]+$"
+    },
+    "href": {
+      "type": "string",
+      "format": "uri",
+      "description": "Reference to the intent"
+    },
+    "name": {
+      "type": "string",
+      "description": "A human-readable name for the intent",
+      "maxLength": 255
+    },
+    "description": {
+      "type": "string",
+      "description": "Description of the intent",
+      "maxLength": 1024
+    },
+    "intentType": {
+      "type": "string",
+      "description": "Type of the intent",
+      "enum": [
+        "NetworkSliceIntent",
+        "ServiceIntent", 
+        "ResourceIntent",
+        "PolicyIntent",
+        "CustomIntent"
+      ]
+    },
+    "priority": {
+      "type": "integer",
+      "description": "Priority of the intent (1 = highest, 5 = lowest)",
+      "minimum": 1,
+      "maximum": 5
+    },
+    "state": {
+      "type": "string",
+      "description": "Current state of the intent lifecycle",
+      "enum": [
+        "acknowledged",
+        "inProgress",
+        "fulfilled",
+        "cancelled",
+        "failed"
+      ]
+    },
+    "version": {
+      "type": "string",
+      "description": "Version of the intent",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "creationDate": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Date and time when the intent was created"
+    },
+    "lastModified": {
+      "type": "string", 
+      "format": "date-time",
+      "description": "Date and time when the intent was last modified"
+    },
+    "characteristic": {
+      "type": "array",
+      "description": "List of characteristics that define the intent",
+      "items": {
+        "$ref": "#/$defs/Characteristic"
+      }
+    },
+    "expectation": {
+      "type": "array",
+      "description": "List of expectations associated with the intent",
+      "items": {
+        "$ref": "#/$defs/Expectation"
+      }
+    },
+    "intentSpecification": {
+      "$ref": "#/$defs/IntentSpecificationRef",
+      "description": "Reference to the intent specification"
+    },
+    "party": {
+      "type": "array",
+      "description": "List of parties involved in the intent",
+      "items": {
+        "$ref": "#/$defs/RelatedParty"
+      }
+    },
+    "relatedParty": {
+      "type": "array",
+      "description": "List of related parties",
+      "items": {
+        "$ref": "#/$defs/RelatedParty"
+      }
+    },
+    "validFor": {
+      "$ref": "#/$defs/TimePeriod",
+      "description": "Time period for which the intent is valid"
+    },
+    "@baseType": {
+      "type": "string",
+      "description": "Base type of the resource",
+      "enum": ["Intent"]
+    },
+    "@type": {
+      "type": "string",
+      "description": "Type of the resource"
+    },
+    "@schemaLocation": {
+      "type": "string",
+      "format": "uri",
+      "description": "Schema location for the resource"
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "Characteristic": {
+      "type": "object",
+      "required": ["name", "value"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name of the characteristic"
+        },
+        "value": {
+          "oneOf": [
+            {"type": "string"},
+            {"type": "number"},
+            {"type": "boolean"}
+          ],
+          "description": "Value of the characteristic"
+        },
+        "valueType": {
+          "type": "string",
+          "description": "Type of the characteristic value",
+          "enum": ["string", "integer", "float", "boolean"]
+        },
+        "unit": {
+          "type": "string",
+          "description": "Unit of measurement for the characteristic value"
+        }
+      },
+      "additionalProperties": false
+    },
+    "Expectation": {
+      "type": "object",
+      "required": ["id", "name", "expectationType"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier of the expectation"
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the expectation"
+        },
+        "expectationType": {
+          "type": "string",
+          "description": "Type of the expectation",
+          "enum": [
+            "DeliveryExpectation",
+            "PerformanceExpectation",
+            "QualityExpectation",
+            "SecurityExpectation"
+          ]
+        },
+        "targetCondition": {
+          "type": "string",
+          "description": "Condition that should be met"
+        },
+        "targetValue": {
+          "$ref": "#/$defs/TargetValue",
+          "description": "Target value for the expectation"
+        },
+        "contextCriteria": {
+          "type": "string",
+          "description": "Context criteria for the expectation"
+        }
+      },
+      "additionalProperties": false
+    },
+    "TargetValue": {
+      "type": "object",
+      "required": ["value"],
+      "properties": {
+        "value": {
+          "oneOf": [
+            {"type": "string"},
+            {"type": "number"}
+          ],
+          "description": "Target value"
+        },
+        "unit": {
+          "type": "string",
+          "description": "Unit of measurement"
+        }
+      },
+      "additionalProperties": false
+    },
+    "IntentSpecificationRef": {
+      "type": "object",
+      "required": ["id"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier of the intent specification"
+        },
+        "href": {
+          "type": "string",
+          "format": "uri",
+          "description": "Reference to the intent specification"
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the intent specification"
+        },
+        "version": {
+          "type": "string",
+          "description": "Version of the intent specification"
+        }
+      },
+      "additionalProperties": false
+    },
+    "RelatedParty": {
+      "type": "object",
+      "required": ["id", "role"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier of the related party"
+        },
+        "href": {
+          "type": "string",
+          "format": "uri",
+          "description": "Reference to the related party"
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the related party"
+        },
+        "role": {
+          "type": "string",
+          "description": "Role of the related party",
+          "enum": [
+            "customer",
+            "provider",
+            "networkOperator",
+            "networkEngineer",
+            "businessOwner"
+          ]
+        },
+        "validFor": {
+          "$ref": "#/$defs/TimePeriod",
+          "description": "Time period for which the party relationship is valid"
+        }
+      },
+      "additionalProperties": false
+    },
+    "TimePeriod": {
+      "type": "object",
+      "properties": {
+        "startDateTime": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Start date and time"
+        },
+        "endDateTime": {
+          "type": "string",
+          "format": "date-time", 
+          "description": "End date and time"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}
