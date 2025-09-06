@@ -67,3 +67,6 @@ go.work.sum
 
 # Claude agents (can be regenerated)
 .claude/agents/
+
+# Keep Claude subagents local only
+.claude/agents/
