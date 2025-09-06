@@ -125,14 +125,20 @@ class TMF921To28312Converter:
         """Extract and convert expectations from TMF921 intent."""
         expectations = []
         
-        intent_spec = tmf921_intent.get("intentSpecification", {})
+        intent_spec = tmf921_intent.get("intentSpecification")
+        if intent_spec is None:
+            return expectations  # Return empty list for null specification
+            
         tmf921_expectations = intent_spec.get("intentExpectations", [])
+        if tmf921_expectations is None:
+            return expectations  # Return empty list for null expectations
         
         for index, tmf921_exp in enumerate(tmf921_expectations):
-            expectation = self._convert_single_expectation(
-                tmf921_intent, tmf921_exp, index
-            )
-            expectations.append(expectation)
+            if tmf921_exp is not None:  # Skip null expectations
+                expectation = self._convert_single_expectation(
+                    tmf921_intent, tmf921_exp, index
+                )
+                expectations.append(expectation)
         
         return expectations
     
@@ -192,10 +198,10 @@ class TMF921To28312Converter:
     
     def _map_target(self, tmf921_target: Dict[str, Any]) -> Dict[str, Any]:
         """Map TMF921 target to 28.312 format."""
-        target_name = tmf921_target.get("targetName", "unknown")
-        target_condition = tmf921_target.get("targetCondition", "lessThan")
-        target_value = tmf921_target.get("targetValue", "0")
-        target_unit = tmf921_target.get("targetUnit", "")
+        target_name = tmf921_target.get("targetName") or "unknown"
+        target_condition = tmf921_target.get("targetCondition") or "lessThan"
+        target_value = tmf921_target.get("targetValue") or "0"
+        target_unit = tmf921_target.get("targetUnit") or ""
         
         # Combine value and unit
         if target_unit:
@@ -283,7 +289,7 @@ def generate_delta_report(
     except:
         mapping_rules = {}
     
-    unmapped_patterns = mapping_rules.get("unmapped_fields", [])
+    unmapped_patterns = mapping_rules.get("unmapped_fields", {})
     
     # Scan for unmapped fields
     def scan_object(obj: Any, path: str = "") -> None:
@@ -291,16 +297,59 @@ def generate_delta_report(
             for key, value in obj.items():
                 current_path = f"{path}.{key}" if path else key
                 
+                # Check if this field is mapped or explicitly unmapped
+                is_known_field = False
+                
                 # Check if this field matches unmapped patterns
-                for pattern in unmapped_patterns:
+                for field_name, field_info in unmapped_patterns.items():
+                    if isinstance(field_info, dict):
+                        pattern = field_info.get("pattern", field_name)
+                        reason = field_info.get("reason", "Field marked as unmapped in mapping rules")
+                        suggested_mapping = field_info.get("suggested_mapping")
+                    else:
+                        # Backward compatibility with simple pattern list
+                        pattern = field_info
+                        reason = "Field marked as unmapped in mapping rules"
+                        suggested_mapping = None
+                    
                     if _matches_pattern(current_path, pattern):
-                        unmapped_fields.append({
-                            "path": current_path,
+                        field_entry = {
+                            "tmf921_path": current_path,
                             "value": value,
                             "type": type(value).__name__,
-                            "reason": "Field marked as unmapped in mapping rules"
-                        })
+                            "reason": reason
+                        }
+                        if suggested_mapping:
+                            field_entry["suggested_mapping"] = suggested_mapping
+                        
+                        unmapped_fields.append(field_entry)
+                        is_known_field = True
                         break
+                
+                # Check if it's a known mapped field
+                if not is_known_field:
+                    known_mapped_fields = [
+                        "id", "intentType", "name", "description",
+                        "intentSpecification", "intentSpecification.intentExpectations",
+                        "expectationType", "expectationObject", "expectationObject.objectType",
+                        "expectationObject.objectInstance", "expectationTargets", 
+                        "targetName", "targetCondition", "targetValue", "targetUnit",
+                        "expectationContext", "contextParameter", "contextValue"
+                    ]
+                    
+                    # Simple heuristic: if it's not a known mapped field and not explicitly unmapped,
+                    # treat it as unmapped custom field
+                    is_mapped = any(_matches_simple_pattern(current_path, mapped_pattern) 
+                                  for mapped_pattern in known_mapped_fields)
+                    
+                    if not is_mapped:
+                        unmapped_fields.append({
+                            "tmf921_path": current_path,
+                            "value": value,
+                            "type": type(value).__name__,
+                            "reason": f"Unknown field not defined in TMF921 standard mapping - no equivalent in 3GPP TS 28.312",
+                            "suggested_mapping": "Review if this field should be mapped to intentExpectationContext or handled as metadata"
+                        })
                 
                 # Recursively scan nested objects
                 if isinstance(value, (dict, list)):
@@ -329,30 +378,46 @@ def generate_delta_report(
     }
 
 
+def _matches_simple_pattern(path: str, pattern: str) -> bool:
+    """Check if a field path matches a simple pattern (without regex)."""
+    return path == pattern or path.endswith(f".{pattern}")
+
+
 def _matches_pattern(path: str, pattern: str) -> bool:
     """Check if a field path matches an unmapped pattern."""
     import re
     
-    # Convert pattern to regex pattern
-    # Replace * with .* and handle array indices [n] as literal matches
-    regex_pattern = pattern.replace("*", ".*")
+    # Simple exact match first
+    if path == pattern:
+        return True
     
-    # Handle array indices by replacing [n] patterns with actual array index patterns
-    regex_pattern = re.sub(r'\\\[.*?\\\]', r'\\[\\d+\\]', regex_pattern)
+    # Handle wildcards in pattern
+    if '*' in pattern:
+        # Build regex pattern step by step
+        regex_pattern = pattern
+        
+        # First replace [*] with a temporary placeholder
+        if '[*]' in regex_pattern:
+            regex_pattern = regex_pattern.replace('[*]', '__ARRAY_INDEX__')
+        
+        # Escape all regex special characters
+        regex_pattern = re.escape(regex_pattern)
+        
+        # Replace our placeholders with proper regex
+        regex_pattern = regex_pattern.replace('__ARRAY_INDEX__', r'\[\d+\]')
+        regex_pattern = regex_pattern.replace(r'\*', '.*')
+        
+        try:
+            return bool(re.match(f"^{regex_pattern}$", path))
+        except re.error:
+            # Fallback to simple matching
+            if pattern.count('*') == 1 and '[*]' not in pattern:
+                parts = pattern.split('*')
+                if len(parts) == 2:
+                    prefix, suffix = parts
+                    return path.startswith(prefix) and path.endswith(suffix)
     
-    # Make it a full match
-    regex_pattern = f"^{regex_pattern}$"
-    
-    try:
-        return bool(re.match(regex_pattern, path))
-    except re.error:
-        # Fallback to simple string matching
-        if "*" in pattern:
-            parts = pattern.split("*")
-            if len(parts) == 2:
-                prefix, suffix = parts
-                return path.startswith(prefix) and path.endswith(suffix)
-        return path == pattern
+    return False
 
 
 def _count_fields(obj: Any, count: int = 0) -> int:

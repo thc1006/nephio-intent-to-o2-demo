@@ -30,7 +30,7 @@ test:
 	pytest tests/ -v
 
 test-intent-gateway:
-	pytest tests/test_schema.py tests/test_cli.py -v --tb=short
+	pytest tests/test_tmf921_validation.py tests/test_schema.py tests/test_cli.py -v --tb=short
 
 # Code quality targets
 lint:

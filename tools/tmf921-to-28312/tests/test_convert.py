@@ -273,7 +273,7 @@ class TestDeltaReportGeneration:
         assert len(delta_report["unmapped_fields"]) > 0
         
         unmapped = delta_report["unmapped_fields"]
-        field_paths = [field["path"] for field in unmapped]
+        field_paths = [field["tmf921_path"] for field in unmapped]
         
         assert "customField" in field_paths
         assert "intentSpecification.intentExpectations[0].customExpectationField" in field_paths

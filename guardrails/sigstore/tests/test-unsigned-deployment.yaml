@@ -1,5 +1,11 @@
 # Test deployment with unsigned images
 # This should FAIL when Sigstore policy-controller is enforced
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: production
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:

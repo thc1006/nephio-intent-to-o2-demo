@@ -9,5 +9,11 @@ __version__ = "0.1.0"
 __author__ = "Nephio Intent Pipeline Team"
 
 from .validator import TMF921Validator, ValidationError, ValidationResult
+from .expectations import ExpectationParser, Expectation
+from .compliance import TIOComplianceChecker, ComplianceResult
 
-__all__ = ["TMF921Validator", "ValidationError", "ValidationResult"]
+__all__ = [
+    "TMF921Validator", "ValidationError", "ValidationResult",
+    "ExpectationParser", "Expectation", 
+    "TIOComplianceChecker", "ComplianceResult"
+]

@@ -1,22 +1,22 @@
 [
   {
-    "intentExpectationId": "intent-001-exp-0",
+    "intentExpectationId": "intent-complex-001-exp-0",
     "intentExpectationType": "ServicePerformance",
     "intentExpectationContext": {
       "contextAttribute": "networkSlice",
       "contextCondition": "EQUAL",
       "contextValueRange": [
-        "slice-001"
+        "slice-premium"
       ]
     },
     "intentExpectationTarget": {
       "targetAttribute": "latency",
       "targetCondition": "LESS_THAN",
-      "targetValue": "10ms"
+      "targetValue": "5ms"
     },
     "intentExpectationObject": {
       "objectType": "Service",
-      "objectInstance": "service-001"
+      "objectInstance": "service-complex-001"
     }
   }
 ]

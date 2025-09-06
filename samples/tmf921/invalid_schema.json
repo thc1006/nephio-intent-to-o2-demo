@@ -1,0 +1,11 @@
+{
+  "id": "intent-invalid-schema-001",
+  "href": "/serviceIntent/intent-invalid-schema-001",
+  "name": "Intent with Schema Violations",
+  "intentType": "InvalidType",
+  "priority": "INVALID_PRIORITY",
+  "state": "invalidState",
+  "@baseType": "Intent",
+  "@type": "InvalidIntentType",
+  "invalidField": "this field should not be allowed"
+}

@@ -1,447 +1,442 @@
-# Security Implementation Guide
+# Security Guardrails Setup & Demo Guide
 
-This document provides exact commands for installing and configuring the security guardrails for the Nephio Intent-to-O2 demo pipeline.
+Complete installation and demonstration guide for the security guardrails in the intent pipeline, following TDD principles with exact commands.
+
+## Overview
+
+The security guardrails provide defense-in-depth protection for the intent pipeline:
+
+- **Sigstore Policy Controller**: Rejects unsigned container images in production
+- **Kyverno**: Kubernetes-native policy enforcement with image verification  
+- **cert-manager**: Automated TLS certificate lifecycle management
+
+All components follow TDD approach: failing tests first (RED), minimal implementation (GREEN), then optimization (REFACTOR).
+
+## Prerequisites
+
+```bash
+# Verify kubectl access
+kubectl cluster-info
+
+# Verify you have cluster-admin permissions
+kubectl auth can-i '*' '*'
+
+# Check cluster readiness
+kubectl get nodes
+```
 
 ## Table of Contents
-- [Quick Start](#quick-start)
-- [Sigstore Policy Controller](#sigstore-policy-controller)
-- [Kyverno Image Verification](#kyverno-image-verification)
-- [Cert-Manager](#cert-manager)
-- [Demo: Unsigned vs Signed Images](#demo-unsigned-vs-signed-images)
-- [Production Checklist](#production-checklist)
+- [1. Sigstore Policy Controller Setup](#1-sigstore-policy-controller-setup)
+- [2. cert-manager Setup](#2-cert-manager-setup)  
+- [3. Kyverno Setup](#3-kyverno-setup)
+- [4. Complete Security Demo Script](#4-complete-security-demo-script)
+- [5. Troubleshooting](#5-troubleshooting)
+- [6. Production Configuration](#6-production-configuration)
 
-## Quick Start
+## 1. Sigstore Policy Controller Setup
 
-```bash
-# Install all security components
-cd guardrails
-
-# Method 1: Use Makefile (recommended)
-make install-all          # Install all components
-make apply-policies       # Apply security policies
-make test-all            # Run comprehensive tests
-make demo                # Run demonstration
-
-# Method 2: Manual installation
-./cert-manager/install.sh   # Install cert-manager (required for TLS)
-./sigstore/install.sh       # Install Sigstore policy controller
-./kyverno/install.sh        # Install Kyverno (optional alternative)
-make apply-policies         # Apply security policies
-./demo-signed-unsigned.sh   # Run demonstration
-
-# Method 3: Full integration test
-./integration-test.sh     # End-to-end validation
-```
-
-## Sigstore Policy Controller
-
-### Installation via Helm
+### Quick Installation
 
 ```bash
-# Add Helm repository
+cd guardrails/sigstore
+
+# Install cosign CLI
+make install-cosign
+
+# Install policy-controller (kubectl method - recommended)
+make install-policy-controller
+
+# Alternative: Helm method
 helm repo add sigstore https://sigstore.github.io/helm-charts
 helm repo update
-
-# Install with enforcing mode
 helm install policy-controller sigstore/policy-controller \
-  --namespace cosign-system \
-  --create-namespace \
-  --version v0.10.0 \
-  --set webhook.configPolicy=enforce \
-  --set webhook.failurePolicy=Fail \
-  --wait
+  --namespace cosign-system --create-namespace
+```
 
-# Verify installation
+### Manual Installation Steps
+
+```bash
+# 1. Install policy-controller
+kubectl apply -f https://github.com/sigstore/policy-controller/releases/download/v0.8.0/policy-controller.yaml
+
+# 2. Wait for deployment
+kubectl -n cosign-system wait --for=condition=Available --timeout=300s deployment/policy-controller-webhook
+
+# 3. Verify installation
 kubectl get pods -n cosign-system
-kubectl get validatingwebhookconfigurations | grep policy-controller
+kubectl logs -n cosign-system deployment/policy-controller-webhook
 ```
 
-### Installation via kubectl
+### Apply Security Policies
 
 ```bash
-# Apply manifest directly
-kubectl apply -f https://github.com/sigstore/policy-controller/releases/download/v0.10.0/policy-controller-v0.10.0.yaml
+# Apply ClusterImagePolicy
+kubectl apply -f policies/cluster-image-policy.yaml
 
-# Wait for readiness
-kubectl rollout status deployment/policy-controller-webhook -n cosign-system
-kubectl rollout status deployment/policy-controller -n cosign-system
+# Verify policy is active
+kubectl get clusterimagepolicy
+kubectl describe clusterimagepolicy reject-unsigned-images
 ```
 
-### Apply ClusterImagePolicy
+### Demo: Unsigned Denied / Signed Allowed
 
 ```bash
-# Apply the policy that rejects unsigned images in non-dev namespaces
-kubectl apply -f - <<'EOF'
-apiVersion: policy.sigstore.dev/v1beta1
-kind: ClusterImagePolicy
-metadata:
-  name: reject-unsigned-production
-spec:
-  mode: enforce
-  images:
-  - glob: "**"
-  authorities:
-  - keyless:
-      url: https://fulcio.sigstore.dev
-      identities:
-      - issuer: https://token.actions.githubusercontent.com
-        subjectRegExp: ".*"
-      - issuer: https://accounts.google.com
-        subjectRegExp: ".*@chainguard.dev$"
-  - key:
-      data: |
-        -----BEGIN PUBLIC KEY-----
-        MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE5vTxPbLilbUtbBriPuJQCvmyU3To
-        dJGKpQ1/kFwypiUNyfq7lwdLIgLWbXMq5A3H9q3v3zzNPQLvQ8K1YvTUHw==
-        -----END PUBLIC KEY-----
-EOF
+# Run automated demo
+make demo
 ```
 
-### Namespace Exemptions
+**Manual Demo Steps:**
 
 ```bash
-# Label namespaces to exempt from policy
-kubectl label namespace kube-system policy.sigstore.dev/exclude=true
-kubectl label namespace dev environment=dev
-kubectl label namespace staging environment=staging
+# 1. Create production namespace
+kubectl create namespace demo-prod
+
+# 2. Test unsigned image (SHOULD BE DENIED)
+echo "Deploying unsigned nginx:latest..."
+kubectl apply -f tests/test-unsigned-deployment.yaml -n demo-prod
+# Expected: admission webhook error - image signature verification failed
+
+# 3. Test signed image (SHOULD BE ALLOWED)  
+echo "Deploying signed distroless image..."
+kubectl apply -f tests/test-signed-deployment.yaml -n demo-prod
+# Expected: deployment created successfully
+
+# 4. Test dev namespace (unsigned ALLOWED)
+kubectl create namespace demo-dev
+kubectl label namespace demo-dev environment=dev
+kubectl apply -f tests/test-unsigned-deployment.yaml -n demo-dev
+# Expected: deployment created with warning
+
+# 5. Cleanup
+kubectl delete namespace demo-prod demo-dev
 ```
 
-## Kyverno Image Verification
-
-### Installation
+### Verify Image Signature
 
 ```bash
-# Install Kyverno
-kubectl create -f https://github.com/kyverno/kyverno/releases/download/v1.12.0/install.yaml
+# Manually verify a signed image
+cosign verify gcr.io/distroless/static:nonroot \
+  --certificate-identity=keyless@distroless.iam.gserviceaccount.com \
+  --certificate-oidc-issuer=https://accounts.google.com
 
-# Wait for readiness
-kubectl rollout status deployment/kyverno-admission-controller -n kyverno
-kubectl rollout status deployment/kyverno-background-controller -n kyverno
-kubectl rollout status deployment/kyverno-cleanup-controller -n kyverno
-kubectl rollout status deployment/kyverno-reports-controller -n kyverno
+# Check cosign version
+cosign version
+
+# Example output of successful verification:
+# Verification for gcr.io/distroless/static:nonroot --
+# The following checks were performed on each of these signatures:
+#   - The cosign claims were validated
+#   - Existence of the claims in the transparency log was verified offline
+#   - The code-signing certificate was verified using trusted certificate authority certificates
 ```
 
-### Apply Image Verification Policy
+## 2. cert-manager Setup
+
+### Quick Installation
 
 ```bash
-kubectl apply -f - <<'EOF'
-apiVersion: kyverno.io/v1
-kind: ClusterPolicy
-metadata:
-  name: verify-images
-spec:
-  background: false
-  validationFailureAction: Enforce
-  webhookTimeoutSeconds: 30
-  rules:
-  - name: verify-signatures
-    match:
-      any:
-      - resources:
-          kinds:
-          - Pod
-          - Deployment
-          - DaemonSet
-          - StatefulSet
-          namespaceSelector:
-            matchExpressions:
-            - key: environment
-              operator: NotIn
-              values:
-              - dev
-    verifyImages:
-    - imageReferences:
-      - "*"
-      attestors:
-      - entries:
-        - keyless:
-            subject: "*@chainguard.dev"
-            issuer: https://accounts.google.com
-            rekor:
-              url: https://rekor.sigstore.dev
-      - entries:
-        - keyless:
-            subject: "*"
-            issuer: https://token.actions.githubusercontent.com
-            rekor:
-              url: https://rekor.sigstore.dev
-EOF
+cd guardrails/cert-manager
+
+# Install cert-manager
+make install
+
+# Apply certificate issuers
+make apply
+
+# Validate installation
+make validate
 ```
 
-### Test Kyverno Policies
+### Manual Installation Steps
 
 ```bash
-# Install kyverno CLI
-brew install kyverno  # macOS
-# or
-curl -L https://github.com/kyverno/kyverno/releases/download/v1.12.0/kyverno-cli_v1.12.0_linux_x86_64.tar.gz | tar -xz
+# 1. Install cert-manager (kubectl method - recommended)
+kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.13.3/cert-manager.yaml
 
-# Run tests
-kyverno test \
-  --policy guardrails/kyverno/policies/ \
-  --resource guardrails/kyverno/tests/resource.yaml \
-  --values guardrails/kyverno/tests/test-values.yaml
-```
-
-## Cert-Manager
-
-### Installation via kubectl
-
-```bash
-# Apply the manifest
-kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.15.0/cert-manager.yaml
-
-# Wait for webhooks to be ready
-kubectl wait --for=condition=available --timeout=300s deployment/cert-manager -n cert-manager
-kubectl wait --for=condition=available --timeout=300s deployment/cert-manager-webhook -n cert-manager
-kubectl wait --for=condition=available --timeout=300s deployment/cert-manager-cainjector -n cert-manager
-
-# Verify installation
-kubectl get pods -n cert-manager
-cmctl check api  # if cmctl is installed
-```
-
-### Installation via Helm
-
-```bash
-# Add repository
+# Alternative: Helm method
 helm repo add jetstack https://charts.jetstack.io
 helm repo update
-
-# Install with CRDs
 helm install cert-manager jetstack/cert-manager \
-  --namespace cert-manager \
-  --create-namespace \
-  --version v1.15.0 \
-  --set crds.enabled=true \
-  --set prometheus.enabled=false \
-  --wait
+  --namespace cert-manager --create-namespace \
+  --version v1.13.3 --set installCRDs=true
+
+# 2. Wait for deployment
+kubectl wait --for=condition=Available --timeout=300s -n cert-manager deployment/cert-manager
+kubectl wait --for=condition=Available --timeout=300s -n cert-manager deployment/cert-manager-webhook
+kubectl wait --for=condition=Available --timeout=300s -n cert-manager deployment/cert-manager-cainjector
+
+# 3. Verify installation
+kubectl get pods -n cert-manager
 ```
 
-### Create ClusterIssuers
+### Apply Certificate Issuers
 
 ```bash
-# Self-signed issuer for testing
-kubectl apply -f - <<'EOF'
-apiVersion: cert-manager.io/v1
-kind: ClusterIssuer
-metadata:
-  name: selfsigned-cluster-issuer
-spec:
-  selfSigned: {}
-EOF
+# Apply ClusterIssuers
+kubectl apply -f manifests/cluster-issuer.yaml
 
-# CA issuer with generated root
-kubectl apply -f - <<'EOF'
-apiVersion: cert-manager.io/v1
-kind: ClusterIssuer
-metadata:
-  name: ca-cluster-issuer
-spec:
-  ca:
-    secretName: ca-key-pair
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: ca-key-pair
-  namespace: cert-manager
-type: kubernetes.io/tls
-data:
-  tls.crt: LS0tLS1CRUdJTi... # base64 encoded cert
-  tls.key: LS0tLS1CRUdJTi... # base64 encoded key
-EOF
+# Verify issuers are ready
+kubectl get clusterissuer
+kubectl describe clusterissuer selfsigned-cluster-issuer
+kubectl describe clusterissuer ca-cluster-issuer
 ```
 
-### Request a Certificate
+### Test Certificate Creation
 
 ```bash
-kubectl apply -f - <<'EOF'
-apiVersion: cert-manager.io/v1
-kind: Certificate
-metadata:
-  name: example-tls
-  namespace: default
-spec:
-  secretName: example-tls-secret
-  issuerRef:
-    name: selfsigned-cluster-issuer
-    kind: ClusterIssuer
-  commonName: example.com
-  dnsNames:
-  - example.com
-  - www.example.com
-EOF
+# Create test certificate
+kubectl apply -f tests/test-certificate.yaml
 
 # Check certificate status
-kubectl describe certificate example-tls
-kubectl get secret example-tls-secret -o yaml
+kubectl get certificate -n cert-manager-test
+kubectl describe certificate test-cert -n cert-manager-test
+
+# Verify secret is created
+kubectl get secret test-cert-secret -n cert-manager-test
+kubectl describe secret test-cert-secret -n cert-manager-test
+
+# Cleanup
+kubectl delete -f tests/test-certificate.yaml
 ```
 
-## Demo: Unsigned vs Signed Images
-
-### Full Interactive Demo
+### Install cert-manager CLI (cmctl)
 
 ```bash
-# Run the complete demo script
-./guardrails/demo-signed-unsigned.sh
+# Install cmctl tool
+make install-cmctl
+
+# Check API readiness
+cmctl check api
+
+# Manual install cmctl
+curl -fsSL -o cmctl.tar.gz \
+  https://github.com/cert-manager/cert-manager/releases/download/v1.13.3/cmctl-linux-amd64.tar.gz
+tar xzf cmctl.tar.gz
+sudo mv cmctl /usr/local/bin
+rm cmctl.tar.gz
 ```
 
-### Manual Demo Steps
+## 3. Kyverno Setup
 
-#### 1. Setup Test Namespaces
+### Quick Installation
 
 ```bash
-# Create and label namespaces
-kubectl create namespace prod-test
-kubectl create namespace dev-test
-kubectl label namespace prod-test environment=production
-kubectl label namespace dev-test environment=dev
+cd guardrails/kyverno
+
+# Install Kyverno
+make install
+
+# Apply policies
+make apply
+
+# Run tests
+make test
 ```
 
-#### 2. Test Unsigned Image (REJECTED in production)
+### Manual Installation Steps
 
 ```bash
-# This should FAIL in production namespace
-kubectl run unsigned-nginx --image=nginx:latest -n prod-test
+# 1. Install Kyverno (kubectl method)
+kubectl apply -f https://github.com/kyverno/kyverno/releases/download/v1.11.0/install.yaml
 
-# Expected output:
-# Error from server (BadRequest): admission webhook "policy.sigstore.dev" denied the request: 
-# validation failed: failed to validate image signature
+# Alternative: Helm method
+helm repo add kyverno https://kyverno.github.io/kyverno/
+helm repo update
+helm install kyverno kyverno/kyverno --namespace kyverno --create-namespace
+
+# 2. Wait for deployment
+kubectl wait --for=condition=Available --timeout=300s -n kyverno deployment/kyverno-admission-controller
+kubectl wait --for=condition=Available --timeout=300s -n kyverno deployment/kyverno-background-controller
+kubectl wait --for=condition=Available --timeout=300s -n kyverno deployment/kyverno-cleanup-controller
+kubectl wait --for=condition=Available --timeout=300s -n kyverno deployment/kyverno-reports-controller
+
+# 3. Verify installation
+kubectl get pods -n kyverno
 ```
 
-#### 3. Test Signed Image (ACCEPTED in production)
+### Apply Image Verification Policies
 
 ```bash
-# This should SUCCEED - using Chainguard signed image
-kubectl run signed-nginx --image=cgr.dev/chainguard/nginx:latest -n prod-test
+# Apply ClusterPolicy
+kubectl apply -f policies/verify-images.yaml
 
-# Verify it's running
-kubectl get pod signed-nginx -n prod-test
+# Verify policy is active
+kubectl get clusterpolicy
+kubectl describe clusterpolicy verify-images
 ```
 
-#### 4. Test Unsigned Image in Dev (ACCEPTED)
+### Run Kyverno Tests
 
 ```bash
-# This should SUCCEED in dev namespace (exempted)
-kubectl run dev-nginx --image=nginx:latest -n dev-test
+# Run policy tests
+kyverno test tests/
 
-# Verify it's running
-kubectl get pod dev-nginx -n dev-test
+# Expected output shows test results:
+# - pass: tests that should pass
+# - fail: tests that should fail (demonstrating policy enforcement)
 ```
 
-### Signed Images for Testing
+## 4. Complete Security Demo Script
+
+### Automated End-to-End Demo
 
 ```bash
-# Chainguard images (signed with keyless)
-cgr.dev/chainguard/nginx:latest
-cgr.dev/chainguard/python:latest
-cgr.dev/chainguard/node:latest
+#!/bin/bash
+# Complete security guardrails demo
 
-# Google Distroless (signed)
-gcr.io/distroless/static:nonroot
-gcr.io/distroless/base:latest
+echo "🛡️  Security Guardrails Demo - Nephio Intent Pipeline"
+echo "=================================================="
 
-# GitHub Container Registry (often signed)
-ghcr.io/stefanprodan/podinfo:6.5.4
-ghcr.io/fluxcd/flux-cli:v2.2.3
+# 1. Test Sigstore Policy Controller
+echo ""
+echo "1️⃣  SIGSTORE POLICY CONTROLLER DEMO"
+cd guardrails/sigstore
+make demo
 
-# Verify signatures manually
-cosign verify \
-  --certificate-identity-regexp ".*" \
-  --certificate-oidc-issuer-regexp ".*" \
-  cgr.dev/chainguard/nginx:latest
+# 2. Test cert-manager
+echo ""
+echo "2️⃣  CERT-MANAGER DEMO"
+cd ../cert-manager
+make test
+kubectl apply -f tests/test-certificate.yaml
+sleep 10
+kubectl get certificate -n cert-manager-test
+kubectl delete -f tests/test-certificate.yaml
+
+# 3. Test Kyverno
+echo ""
+echo "3️⃣  KYVERNO POLICY DEMO"
+cd ../kyverno
+make test
+
+echo ""
+echo "✅ All security guardrails demonstrated successfully!"
+echo "   - Unsigned images blocked in production ❌"
+echo "   - Signed images allowed in production ✅"
+echo "   - Certificates automatically managed 🔒"
+echo "   - Policies enforced via Kyverno 📜"
 ```
 
-## Production Checklist
-
-### Pre-Deployment
+### Save and Run Demo
 
 ```bash
-# 1. Verify all components are installed
-kubectl get ns cert-manager cosign-system kyverno
+# Save demo script
+cat > /tmp/security-demo.sh << 'EOF'
+[paste the script above]
+EOF
 
-# 2. Check webhook configurations
-kubectl get validatingwebhookconfigurations
-kubectl get mutatingwebhookconfigurations
-
-# 3. Test policies in dry-run mode first
-kubectl apply -f policies/ --dry-run=server
+chmod +x /tmp/security-demo.sh
+/tmp/security-demo.sh
 ```
 
-### Monitoring
+## 5. Troubleshooting
+
+### Common Issues
+
+#### Policy Controller Issues
 
 ```bash
-# Watch policy controller logs
-kubectl logs -f deployment/policy-controller-webhook -n cosign-system
+# Check policy-controller status
+kubectl get pods -n cosign-system
+kubectl logs -n cosign-system deployment/policy-controller-webhook
 
-# Watch Kyverno logs
-kubectl logs -f deployment/kyverno-admission-controller -n kyverno
+# Verify webhook configuration
+kubectl get validatingadmissionwebhooks
+kubectl describe validatingadmissionwebhook policy.sigstore.dev
 
-# Check cert-manager logs
-kubectl logs -f deployment/cert-manager -n cert-manager
+# Test policy dry-run
+kubectl apply -f tests/test-unsigned-deployment.yaml --dry-run=server
 ```
 
-### Troubleshooting
+#### cert-manager Issues
 
 ```bash
-# Debug denied admission
-kubectl describe replicaset <rs-name> -n <namespace>
-kubectl events -n <namespace>
+# Check cert-manager status
+kubectl get pods -n cert-manager
+kubectl logs -n cert-manager deployment/cert-manager
 
-# Check policy status
-kubectl get clusterimageepolicy -o yaml
-kubectl get clusterpolicy -o yaml
+# Check certificate events
+kubectl describe certificate <cert-name>
+kubectl get certificaterequest
 
-# Verify webhook is receiving requests
-kubectl logs -n cosign-system deployment/policy-controller-webhook --tail=100
+# Test API connectivity
+cmctl check api
 ```
 
-### Emergency Bypass
+#### Kyverno Issues
 
 ```bash
-# Temporarily disable enforcement (USE WITH CAUTION)
-kubectl patch clusterimageepolicy reject-unsigned-production \
-  --type='json' -p='[{"op": "replace", "path": "/spec/mode", "value": "warn"}]'
+# Check Kyverno status
+kubectl get pods -n kyverno
+kubectl logs -n kyverno deployment/kyverno-admission-controller
 
-# Re-enable enforcement
-kubectl patch clusterimageepolicy reject-unsigned-production \
-  --type='json' -p='[{"op": "replace", "path": "/spec/mode", "value": "enforce"}]'
+# Verify policies
+kubectl get clusterpolicy
+kubectl describe clusterpolicy verify-images
+
+# Check policy violations
+kubectl get policyreport -A
 ```
 
-## Security Best Practices
-
-1. **Never disable policies in production** - Use namespace exemptions instead
-2. **Monitor webhook latency** - Set appropriate timeout values
-3. **Use fail-closed configuration** - Deny on webhook failure
-4. **Rotate signing keys regularly** - Update ClusterImagePolicy accordingly
-5. **Audit policy violations** - Export logs to SIEM
-6. **Test in staging first** - Validate policies don't break deployments
-7. **Document exemptions** - Maintain list of exempted namespaces/images
-8. **Use GitOps for policies** - Version control all security policies
-
-## Integration with Nephio Pipeline
+### Debug Commands
 
 ```bash
-# Apply policies before deploying Nephio components
-kubectl apply -f guardrails/sigstore/policies/
-kubectl apply -f guardrails/kyverno/policies/
+# Check all security components
+kubectl get pods -n cosign-system -n cert-manager -n kyverno
 
-# Label Nephio namespaces appropriately
-kubectl label namespace nephio-system environment=production
-kubectl label namespace porch-system environment=production
+# View recent events
+kubectl get events --all-namespaces --sort-by='.lastTimestamp' | tail -20
 
-# Verify Nephio images are signed or add to allowlist
-kubectl get deployments -n nephio-system -o json | \
-  jq -r '.items[].spec.template.spec.containers[].image' | \
-  xargs -I {} cosign verify --certificate-identity-regexp ".*" \
-    --certificate-oidc-issuer-regexp ".*" {} || echo "Image {} not signed"
+# Test webhook connectivity
+kubectl apply -f <test-resource> --dry-run=server -v=6
 ```
 
-## Additional Resources
+## 6. Production Configuration
 
-- [Sigstore Policy Controller Documentation](https://docs.sigstore.dev/policy-controller/overview/)
-- [Kyverno Policy Library](https://kyverno.io/policies/)
-- [Cert-Manager Documentation](https://cert-manager.io/docs/)
-- [SLSA Framework](https://slsa.dev/)
-- [Supply Chain Security Best Practices](https://www.cncf.io/blog/2022/08/08/supply-chain-security-best-practices/)
+### Security Hardening Checklist
+
+- [ ] Replace self-signed certificates with enterprise CA
+- [ ] Configure proper OIDC provider for keyless signing
+- [ ] Set up monitoring and alerting for policy violations
+- [ ] Implement backup and disaster recovery procedures
+- [ ] Configure RBAC for security component access
+- [ ] Set up certificate expiration monitoring
+- [ ] Document security incident response procedures
+- [ ] Regular security policy reviews and updates
+
+### Monitoring Commands
+
+```bash
+# Monitor policy violations
+kubectl get events --field-selector reason=PolicyViolation
+
+# Monitor certificate expiration
+kubectl get certificates -A -o custom-columns=NAME:.metadata.name,NAMESPACE:.metadata.namespace,READY:.status.conditions[0].status,EXPIRES:.status.notAfter
+
+# Monitor Kyverno policy reports
+kubectl get policyreport -A -o wide
+
+# Check security component health
+kubectl get pods -n cosign-system -n cert-manager -n kyverno -o wide
+```
+
+## 7. Integration with Intent Pipeline
+
+The security guardrails integrate with the intent pipeline at multiple points:
+
+1. **Image Verification**: All KRM packages and O2 IMS deployments use only signed images
+2. **Certificate Management**: Automatic TLS for all API communications
+3. **Policy Enforcement**: Kyverno validates all intent transformations
+4. **Supply Chain Security**: Complete signature verification chain from intent to deployment
+
+### Pipeline Security Flow
+
+```
+LLM Intent → TMF921 → 28.312 → KRM Packages → O2 IMS
+     ↓           ↓        ↓          ↓          ↓
+   Schema    Signed   Policy    Image      TLS
+   Valid     JSON   Validated  Verified   Secured
+```
+
+Each step enforced by the security guardrails ensures end-to-end security from intent creation to O-RAN deployment.
+

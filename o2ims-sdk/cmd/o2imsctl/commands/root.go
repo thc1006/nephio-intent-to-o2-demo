@@ -27,7 +27,7 @@ func NewRootCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "o2imsctl",
 		Short: "O2 IMS CLI for managing ProvisioningRequest resources",
-		Long: `o2imsctl is a CLI tool for interacting with O2 IMS resources in Kubernetes clusters.
+		Long: `O2 IMS CLI (o2imsctl) is a tool for interacting with O2 IMS resources in Kubernetes clusters.
 It provides commands to create, manage, and monitor ProvisioningRequest resources following
 O-RAN O2 IMS specifications.`,
 		SilenceUsage:  true,

@@ -31,7 +31,15 @@ fi
 
 # Test 3: Dev namespace should allow unsigned images
 echo "Test 3: Deploying unsigned image to dev namespace..."
-kubectl create namespace dev --dry-run=client -o yaml | kubectl apply -f - 2>/dev/null || true
+# Create dev namespace with proper labels
+cat <<EOF | kubectl apply -f - 2>/dev/null || true
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: dev
+  labels:
+    environment: dev
+EOF
 sed 's/namespace: production/namespace: dev/g' test-unsigned-deployment.yaml | \
     kubectl apply -f - --dry-run=server 2>/dev/null
 if [ $? -eq 0 ]; then

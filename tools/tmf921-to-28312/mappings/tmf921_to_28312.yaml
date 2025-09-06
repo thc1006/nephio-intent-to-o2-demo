@@ -107,20 +107,56 @@ field_mappings:
         target: "contextValueRange"
         transform: "to_array"
 
-# Unmapped fields - these will be reported in delta
+# Unmapped fields - these will be reported in delta with detailed rationale
 unmapped_fields:
-  - "validFor"
-  - "intentSpecification.validFor" 
-  - "intentSpecification.intentExpectations.*.validFor"
-  - "category"
-  - "priority"
-  - "state"
-  - "@type"
-  - "@baseType"
-  - "@schemaLocation"
-  - "customField"
-  - "intentSpecification.intentExpectations.*.customExpectationField"
-  - "intentSpecification.intentExpectations.*.expectationTargets.*.customTargetField"
+  validFor:
+    pattern: "validFor"
+    reason: "No equivalent field in 3GPP TS 28.312 clause 6.2.2 - IntentExpectation data type lacks temporal validity constraints"
+    suggested_mapping: "Could map to intentExpectationContext with temporal context attributes"
+  intentSpecification_validFor:
+    pattern: "intentSpecification.validFor"
+    reason: "No equivalent field in 3GPP TS 28.312 clause 6.2.2 - IntentExpectation data type lacks temporal validity constraints"
+    suggested_mapping: "Could map to intentExpectationContext with temporal context attributes"
+  expectation_validFor:
+    pattern: "intentSpecification.intentExpectations.*.validFor"
+    reason: "No equivalent field in 3GPP TS 28.312 clause 6.2.2 - IntentExpectation data type lacks temporal validity constraints"
+    suggested_mapping: "Could map to intentExpectationContext with temporal context attributes"
+  category:
+    pattern: "category"
+    reason: "No equivalent field in 3GPP TS 28.312 clause 6.2.2 - Classification not supported in IntentExpectation structure"
+    suggested_mapping: "Could be stored as metadata or in intentExpectationContext"
+  priority:
+    pattern: "priority"
+    reason: "No equivalent field in 3GPP TS 28.312 clause 6.2.2 - Priority handling not defined in IntentExpectation"
+    suggested_mapping: "Could be handled at Intent Management Service level per clause 7.2.4"
+  state:
+    pattern: "state"
+    reason: "No equivalent field in 3GPP TS 28.312 clause 6.2.2 - State management handled via IntentReport per clause 6.2.3"
+    suggested_mapping: "State information should be tracked via IntentReport.intentReportStatus"
+  at_type:
+    pattern: "@type"
+    reason: "TMF921 JSON-LD type annotation - not applicable to 3GPP TS 28.312 clause 6.2.2 structure"
+    suggested_mapping: "Type information captured in intentExpectationType enum"
+  at_baseType:
+    pattern: "@baseType"
+    reason: "TMF921 JSON-LD inheritance annotation - not applicable to 3GPP TS 28.312 clause 6.2.2 structure"
+    suggested_mapping: "Inheritance handled by 3GPP TS 28.312 data type definitions"
+  at_schemaLocation:
+    pattern: "@schemaLocation"
+    reason: "TMF921 JSON-LD schema reference - not applicable to 3GPP TS 28.312 clause 6.2.2 structure"
+    suggested_mapping: "Schema validation handled by 3GPP TS 28.312 specification compliance"
+  customField:
+    pattern: "customField"
+    reason: "Custom field not defined in 3GPP TS 28.312 clause 6.2.2 - IntentExpectation extensibility not specified"
+    suggested_mapping: "Could map to intentExpectationContext.contextAttribute if semantically appropriate"
+  custom_expectation_field:
+    pattern: "intentSpecification.intentExpectations.*.customExpectationField"
+    reason: "Custom expectation field not defined in 3GPP TS 28.312 clause 6.2.2 - IntentExpectation extensibility not specified"
+    suggested_mapping: "Could map to intentExpectationContext.contextAttribute if semantically appropriate"
+  custom_target_field:
+    pattern: "intentSpecification.intentExpectations.*.expectationTargets.*.customTargetField"
+    reason: "Custom target field not defined in 3GPP TS 28.312 clause 6.2.2.4 - IntentExpectationTarget structure is fixed"
+    suggested_mapping: "Could be incorporated into targetValue if it modifies the target semantically"
 
 # Output templates for 3GPP TS 28.312 structures
 templates:

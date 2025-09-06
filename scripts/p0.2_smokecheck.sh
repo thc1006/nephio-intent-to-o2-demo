@@ -118,13 +118,13 @@ check_porch_api() {
     local check_name="porch-api"
     log_info "Checking Porch API resources..."
     
-    # Required API resources
-    local api_resources=("repositories.porch.kpt.dev" "packagerevisions.porch.kpt.dev" "packagevariants.config.porch.kpt.dev")
+    # Required API resources (check with grep pattern matching)
+    local api_checks=("repositories" "packagerevisions" "packagevariants")
     local missing_resources=()
     
-    for resource in "${api_resources[@]}"; do
-        if ! timeout "$TIMEOUT_API" kubectl api-resources --api-group="${resource##*.}" 2>/dev/null | \
-             grep -q "${resource%%.*}"; then
+    for resource in "${api_checks[@]}"; do
+        if ! timeout "$TIMEOUT_API" kubectl api-resources 2>/dev/null | grep -i porch | \
+             grep -q "$resource"; then
             missing_resources+=("$resource")
         fi
     done

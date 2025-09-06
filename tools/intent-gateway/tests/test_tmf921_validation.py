@@ -18,14 +18,14 @@ class TestTMF921Validation:
             "href": "/intentManagement/v1/intent/intent-001",
             "name": "Deploy 5G Network Slice",
             "description": "Intent for ultra-reliable low latency slice",
-            "category": "NetworkSlice",
+            "intentType": "NetworkSliceIntent",
+            "state": "acknowledged",
+            "@baseType": "Intent",
+            "@type": "NetworkSliceIntent",
             "intentSpecification": {
+                "id": "spec-urllc-slice",
                 "name": "URLLC_Slice_Spec",
-                "valueSchema": {
-                    "latency": "< 1ms",
-                    "reliability": "99.999%",
-                    "throughput": "100Mbps",
-                },
+                "version": "1.0.0"
             },
         }
 
@@ -47,7 +47,7 @@ class TestTMF921Validation:
         result = validator.validate(invalid_intent)
         assert result.is_valid is False
         assert "id" in str(result.errors)
-        assert "intentSpecification" in str(result.errors)
+        assert "intentType" in str(result.errors)
 
     def test_validate_intent_expectations(self):
         """Validate intent expectations/outcomes"""
@@ -57,15 +57,15 @@ class TestTMF921Validation:
         parser = ExpectationParser()
         intent_with_expectations = {
             "id": "intent-002",
-            "expectations": [
+            "expectation": [
                 {
-                    "expectationId": "exp-001",
-                    "expectationType": "ServiceLevelExpectation",
-                    "expectedValue": {
-                        "kpiName": "latency",
-                        "kpiValue": "1",
-                        "kpiUnit": "ms",
-                        "operator": "lessThan",
+                    "id": "exp-001",
+                    "name": "Latency Expectation",
+                    "expectationType": "DeliveryExpectation",
+                    "targetCondition": "latency <= 1 ms",
+                    "targetValue": {
+                        "value": "1",
+                        "unit": "ms"
                     },
                 }
             ],
@@ -101,12 +101,12 @@ class TestTMF921Validation:
         # Valid intent should exit 0
         result = subprocess.run(
             [
-                "python",
+                "python3",
                 "-m",
                 "intent_gateway",
                 "validate",
                 "--file",
-                "samples/tmf921/valid_intent_01.json",
+                "samples/tmf921/valid_01.json",
                 "--tio-mode",
                 "fake",
             ],
@@ -114,18 +114,18 @@ class TestTMF921Validation:
         )
         assert result.returncode == 0
 
-        # Invalid intent should exit 1
+        # Invalid intent should exit 2 (validation error)
         result = subprocess.run(
             [
-                "python",
+                "python3",
                 "-m",
                 "intent_gateway",
                 "validate",
                 "--file",
-                "samples/tmf921/invalid_intent_01.json",
+                "samples/tmf921/invalid_01.json",
                 "--tio-mode",
-                "fake",
+                "strict",  # Use strict mode to actually validate
             ],
             capture_output=True,
         )
-        assert result.returncode == 1
+        assert result.returncode == 2
