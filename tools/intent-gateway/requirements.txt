@@ -1,0 +1,15 @@
+# TMF921 Intent Gateway Dependencies
+# Core validation
+jsonschema>=4.17.0,<5.0.0
+
+# CLI framework
+click>=8.0.0,<9.0.0
+
+# Development and testing dependencies
+pytest>=7.0.0,<8.0.0
+pytest-cov>=4.0.0,<5.0.0
+
+# Code quality
+ruff>=0.1.0,<1.0.0
+black>=23.0.0,<24.0.0
+mypy>=1.0.0,<2.0.0

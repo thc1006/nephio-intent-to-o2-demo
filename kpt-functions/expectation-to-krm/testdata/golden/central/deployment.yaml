@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: central-cu-cp-cluster-02
+  namespace: o-ran-central
+  annotations:
+    expectation.28312.3gpp.org/id: "central-throughput-expectation-002"
+    expectation.28312.3gpp.org/object-type: "O-RAN-CU-CP"
+    expectation.28312.3gpp.org/deployment-mode: "central"
+    o2ims.o-ran.org/provider: "central-o2ims-002"
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: o-ran-cu-cp
+      instance: central-cu-cp-cluster-02
+  template:
+    metadata:
+      labels:
+        app: o-ran-cu-cp
+        instance: central-cu-cp-cluster-02
+        deployment-mode: central
+        location: datacenter-region-west
+        region: west
+    spec:
+      containers:
+      - name: o-ran-cu-cp
+        image: o-ran/cu-cp:latest
+        resources:
+          requests:
+            cpu: "16"
+            memory: "64Gi"
+          limits:
+            cpu: "16"
+            memory: "64Gi"
+        env:
+        - name: DEPLOYMENT_MODE
+          value: "central"
+        - name: LOCATION
+          value: "datacenter-region-west"
+        - name: REGION
+          value: "west"
+        - name: LOAD_BALANCING
+          value: "enabled"
+      volumes:
+      - name: storage
+        persistentVolumeClaim:
+          claimName: central-cu-cp-cluster-02-storage

@@ -1,0 +1,22 @@
+# Test deployment with signed images
+# This should PASS when Sigstore policy-controller is enforced
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-signed-app
+  namespace: production
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: test-signed
+  template:
+    metadata:
+      labels:
+        app: test-signed
+    spec:
+      containers:
+      - name: distroless
+        # gcr.io/distroless images are signed by Google
+        image: gcr.io/distroless/static:nonroot
+        command: ["/busybox/sleep", "3600"]

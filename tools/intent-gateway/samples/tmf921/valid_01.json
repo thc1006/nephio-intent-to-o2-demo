@@ -1,0 +1,117 @@
+{
+  "id": "intent-001-5g-slice-premium",
+  "href": "/tmf-api/intentManagement/v5/intent/intent-001-5g-slice-premium",
+  "name": "Premium 5G Network Slice for Enterprise Customer",
+  "description": "High-performance 5G network slice with guaranteed SLA for enterprise customers requiring ultra-low latency and high throughput",
+  "intentType": "NetworkSliceIntent",
+  "priority": 1,
+  "state": "acknowledged",
+  "version": "1.0.0",
+  "creationDate": "2025-01-06T10:00:00.000Z",
+  "lastModified": "2025-01-06T10:00:00.000Z",
+  "characteristic": [
+    {
+      "name": "sliceType",
+      "value": "eMBB",
+      "valueType": "string"
+    },
+    {
+      "name": "coverageArea",
+      "value": "downtown-business-district",
+      "valueType": "string"
+    },
+    {
+      "name": "maxThroughputDL",
+      "value": "1000",
+      "valueType": "integer",
+      "unit": "Mbps"
+    },
+    {
+      "name": "maxThroughputUL", 
+      "value": "500",
+      "valueType": "integer",
+      "unit": "Mbps"
+    },
+    {
+      "name": "latency",
+      "value": "5",
+      "valueType": "integer",
+      "unit": "ms"
+    },
+    {
+      "name": "reliability",
+      "value": "99.99",
+      "valueType": "float",
+      "unit": "percent"
+    },
+    {
+      "name": "availability",
+      "value": "99.999",
+      "valueType": "float", 
+      "unit": "percent"
+    }
+  ],
+  "expectation": [
+    {
+      "id": "exp-001-throughput-dl",
+      "name": "Downlink Throughput Expectation",
+      "expectationType": "DeliveryExpectation",
+      "targetCondition": "throughputDL >= 1000 Mbps",
+      "targetValue": {
+        "value": "1000",
+        "unit": "Mbps"
+      },
+      "contextCriteria": "coverageArea = downtown-business-district"
+    },
+    {
+      "id": "exp-002-latency",
+      "name": "Low Latency Expectation", 
+      "expectationType": "DeliveryExpectation",
+      "targetCondition": "latency <= 5 ms",
+      "targetValue": {
+        "value": "5",
+        "unit": "ms"
+      },
+      "contextCriteria": "sliceType = eMBB"
+    }
+  ],
+  "intentSpecification": {
+    "id": "spec-5g-enterprise-slice",
+    "href": "/tmf-api/intentManagement/v5/intentSpecification/spec-5g-enterprise-slice",
+    "name": "5G Enterprise Network Slice Specification",
+    "version": "2.1.0"
+  },
+  "party": [
+    {
+      "id": "party-enterprise-customer-001",
+      "href": "/tmf-api/partyManagement/v5/individual/party-enterprise-customer-001",
+      "name": "TechCorp Solutions Inc.",
+      "role": "customer"
+    },
+    {
+      "id": "party-telecom-operator-001",
+      "href": "/tmf-api/partyManagement/v5/organization/party-telecom-operator-001", 
+      "name": "GlobalTel Communications",
+      "role": "provider"
+    }
+  ],
+  "relatedParty": [
+    {
+      "id": "rp-network-engineer-001",
+      "href": "/tmf-api/partyManagement/v5/individual/rp-network-engineer-001",
+      "name": "Alice Johnson",
+      "role": "networkEngineer",
+      "validFor": {
+        "startDateTime": "2025-01-06T10:00:00.000Z",
+        "endDateTime": "2025-12-31T23:59:59.999Z"
+      }
+    }
+  ],
+  "validFor": {
+    "startDateTime": "2025-01-06T10:00:00.000Z",
+    "endDateTime": "2025-12-31T23:59:59.999Z"
+  },
+  "@baseType": "Intent",
+  "@type": "NetworkSliceIntent",
+  "@schemaLocation": "https://schemas.tmforum.org/Intent/v5.0.0/schema/Intent.schema.json"
+}

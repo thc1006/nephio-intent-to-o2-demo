@@ -1,0 +1,22 @@
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: intent-to-krm
+  annotations:
+    config.kubernetes.io/local-config: "true"
+info:
+  title: Intent to KRM Conversion Package
+  description: |
+    This package converts 3GPP TS 28.312 Intent/Expectation JSON to KRM resources
+    suitable for O-RAN O2 IMS deployment scenarios.
+    
+    Features:
+    - Converts 28.312 Expectations to Kubernetes Deployments
+    - Creates appropriate PVCs for storage requirements  
+    - Generates ServiceMonitors for expectations monitoring
+    - Supports both edge and central deployment modes
+    - Includes HPA for central scenarios with scaling requirements
+pipeline:
+  mutators:
+    - image: expectation-to-krm:latest
+      configPath: expectation-config.yaml

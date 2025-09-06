@@ -1,0 +1,61 @@
+# Kyverno policy to verify image signatures
+# Enforces signed images in non-dev namespaces
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: verify-images
+spec:
+  validationFailureAction: Enforce
+  background: false
+  webhookTimeoutSeconds: 30
+  failurePolicy: Fail
+  rules:
+    - name: verify-image-signatures
+      match:
+        any:
+        - resources:
+            kinds:
+            - Pod
+            - Deployment
+            - StatefulSet
+            - DaemonSet
+            - Job
+            - CronJob
+            namespaceSelector:
+              matchExpressions:
+              - key: kubernetes.io/metadata.name
+                operator: NotIn
+                values:
+                - dev
+                - kube-system
+                - kube-public
+                - kube-node-lease
+                - cert-manager
+                - cosign-system
+                - kyverno
+      verifyImages:
+      - imageReferences:
+        - "*"
+        attestors:
+        - count: 1
+          entries:
+          - keys:
+              publicKeys: |
+                -----BEGIN PUBLIC KEY-----
+                # This is a placeholder public key for testing
+                # In production, use real public keys from your registry
+                MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE8nXRh950IZbRj8Ra/N9sbqOPZrfM
+                5/KAQN0/KjHcorm/J5yctVd7iEcnessRQjU917hmKO6JWVGHpDguIyakZA==
+                -----END PUBLIC KEY-----
+              rekor:
+                url: https://rekor.sigstore.dev
+        # Allow specific signed images without custom keys
+        - count: 1
+          entries:
+          - keyless:
+              subject: "keyless@distroless.iam.gserviceaccount.com"
+              issuer: "https://accounts.google.com"
+              rekor:
+                url: https://rekor.sigstore.dev
+        mutateDigest: true
+        verifyDigest: true
