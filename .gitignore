@@ -66,4 +66,4 @@ go.work.sum
 **/*.bak
 
 # Claude agents (can be regenerated)
-.claude/agents/
+
