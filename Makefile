@@ -1,6 +1,6 @@
 # Nephio Intent-to-O2 Demo Pipeline
 SHELL := /bin/bash
-.PHONY: init fmt lint test build e2e clean
+.PHONY: init fmt lint test build p0-check e2e clean
 
 # Tool versions
 GO_VERSION := 1.22
@@ -54,6 +54,10 @@ build: ## Build all components
 	@cd o2ims-sdk && go build -o ../artifacts/o2imsctl ./cmd/... || true
 	@echo "Build complete"
 
+p0-check: ## Validate Nephio Phase-0 infrastructure readiness
+	@echo "Checking Nephio Phase-0 infrastructure..."
+	@./scripts/p0.2_smokecheck.sh
+
 e2e: ## Run end-to-end tests
 	@echo "Starting e2e tests..."
 	@./scripts/e2e-test.sh || exit 1
@@ -81,6 +85,6 @@ docs-pdf: ## Export documentation to PDF using pandoc
 	@echo "PDF documentation exported to artifacts/docs-pdf/"
 
 help: ## Show this help
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-10s\033[0m %s\n", $$1, $$2}'
+	@grep '^[a-zA-Z0-9_-]*:.*##' $(MAKEFILE_LIST) | sort | sed 's/:.*##/:##/' | awk -F ':##' '{printf "\033[36m%-10s\033[0m %s\n", $$1, $$2}'
 
 .DEFAULT_GOAL := help
