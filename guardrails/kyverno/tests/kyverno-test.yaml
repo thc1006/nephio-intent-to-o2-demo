@@ -1,0 +1,16 @@
+name: verify-images-policy-test
+policies:
+  - ../policies/verify-images.yaml
+resources:
+  - resource.yaml
+results:
+  - policy: verify-images
+    rule: verify-image-signatures
+    resource: test-unsigned-pod
+    kind: Pod
+    result: fail
+  - policy: verify-images
+    rule: verify-image-signatures  
+    resource: test-dev-pod
+    kind: Pod
+    result: skip

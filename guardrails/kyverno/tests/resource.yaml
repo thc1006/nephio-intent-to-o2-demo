@@ -1,6 +1,18 @@
 # Test resources with unsigned images that should fail policy checks
 ---
 apiVersion: v1
+kind: Namespace
+metadata:
+  name: production
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: dev
+  labels:
+    environment: dev
+---
+apiVersion: v1
 kind: Pod
 metadata:
   name: test-unsigned-pod

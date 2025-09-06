@@ -1,0 +1,62 @@
+{
+  "id": "intent-complex-001",
+  "intentType": "ServiceIntent",
+  "name": "Complex Service Intent",
+  "description": "Complex intent with unmapped fields for testing",
+  "category": "PerformanceOptimization",
+  "priority": "high",
+  "state": "active",
+  "@type": "ServiceIntent",
+  "@baseType": "Intent",
+  "@schemaLocation": "https://tmf921.schema/intent",
+  "customField": "unmapped_value",
+  "validFor": {
+    "startDateTime": "2024-01-01T00:00:00Z",
+    "endDateTime": "2024-12-31T23:59:59Z"
+  },
+  "intentSpecification": {
+    "validFor": {
+      "startDateTime": "2024-01-01T00:00:00Z",
+      "endDateTime": "2024-12-31T23:59:59Z"
+    },
+    "intentExpectations": [
+      {
+        "expectationType": "deliver",
+        "customExpectationField": "also_unmapped",
+        "validFor": {
+          "startDateTime": "2024-01-01T00:00:00Z",
+          "endDateTime": "2024-12-31T23:59:59Z"
+        },
+        "expectationObject": {
+          "objectType": "service",
+          "objectInstance": "service-complex-001"
+        },
+        "expectationTargets": [
+          {
+            "targetName": "latency",
+            "targetCondition": "lessThan",
+            "targetValue": "5",
+            "targetUnit": "ms",
+            "customTargetField": "unmapped_target"
+          },
+          {
+            "targetName": "throughput",
+            "targetCondition": "greaterThan",
+            "targetValue": "100",
+            "targetUnit": "Mbps"
+          }
+        ],
+        "expectationContext": [
+          {
+            "contextParameter": "networkSlice",
+            "contextValue": "slice-premium"
+          },
+          {
+            "contextParameter": "region",
+            "contextValue": "us-east-1"
+          }
+        ]
+      }
+    ]
+  }
+}

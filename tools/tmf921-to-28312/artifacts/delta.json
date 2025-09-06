@@ -1,10 +1,146 @@
 {
-  "unmapped_fields": [],
+  "unmapped_fields": [
+    {
+      "tmf921_path": "category",
+      "value": "PerformanceOptimization",
+      "type": "str",
+      "reason": "No equivalent field in 3GPP TS 28.312 clause 6.2.2 - Classification not supported in IntentExpectation structure",
+      "suggested_mapping": "Could be stored as metadata or in intentExpectationContext"
+    },
+    {
+      "tmf921_path": "priority",
+      "value": "high",
+      "type": "str",
+      "reason": "No equivalent field in 3GPP TS 28.312 clause 6.2.2 - Priority handling not defined in IntentExpectation",
+      "suggested_mapping": "Could be handled at Intent Management Service level per clause 7.2.4"
+    },
+    {
+      "tmf921_path": "state",
+      "value": "active",
+      "type": "str",
+      "reason": "No equivalent field in 3GPP TS 28.312 clause 6.2.2 - State management handled via IntentReport per clause 6.2.3",
+      "suggested_mapping": "State information should be tracked via IntentReport.intentReportStatus"
+    },
+    {
+      "tmf921_path": "@type",
+      "value": "ServiceIntent",
+      "type": "str",
+      "reason": "TMF921 JSON-LD type annotation - not applicable to 3GPP TS 28.312 clause 6.2.2 structure",
+      "suggested_mapping": "Type information captured in intentExpectationType enum"
+    },
+    {
+      "tmf921_path": "@baseType",
+      "value": "Intent",
+      "type": "str",
+      "reason": "TMF921 JSON-LD inheritance annotation - not applicable to 3GPP TS 28.312 clause 6.2.2 structure",
+      "suggested_mapping": "Inheritance handled by 3GPP TS 28.312 data type definitions"
+    },
+    {
+      "tmf921_path": "@schemaLocation",
+      "value": "https://tmf921.schema/intent",
+      "type": "str",
+      "reason": "TMF921 JSON-LD schema reference - not applicable to 3GPP TS 28.312 clause 6.2.2 structure",
+      "suggested_mapping": "Schema validation handled by 3GPP TS 28.312 specification compliance"
+    },
+    {
+      "tmf921_path": "customField",
+      "value": "unmapped_value",
+      "type": "str",
+      "reason": "Custom field not defined in 3GPP TS 28.312 clause 6.2.2 - IntentExpectation extensibility not specified",
+      "suggested_mapping": "Could map to intentExpectationContext.contextAttribute if semantically appropriate"
+    },
+    {
+      "tmf921_path": "validFor",
+      "value": {
+        "startDateTime": "2024-01-01T00:00:00Z",
+        "endDateTime": "2024-12-31T23:59:59Z"
+      },
+      "type": "dict",
+      "reason": "No equivalent field in 3GPP TS 28.312 clause 6.2.2 - IntentExpectation data type lacks temporal validity constraints",
+      "suggested_mapping": "Could map to intentExpectationContext with temporal context attributes"
+    },
+    {
+      "tmf921_path": "validFor.startDateTime",
+      "value": "2024-01-01T00:00:00Z",
+      "type": "str",
+      "reason": "Unknown field not defined in TMF921 standard mapping - no equivalent in 3GPP TS 28.312",
+      "suggested_mapping": "Review if this field should be mapped to intentExpectationContext or handled as metadata"
+    },
+    {
+      "tmf921_path": "validFor.endDateTime",
+      "value": "2024-12-31T23:59:59Z",
+      "type": "str",
+      "reason": "Unknown field not defined in TMF921 standard mapping - no equivalent in 3GPP TS 28.312",
+      "suggested_mapping": "Review if this field should be mapped to intentExpectationContext or handled as metadata"
+    },
+    {
+      "tmf921_path": "intentSpecification.validFor",
+      "value": {
+        "startDateTime": "2024-01-01T00:00:00Z",
+        "endDateTime": "2024-12-31T23:59:59Z"
+      },
+      "type": "dict",
+      "reason": "No equivalent field in 3GPP TS 28.312 clause 6.2.2 - IntentExpectation data type lacks temporal validity constraints",
+      "suggested_mapping": "Could map to intentExpectationContext with temporal context attributes"
+    },
+    {
+      "tmf921_path": "intentSpecification.validFor.startDateTime",
+      "value": "2024-01-01T00:00:00Z",
+      "type": "str",
+      "reason": "Unknown field not defined in TMF921 standard mapping - no equivalent in 3GPP TS 28.312",
+      "suggested_mapping": "Review if this field should be mapped to intentExpectationContext or handled as metadata"
+    },
+    {
+      "tmf921_path": "intentSpecification.validFor.endDateTime",
+      "value": "2024-12-31T23:59:59Z",
+      "type": "str",
+      "reason": "Unknown field not defined in TMF921 standard mapping - no equivalent in 3GPP TS 28.312",
+      "suggested_mapping": "Review if this field should be mapped to intentExpectationContext or handled as metadata"
+    },
+    {
+      "tmf921_path": "intentSpecification.intentExpectations[0].customExpectationField",
+      "value": "also_unmapped",
+      "type": "str",
+      "reason": "Unknown field not defined in TMF921 standard mapping - no equivalent in 3GPP TS 28.312",
+      "suggested_mapping": "Review if this field should be mapped to intentExpectationContext or handled as metadata"
+    },
+    {
+      "tmf921_path": "intentSpecification.intentExpectations[0].validFor",
+      "value": {
+        "startDateTime": "2024-01-01T00:00:00Z",
+        "endDateTime": "2024-12-31T23:59:59Z"
+      },
+      "type": "dict",
+      "reason": "Unknown field not defined in TMF921 standard mapping - no equivalent in 3GPP TS 28.312",
+      "suggested_mapping": "Review if this field should be mapped to intentExpectationContext or handled as metadata"
+    },
+    {
+      "tmf921_path": "intentSpecification.intentExpectations[0].validFor.startDateTime",
+      "value": "2024-01-01T00:00:00Z",
+      "type": "str",
+      "reason": "Unknown field not defined in TMF921 standard mapping - no equivalent in 3GPP TS 28.312",
+      "suggested_mapping": "Review if this field should be mapped to intentExpectationContext or handled as metadata"
+    },
+    {
+      "tmf921_path": "intentSpecification.intentExpectations[0].validFor.endDateTime",
+      "value": "2024-12-31T23:59:59Z",
+      "type": "str",
+      "reason": "Unknown field not defined in TMF921 standard mapping - no equivalent in 3GPP TS 28.312",
+      "suggested_mapping": "Review if this field should be mapped to intentExpectationContext or handled as metadata"
+    },
+    {
+      "tmf921_path": "intentSpecification.intentExpectations[0].expectationTargets[0].customTargetField",
+      "value": "unmapped_target",
+      "type": "str",
+      "reason": "Unknown field not defined in TMF921 standard mapping - no equivalent in 3GPP TS 28.312",
+      "suggested_mapping": "Review if this field should be mapped to intentExpectationContext or handled as metadata"
+    }
+  ],
   "conversion_summary": {
-    "total_fields_processed": 18,
-    "successfully_mapped": 18,
-    "unmapped_count": 0,
-    "mapping_coverage": 1.0
+    "total_fields_processed": 42,
+    "successfully_mapped": 24,
+    "unmapped_count": 18,
+    "mapping_coverage": 0.5714285714285714
   },
-  "timestamp": "2025-09-06T18:20:46.211651Z"
+  "timestamp": "2025-09-06T20:12:17.996130Z"
 }

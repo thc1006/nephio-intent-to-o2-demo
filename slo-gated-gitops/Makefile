@@ -18,6 +18,9 @@ help:
 	@echo "Runtime targets:"
 	@echo "  run-adapter     - Start job-query-adapter server"
 	@echo "  run-gate        - Run gate CLI (set ARGS for parameters)"
+	@echo "  test-gate       - Test gate against running adapter"
+	@echo "  demo-red        - Demo SLO violations (should fail)"
+	@echo "  demo-green      - Demo SLO compliance (should pass)"
 	@echo "  integration-test - Run end-to-end integration tests"
 	@echo ""
 	@echo "Utility:"
@@ -90,6 +93,27 @@ run-gate:
 test-gate:
 	@echo "Testing gate against adapter (requires adapter running at localhost:8080)"
 	$(MAKE) -C gate test-gate
+
+# Demo scenarios
+demo-red:
+	@echo "🔴 Demo RED: Testing SLO violations (should exit 1)"
+	@echo "Testing violating thresholds against adapter..."
+	@if python3 -m gate.gate --slo "latency_p95_ms<=5,success_rate>=0.999,throughput_p95_mbps>=1000" --url http://localhost:8080/metrics; then \
+		echo "❌ UNEXPECTED: Demo should have failed but passed"; \
+		exit 1; \
+	else \
+		echo "✅ Expected failure: SLO violations detected correctly"; \
+	fi
+
+demo-green:
+	@echo "🟢 Demo GREEN: Testing SLO compliance (should exit 0)"
+	@echo "Testing compliant thresholds against adapter..."
+	@if python3 -m gate.gate --slo "latency_p95_ms<=15,success_rate>=0.995,throughput_p95_mbps>=200" --url http://localhost:8080/metrics; then \
+		echo "✅ Expected success: All SLOs passed"; \
+	else \
+		echo "❌ UNEXPECTED: Demo should have passed but failed"; \
+		exit 1; \
+	fi
 
 # Integration test - full pipeline
 integration-test: install

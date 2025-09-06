@@ -8,7 +8,14 @@ help: ## Show this help
 
 install: ## Install cert-manager in cluster
 	@echo "Installing cert-manager $(CERT_MANAGER_VERSION)..."
+	@echo "Using kubectl method (recommended):"
 	kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/$(CERT_MANAGER_VERSION)/cert-manager.yaml
+	@echo ""
+	@echo "Alternative Helm method (if preferred):"
+	@echo "helm repo add jetstack https://charts.jetstack.io"
+	@echo "helm repo update"
+	@echo "helm install cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --version $(CERT_MANAGER_VERSION) --set installCRDs=true"
+	@echo ""
 	@echo "Waiting for cert-manager to be ready..."
 	kubectl wait --for=condition=Available --timeout=300s -n cert-manager deployment/cert-manager
 	kubectl wait --for=condition=Available --timeout=300s -n cert-manager deployment/cert-manager-webhook

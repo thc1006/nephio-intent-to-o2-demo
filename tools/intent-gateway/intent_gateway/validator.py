@@ -38,13 +38,17 @@ class ValidationResult:
 class TMF921Validator:
     """TMF921 Intent JSON Schema validator with TIO mode support."""
 
-    def __init__(self, schema_path: Path):
+    def __init__(self, schema_path: Path | None = None):
         """
         Initialize validator with TMF921 schema.
 
         Args:
-            schema_path: Path to the TMF921 JSON schema file
+            schema_path: Path to the TMF921 JSON schema file. If None, defaults to guardrails/schemas/tmf921.json
         """
+        if schema_path is None:
+            # Default to the standard schema location
+            schema_path = Path(__file__).parent.parent.parent.parent / "guardrails" / "schemas" / "tmf921.json"
+        
         self.schema_path = schema_path
         self.schema = self._load_schema()
         self.tio_mode: str | None = None

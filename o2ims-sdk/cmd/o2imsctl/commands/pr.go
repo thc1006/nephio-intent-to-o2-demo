@@ -155,6 +155,11 @@ func runProvisioningRequestCreate(fromFile, output string) error {
 		return fmt.Errorf("failed to read ProvisioningRequest: %w", err)
 	}
 
+	// Show fake mode indicator if in fake mode
+	if globalOpts.Fake {
+		fmt.Println("FAKE MODE: Would create ProvisioningRequest from", fromFile)
+	}
+
 	// Get the appropriate client (fake or real)
 	o2imsClient, err := getO2IMSClient()
 	if err != nil {
@@ -174,6 +179,11 @@ func runProvisioningRequestCreate(fromFile, output string) error {
 }
 
 func runProvisioningRequestGet(name, output string) error {
+	// Show fake mode indicator if in fake mode
+	if globalOpts.Fake {
+		fmt.Printf("FAKE MODE: Getting ProvisioningRequest %s\n", name)
+	}
+
 	// Get the appropriate client (fake or real)
 	o2imsClient, err := getO2IMSClient()
 	if err != nil {
@@ -192,6 +202,11 @@ func runProvisioningRequestGet(name, output string) error {
 }
 
 func runProvisioningRequestList(output string) error {
+	// Show fake mode indicator if in fake mode
+	if globalOpts.Fake {
+		fmt.Println("FAKE MODE: Listing ProvisioningRequests")
+	}
+
 	// Get the appropriate client (fake or real)
 	o2imsClient, err := getO2IMSClient()
 	if err != nil {
@@ -210,6 +225,11 @@ func runProvisioningRequestList(output string) error {
 }
 
 func runProvisioningRequestDelete(name string) error {
+	// Show fake mode indicator if in fake mode
+	if globalOpts.Fake {
+		fmt.Printf("FAKE MODE: Would delete ProvisioningRequest %s\n", name)
+	}
+
 	// Get the appropriate client (fake or real)
 	o2imsClient, err := getO2IMSClient()
 	if err != nil {
@@ -227,6 +247,11 @@ func runProvisioningRequestDelete(name string) error {
 }
 
 func runProvisioningRequestWait(name, condition string, timeout time.Duration) error {
+	// Show fake mode indicator if in fake mode
+	if globalOpts.Fake {
+		fmt.Printf("FAKE MODE: Would wait for ProvisioningRequest %s to reach condition %s\n", name, condition)
+	}
+
 	// Get the appropriate client (fake or real)
 	o2imsClient, err := getO2IMSClient()
 	if err != nil {

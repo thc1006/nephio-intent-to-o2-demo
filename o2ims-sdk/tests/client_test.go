@@ -14,17 +14,17 @@ import (
 
 var _ = Describe("O2 IMS Client", func() {
 	Context("When creating a new client", func() {
-		It("Should fail with unimplemented error", func() {
+		It("Should create client successfully with valid config", func() {
 			By("Attempting to create a new O2 IMS client")
 			config := client.ClientConfig{
 				RestConfig: cfg,
 				Namespace:  "default",
 			}
 
-			// This should fail with "not implemented" error in RED phase
-			_, err := client.NewO2IMSClient(config)
-			Expect(err).Should(HaveOccurred())
-			Expect(err.Error()).Should(ContainSubstring("not implemented"))
+			// This should succeed since we have a valid envtest config
+			c, err := client.NewO2IMSClient(config)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(c).ShouldNot(BeNil())
 		})
 	})
 
