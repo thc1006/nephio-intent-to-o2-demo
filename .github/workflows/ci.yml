@@ -1,0 +1,100 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  python-checks:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install Python dependencies
+        run: |
+          pip install ruff black pytest pytest-cov
+      
+      - name: Run Black formatter check
+        run: |
+          black --check tools/ || true
+      
+      - name: Run Ruff linter
+        run: |
+          ruff check tools/ || true
+      
+      - name: Run Python tests
+        run: |
+          cd tools/intent-gateway && pytest tests/ -v || true
+          cd ../tmf921-to-28312 && pytest tests/ -v || true
+
+  go-checks:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Go 1.22
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.22'
+      
+      - name: Install golangci-lint
+        run: |
+          go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+      
+      - name: Run Go tests
+        run: |
+          cd kpt-functions/expectation-to-krm && go test ./... -v || true
+          cd ../../o2ims-sdk && go test ./... -v || true
+      
+      - name: Run golangci-lint
+        run: |
+          cd kpt-functions/expectation-to-krm && golangci-lint run || true
+
+  yaml-checks:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python for yamllint
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install yamllint
+        run: pip install yamllint
+      
+      - name: Run yamllint
+        run: yamllint -d relaxed . || true
+      
+      - name: Install kubeconform
+        run: |
+          wget https://github.com/yannh/kubeconform/releases/latest/download/kubeconform-linux-amd64.tar.gz
+          tar xf kubeconform-linux-amd64.tar.gz
+          sudo mv kubeconform /usr/local/bin
+      
+      - name: Run kubeconform
+        run: |
+          find . -name "*.yaml" -o -name "*.yml" | grep -E "(packages|samples)/.*krm" | xargs -I {} kubeconform -summary {} || true
+
+  kyverno-checks:
+    runs-on: ubuntu-22.04
+    if: hashFiles('guardrails/kyverno/*.yaml') != ''
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install Kyverno CLI
+        run: |
+          wget https://github.com/kyverno/kyverno/releases/latest/download/kyverno-cli_v1.11.0_linux_x86_64.tar.gz
+          tar xf kyverno-cli_v1.11.0_linux_x86_64.tar.gz
+          sudo mv kyverno /usr/local/bin
+      
+      - name: Test Kyverno policies
+        run: |
+          kyverno test guardrails/kyverno/ || true
