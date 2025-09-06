@@ -30,3 +30,40 @@ go.work.sum
 # Editor/IDE
 # .idea/
 # .vscode/
+
+# Large binaries and build artifacts
+**/bin/k8s/
+**/bin/controller-gen
+**/bin/setup-envtest
+**/bin/o2imsctl
+**/*.bin
+**/*.exe
+**/kube-apiserver
+**/kubectl
+**/etcd
+
+# Python virtual environments
+**/.venv/
+**/venv/
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+
+# Node.js
+**/node_modules/
+
+# Build artifacts
+**/artifacts/
+**/build/
+**/dist/
+**/.coverage
+**/.pytest_cache/
+
+# Temporary files
+**/*.tmp
+**/*.temp
+**/*.swp
+**/*.bak
+
+# Claude agents (can be regenerated)
+.claude/agents/
