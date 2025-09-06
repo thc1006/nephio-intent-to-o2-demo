@@ -1,0 +1,25 @@
+# Test deployment with unsigned images
+# This should FAIL when Sigstore policy-controller is enforced
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-unsigned-app
+  namespace: production
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: test-unsigned
+  template:
+    metadata:
+      labels:
+        app: test-unsigned
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest  # Unsigned image - should be REJECTED
+        ports:
+        - containerPort: 80
+      - name: sidecar
+        image: busybox:1.35  # Another unsigned image
+        command: ["sleep", "3600"]

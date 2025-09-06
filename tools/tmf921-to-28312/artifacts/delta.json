@@ -1,0 +1,10 @@
+{
+  "unmapped_fields": [],
+  "conversion_summary": {
+    "total_fields_processed": 18,
+    "successfully_mapped": 18,
+    "unmapped_count": 0,
+    "mapping_coverage": 1.0
+  },
+  "timestamp": "2025-09-06T18:20:46.211651Z"
+}

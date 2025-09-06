@@ -1,0 +1,56 @@
+{
+  "expectationId": "edge-latency-expectation-001",
+  "expectationObject": {
+    "objectType": "O-RAN-DU",
+    "objectInstance": "edge-du-cluster-01",
+    "objectParameters": {
+      "deployment": "edge",
+      "location": "cell-site-tower-001",
+      "resources": {
+        "cpu": "4",
+        "memory": "8Gi",
+        "storage": "100Gi"
+      }
+    }
+  },
+  "expectationTarget": [
+    {
+      "targetName": "user-plane-latency",
+      "targetCondition": "LessThanOrEqual",
+      "targetValue": 1,
+      "targetContexts": [
+        {
+          "contextAttribute": "measurement-unit",
+          "contextCondition": "Equal",
+          "contextValueType": "string",
+          "contextValue": "milliseconds"
+        },
+        {
+          "contextAttribute": "percentile",
+          "contextCondition": "Equal",
+          "contextValueType": "number",
+          "contextValue": 95
+        }
+      ]
+    },
+    {
+      "targetName": "availability",
+      "targetCondition": "GreaterThanOrEqual",
+      "targetValue": 99.99,
+      "targetContexts": [
+        {
+          "contextAttribute": "measurement-unit",
+          "contextCondition": "Equal",
+          "contextValueType": "string", 
+          "contextValue": "percentage"
+        }
+      ]
+    }
+  ],
+  "expectationContext": {
+    "timeWindow": "1hour",
+    "monitoringInterval": "30seconds",
+    "o2imsProvider": "edge-o2ims-001",
+    "deployment-mode": "edge"
+  }
+}
