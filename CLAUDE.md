@@ -28,6 +28,7 @@ Repository Layout (do not move without a dedicated PR):
   samples/{tmf921, 28312, krm}/
   scripts/
   docs/
+  .github/workflows/
 
 Coding Style:
 - Python 3.11 (ruff+black+pytest), Go 1.22 (gofmt+golangci-lint+testing), YAML (kubeconform+yamllint).
