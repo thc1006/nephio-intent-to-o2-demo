@@ -1,0 +1,54 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: expectation-cn-cap-001
+  namespace: intent-to-krm
+  labels:
+    expectation.nephio.org/id: cn-cap-001
+    expectation.nephio.org/object-type: CoreNetwork
+    expectation.nephio.org/type: ServiceCapacity
+  annotations:
+    expectation.nephio.org/context-attribute: networkSlice
+    expectation.nephio.org/context-condition: EQUAL
+    expectation.nephio.org/target-attribute: latency
+    expectation.nephio.org/target-condition: LESS_THAN
+    expectation.nephio.org/target-value: 1ms
+data:
+  expectation.json: |-
+    {
+      "intentExpectationId": "cn-cap-001",
+      "intentExpectationType": "ServiceCapacity",
+      "intentExpectationContext": {
+        "contextAttribute": "networkSlice",
+        "contextCondition": "EQUAL",
+        "contextValueRange": ["slice-urllc"]
+      },
+      "intentExpectationTarget": {
+        "targetAttribute": "latency",
+        "targetCondition": "LESS_THAN",
+        "targetValue": "1ms"
+      },
+      "intentExpectationObject": {
+        "objectType": "CoreNetwork",
+        "objectInstance": "5gc-upf-001"
+      }
+    }
+---
+apiVersion: cn.nephio.org/v1alpha1
+kind: CNBundle
+metadata:
+  name: cn-bundle-cn-cap-001
+  namespace: intent-to-krm
+  labels:
+    expectation.nephio.org/id: cn-cap-001
+    expectation.nephio.org/type: ServiceCapacity
+spec:
+  expectationId: cn-cap-001
+  expectationType: ServiceCapacity
+  networkSlices:
+    - slice-urllc
+  capacity:
+    latency:
+      condition: LESS_THAN
+      value: 1ms
+  objectInstance: 5gc-upf-001
