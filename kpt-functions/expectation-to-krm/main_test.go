@@ -42,20 +42,38 @@ func TestExpectationToKRMConversion(t *testing.T) {
 		name         string
 		fixtureFile  string
 		goldenDir    string
+		inputType    string  // "28312" or "tmf921"
 		expectError  bool
 	}{
 		{
 			name:        "Edge scenario - O-RAN DU with latency expectations",
 			fixtureFile: "edge-scenario.json",
 			goldenDir:   "edge",
+			inputType:   "28312",
 			expectError: false, // GREEN test - should pass now
 		},
 		{
 			name:        "Central scenario - O-RAN CU-CP with throughput expectations",
 			fixtureFile: "central-scenario.json", 
 			goldenDir:   "central",
+			inputType:   "28312",
 			expectError: false, // GREEN test - should pass now
 		},
+		// TODO: Enable these tests after generating golden files
+		// {
+		// 	name:        "TMF921 v5 URLLC Intent transformation",
+		// 	fixtureFile: "tmf921-urllc-scenario.json",
+		// 	goldenDir:   "tmf921-urllc",
+		// 	inputType:   "tmf921",
+		// 	expectError: false,
+		// },
+		// {
+		// 	name:        "Enhanced 3GPP TS 28.312 with SLO and traceability",
+		// 	fixtureFile: "enhanced-28312-scenario.json",
+		// 	goldenDir:   "enhanced-28312",
+		// 	inputType:   "28312",
+		// 	expectError: false,
+		// },
 	}
 
 	for _, tc := range testCases {
@@ -64,7 +82,7 @@ func TestExpectationToKRMConversion(t *testing.T) {
 			fixtureData := loadExpectationFixture(t, tc.fixtureFile)
 			
 			// Create input resource list with expectation as ConfigMap
-			inputRL := createInputResourceList(t, fixtureData)
+			inputRL := createInputResourceList(t, fixtureData, tc.inputType)
 			
 			// Run the kpt function
 			outputRL, err := runKptFunction(t, inputRL)
@@ -126,30 +144,51 @@ func loadExpectationFixture(t *testing.T, filename string) []byte {
 		t.Fatalf("Failed to load fixture %s: %v", filename, err)
 	}
 	
-	// Validate it's valid JSON
-	var expectation Expectation28312
-	if err := json.Unmarshal(data, &expectation); err != nil {
-		t.Fatalf("Invalid expectation JSON in %s: %v", filename, err)
+	// Validate it's valid JSON based on expected input type
+	// For TMF921 fixtures, we should validate as TMF921Intent
+	if strings.Contains(filename, "tmf921") {
+		var intent TMF921Intent
+		if err := json.Unmarshal(data, &intent); err != nil {
+			t.Fatalf("Invalid TMF921 intent JSON in %s: %v", filename, err)
+		}
+	} else {
+		// For 3GPP TS 28.312 fixtures
+		var expectation Expectation28312
+		if err := json.Unmarshal(data, &expectation); err != nil {
+			t.Fatalf("Invalid expectation JSON in %s: %v", filename, err)
+		}
 	}
 	
 	return data
 }
 
-func createInputResourceList(t *testing.T, expectationData []byte) *framework.ResourceList {
-	// Create a ConfigMap containing the expectation JSON
+func createInputResourceList(t *testing.T, inputData []byte, inputType string) *framework.ResourceList {
+	// Create a ConfigMap containing the input JSON based on type
+	var annotation, dataKey string
+	switch inputType {
+	case "28312":
+		annotation = "expectation.28312.3gpp.org/input"
+		dataKey = "expectation.json"
+	case "tmf921":
+		annotation = "intent.tmf921.v5/input"
+		dataKey = "intent.json"
+	default:
+		t.Fatalf("Unsupported input type: %s", inputType)
+	}
+	
 	configMapYAML := fmt.Sprintf(`apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: expectation-input
+  name: %s-input
   namespace: default
   annotations:
     config.kubernetes.io/function: |
       container:
         image: expectation-to-krm:latest
-    expectation.28312.3gpp.org/input: "true"
+    %s: "true"
 data:
-  expectation.json: |
-    %s`, strings.ReplaceAll(string(expectationData), "\n", "\n    "))
+  %s: |
+    %s`, inputType, annotation, dataKey, strings.ReplaceAll(string(inputData), "\n", "\n    "))
 	
 	node, err := yaml.Parse(configMapYAML)
 	if err != nil {

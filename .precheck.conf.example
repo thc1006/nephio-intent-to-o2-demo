@@ -1,0 +1,57 @@
+# Precheck Configuration for Nephio Intent-to-O2 Demo
+# Copy this file to .precheck.conf and customize for your environment
+
+# Change size validation thresholds
+MAX_CHANGE_SIZE_LINES=500
+MAX_CHANGE_SIZE_FILES=20
+
+# Container registry allowlist (used for image validation)
+ALLOWED_REGISTRIES=gcr.io,ghcr.io,registry.k8s.io,docker.io/library,quay.io,docker.io/nephio,docker.io/oransc
+
+# Strict mode enforcement
+# true: Fail precheck on any violation (production)
+# false: Allow warnings and continue (development)
+STRICT_MODE=false
+
+# Cosign signature verification requirements
+# true: Require image signatures (production)
+# false: Optional signature verification (development)
+COSIGN_REQUIRED=false
+
+# Allow unsigned images in precheck
+# true: Development mode - allow unsigned images
+# false: Production mode - require signed images
+ALLOW_UNSIGNED=true
+
+# Security report integration
+# true: Run comprehensive security report as part of precheck
+# false: Skip security report integration
+ENABLE_SECURITY_REPORT_INTEGRATION=true
+
+# Logging level
+# INFO: Standard colored output
+# JSON: Machine-readable JSON for CI/CD
+LOG_LEVEL=INFO
+
+# Example configurations for different environments:
+
+# Development environment
+# MAX_CHANGE_SIZE_LINES=1000
+# MAX_CHANGE_SIZE_FILES=50
+# STRICT_MODE=false
+# COSIGN_REQUIRED=false
+# ALLOW_UNSIGNED=true
+# ENABLE_SECURITY_REPORT_INTEGRATION=true
+
+# Production environment  
+# MAX_CHANGE_SIZE_LINES=200
+# MAX_CHANGE_SIZE_FILES=10
+# STRICT_MODE=true
+# COSIGN_REQUIRED=true
+# ALLOW_UNSIGNED=false
+# ENABLE_SECURITY_REPORT_INTEGRATION=true
+
+# CI/CD environment
+# STRICT_MODE=true
+# LOG_LEVEL=JSON
+# ENABLE_SECURITY_REPORT_INTEGRATION=true

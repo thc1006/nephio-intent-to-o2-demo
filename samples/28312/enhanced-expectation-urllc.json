@@ -1,0 +1,274 @@
+{
+  "expectationId": "enhanced-urllc-expectation-001",
+  "expectationObject": {
+    "objectType": "O-RAN-DU",
+    "objectInstance": "urllc-du-enhanced-001",
+    "objectDescription": "Enhanced O-RAN DU with comprehensive SLO monitoring",
+    "objectParameters": {
+      "deployment": "edge",
+      "location": "metro-cell-001",
+      "resources": {
+        "cpu": "8",
+        "memory": "16Gi",
+        "storage": "200Gi"
+      },
+      "hwAcceleration": "dpdk-enabled",
+      "networkSlicing": "urllc-slice-001"
+    }
+  },
+  "expectationTarget": [
+    {
+      "targetName": "user-plane-latency",
+      "targetCondition": "LessThanOrEqual",
+      "targetValue": 5,
+      "targetDescription": "95th percentile user-plane latency",
+      "targetUnit": "ms",
+      "targetValueType": "numeric",
+      "targetContexts": [
+        {
+          "contextAttribute": "percentile",
+          "contextCondition": "Equal",
+          "contextValueType": "number",
+          "contextValue": 95,
+          "contextDescription": "95th percentile measurement"
+        },
+        {
+          "contextAttribute": "measurement-window",
+          "contextCondition": "Equal",
+          "contextValueType": "string",
+          "contextValue": "5m",
+          "contextDescription": "5-minute sliding window"
+        }
+      ]
+    },
+    {
+      "targetName": "availability",
+      "targetCondition": "GreaterThanOrEqual",
+      "targetValue": 99.999,
+      "targetDescription": "Service availability percentage",
+      "targetUnit": "percentage",
+      "targetValueType": "numeric",
+      "targetContexts": [
+        {
+          "contextAttribute": "measurement-window",
+          "contextCondition": "Equal",
+          "contextValueType": "string",
+          "contextValue": "1h",
+          "contextDescription": "1-hour measurement window"
+        }
+      ]
+    },
+    {
+      "targetName": "throughput",
+      "targetCondition": "GreaterThanOrEqual",
+      "targetValue": 1000,
+      "targetDescription": "95th percentile sustained throughput",
+      "targetUnit": "Mbps",
+      "targetValueType": "numeric",
+      "targetContexts": [
+        {
+          "contextAttribute": "percentile",
+          "contextCondition": "Equal",
+          "contextValueType": "number",
+          "contextValue": 95,
+          "contextDescription": "95th percentile sustained throughput"
+        }
+      ]
+    }
+  ],
+  "expectationContext": {
+    "timeWindow": "1hour",
+    "monitoringInterval": "30seconds",
+    "o2imsProvider": "enhanced-o2ims-001",
+    "deployment-mode": "edge",
+    "networkSlice": "slice-urllc-enhanced-001",
+    "region": "metro-region-001",
+    "measurementJobId": "urllc-slo-monitoring-001"
+  },
+  "intentId": "intent-urllc-enhanced-001",
+  "version": "2.0",
+  "priority": 1,
+  "lifecyclePhase": "active",
+  "creationTimestamp": "2024-01-01T00:00:00Z",
+  "lastModified": "2024-01-01T00:00:00Z",
+  "traceabilityInfo": {
+    "sourceIntentId": "intent-urllc-enhanced-001",
+    "sourceSystem": "TMF921-v5",
+    "sourceVersion": "2.0",
+    "transformationId": "tmf921-to-28312-urllc-001",
+    "mappingRules": {
+      "intent.id": "expectation.intentId",
+      "intentExpectation.id": "expectation.expectationId",
+      "intentExpectation.expectationTargets": "expectation.expectationTarget"
+    },
+    "correlationIds": ["intent-urllc-enhanced-001", "expectation-latency-p95-001"]
+  },
+  "sloConfiguration": {
+    "sloTargets": [
+      {
+        "metricName": "latency",
+        "targetValue": 5.0,
+        "threshold": "lessThan",
+        "unit": "ms",
+        "percentile": 95,
+        "description": "95th percentile user-plane latency"
+      },
+      {
+        "metricName": "availability",
+        "targetValue": 99.999,
+        "threshold": "greaterThan",
+        "unit": "percentage",
+        "description": "Service availability percentage"
+      },
+      {
+        "metricName": "throughput",
+        "targetValue": 1000.0,
+        "threshold": "greaterThan",
+        "unit": "Mbps",
+        "percentile": 95,
+        "description": "95th percentile sustained throughput"
+      }
+    ],
+    "measurementWindow": "5m",
+    "reportingInterval": "30s",
+    "violationActions": [
+      {
+        "actionType": "alert",
+        "actionConfig": {
+          "severity": "critical",
+          "channels": ["monitoring", "o2ims"]
+        },
+        "triggerAfter": "2m"
+      },
+      {
+        "actionType": "rollback",
+        "actionConfig": {
+          "automatic": true,
+          "strategy": "immediate"
+        },
+        "triggerAfter": "5m"
+      }
+    ],
+    "escalationPolicy": {
+      "levels": [
+        {
+          "level": 1,
+          "timeWindow": "5m",
+          "actions": [
+            {
+              "actionType": "notify",
+              "actionConfig": {
+                "channels": ["slack", "email"]
+              }
+            }
+          ],
+          "notifications": [
+            {
+              "channel": "o2ims-webhook",
+              "recipients": ["slo-monitor@telco-alpha.com"],
+              "template": "slo-violation-urllc",
+              "metadata": {
+                "urgency": "high",
+                "service": "urllc"
+              }
+            }
+          ]
+        },
+        {
+          "level": 2,
+          "timeWindow": "10m",
+          "actions": [
+            {
+              "actionType": "scale",
+              "actionConfig": {
+                "direction": "up",
+                "increment": "2"
+              }
+            }
+          ]
+        }
+      ],
+      "maxEscalations": 3
+    }
+  },
+  "rolloutStrategy": {
+    "strategyType": "canary",
+    "parameters": {
+      "canaryPercentage": "10",
+      "progressDeadline": "600s",
+      "stableRevisionReplicas": "3"
+    },
+    "rollbackPolicy": {
+      "autoRollback": true,
+      "triggerConditions": [
+        {
+          "conditionType": "sloViolation",
+          "threshold": "critical",
+          "timeWindow": "5m"
+        },
+        {
+          "conditionType": "errorRate",
+          "threshold": 0.05,
+          "timeWindow": "3m"
+        }
+      ],
+      "rollbackTimeout": "300s"
+    },
+    "gatingPolicy": {
+      "gates": [
+        {
+          "gateType": "slo",
+          "gateName": "latency-slo-gate",
+          "gateConfig": {
+            "metricName": "latency",
+            "threshold": 5.0,
+            "percentile": 95,
+            "validationWindow": "5m"
+          },
+          "required": true,
+          "timeout": "10m"
+        },
+        {
+          "gateType": "slo", 
+          "gateName": "availability-slo-gate",
+          "gateConfig": {
+            "metricName": "availability",
+            "threshold": 99.999,
+            "validationWindow": "10m"
+          },
+          "required": true,
+          "timeout": "15m"
+        },
+        {
+          "gateType": "security",
+          "gateName": "vulnerability-scan",
+          "gateConfig": {
+            "scanType": "container",
+            "severityThreshold": "high"
+          },
+          "required": false,
+          "timeout": "5m"
+        }
+      ],
+      "allGatesRequired": false,
+      "gateTimeout": "30m"
+    }
+  },
+  "deploymentScope": {
+    "targetNamespaces": ["o-ran-urllc", "o-ran-edge"],
+    "targetClusters": ["metro-cluster-001", "edge-cluster-002"],
+    "targetRegions": ["metro-region-001"],
+    "labelSelectors": {
+      "intent.tmf921.v5/id": "intent-urllc-enhanced-001",
+      "intent.tmf921.v5/type": "ServiceIntent",
+      "intent.tmf921.v5/category": "Performance",
+      "service-type": "URLLC",
+      "network-slice": "slice-urllc-enhanced-001"
+    },
+    "annotationFilters": {
+      "slo.28312.3gpp.org/enabled": "true",
+      "rollout.28312.3gpp.org/strategy": "canary"
+    },
+    "excludePatterns": ["test-*", "*-staging"]
+  }
+}

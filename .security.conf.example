@@ -1,0 +1,61 @@
+# Security Configuration for Nephio Intent-to-O2 Demo
+# Copy this file to .security.conf and customize for your environment
+
+# Container Registry Allowlist (comma-separated)
+# Production: strict list of trusted registries only
+# Development: broader list including development registries
+ALLOWED_REGISTRIES=gcr.io,ghcr.io,registry.k8s.io,quay.io,docker.io/library,docker.io/nephio,docker.io/oransc
+
+# Security Policy Enforcement Level
+# strict: Production mode - strict enforcement, all images must be signed
+# permissive: Development mode - warnings for violations
+# demo: Testing mode - minimal enforcement
+SECURITY_POLICY_LEVEL=permissive
+
+# Allow unsigned container images
+# false: Production - require all images to be signed
+# true: Development - allow unsigned images with warnings
+ALLOW_UNSIGNED=true
+
+# Cosign verification settings
+COSIGN_TIMEOUT=30
+PARALLEL_SCANS=4
+COSIGN_REQUIRED=false
+
+# Auto-install cosign in CI environments
+AUTO_INSTALL_COSIGN=false
+
+# Enable comprehensive security report integration in precheck
+ENABLE_SECURITY_REPORT_INTEGRATION=true
+
+# Change size limits for precheck
+MAX_CHANGE_SIZE_LINES=500
+MAX_CHANGE_SIZE_FILES=20
+
+# Strict mode for precheck (fail fast on any violation)
+STRICT_MODE=false
+
+# Logging configuration
+# INFO: Human-readable output
+# JSON: Machine-readable JSON output for CI/CD
+LOG_LEVEL=INFO
+
+# Example configurations:
+
+# Development configuration
+# ALLOWED_REGISTRIES=gcr.io,ghcr.io,registry.k8s.io,quay.io,docker.io/library,docker.io/nephio,docker.io/oransc
+# SECURITY_POLICY_LEVEL=permissive  
+# ALLOW_UNSIGNED=true
+# STRICT_MODE=false
+
+# Production configuration
+# ALLOWED_REGISTRIES=gcr.io,ghcr.io,registry.k8s.io,quay.io
+# SECURITY_POLICY_LEVEL=strict
+# ALLOW_UNSIGNED=false
+# COSIGN_REQUIRED=true
+# STRICT_MODE=true
+
+# CI/CD configuration
+# AUTO_INSTALL_COSIGN=true
+# LOG_LEVEL=JSON
+# ENABLE_SECURITY_REPORT_INTEGRATION=true

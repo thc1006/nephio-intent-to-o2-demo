@@ -1,0 +1,26 @@
+# Example configuration for rollback.sh
+# Copy to .rollback.conf and modify as needed
+
+# Repository settings
+EDGE_REPO_DIR=${HOME}/edge1-config
+
+# Rollback strategy configuration
+ROLLBACK_STRATEGY=revert
+KNOWN_GOOD_TAG=stable
+MAX_ROLLBACK_COMMITS=5
+
+# Behavior settings
+DRY_RUN=false
+AUTO_PUSH=true
+
+# Notifications (optional)
+# NOTIFICATION_WEBHOOK=https://hooks.slack.com/services/...
+
+# Logging
+LOG_LEVEL=INFO
+
+# For production, consider:
+# ROLLBACK_STRATEGY=reset
+# KNOWN_GOOD_TAG=production-stable
+# LOG_LEVEL=JSON
+# AUTO_PUSH=false  # Require manual verification
