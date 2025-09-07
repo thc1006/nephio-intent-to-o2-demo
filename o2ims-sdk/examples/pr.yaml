@@ -1,7 +1,7 @@
 # Example ProvisioningRequest for O-RAN/5G RAN deployment
 # This represents a comprehensive O2 IMS ProvisioningRequest following
 # O-RAN specifications and Nephio best practices
-apiVersion: o2ims.provisioning.oran.org/v1alpha1
+apiVersion: o2ims.oran.org/v1alpha1
 kind: ProvisioningRequest
 metadata:
   name: example-pr
@@ -20,8 +20,8 @@ metadata:
     intent.nephio.org/source: "tmf921-intent-12345"
     intent.nephio.org/created-by: "intent-gateway"
     # O2 IMS metadata
-    o2ims.provisioning.oran.org/deployment-id: "deployment-ran-001"
-    o2ims.provisioning.oran.org/smo-reference: "smo://nephio-demo/v1"
+    o2ims.oran.org/deployment-id: "deployment-ran-001"
+    o2ims.oran.org/smo-reference: "smo://nephio-demo/v1"
     description: |
       Provision a complete O-RAN Central Unit (CU) with both Control Plane (CU-CP) 
       and User Plane (CU-UP) functions for 5G RAN deployment in edge location.

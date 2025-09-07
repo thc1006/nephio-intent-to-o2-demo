@@ -1,0 +1,84 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: o2ims
+
+resources:
+  - ocloud.yaml
+  - template-info.yaml
+  - provisioning-request.yaml
+
+# Common labels applied to all resources
+commonLabels:
+  app.kubernetes.io/name: ocloud-provisioning
+  app.kubernetes.io/instance: edge-1
+  app.kubernetes.io/component: o2ims
+  app.kubernetes.io/part-of: nephio
+  app.kubernetes.io/managed-by: focom
+
+# Common annotations
+commonAnnotations:
+  deployment.nephio.org/timestamp: "2025-01-07"
+  deployment.nephio.org/version: "v1.0.0"
+
+# Patches for environment-specific configurations
+patches:
+  # Patch for development environment
+  - target:
+      kind: OCloud
+      name: edge-ocloud
+    patch: |-
+      - op: replace
+        path: /spec/endpoints/0/url
+        value: https://172.16.4.45:6443
+  
+  # Patch for ProvisioningRequest parameters
+  - target:
+      kind: ProvisioningRequest
+      name: edge-5g-deployment
+    patch: |-
+      - op: replace
+        path: /spec/parameters/du_replicas
+        value: 3
+      - op: replace
+        path: /spec/parameters/cu_replicas
+        value: 2
+
+# Config map for edge cluster kubeconfig (example)
+configMapGenerator:
+  - name: ocloud-config
+    literals:
+      - cluster.name=edge-ocloud
+      - cluster.region=us-west
+      - cluster.site=edge-1
+      - cluster.type=kubernetes
+
+# Secret generator (commented out - actual secret created by script)
+# secretGenerator:
+#   - name: edge-cluster-kubeconfig
+#     files:
+#       - kubeconfig=/tmp/kubeconfig-edge.yaml
+#     type: Opaque
+
+# Variable replacements
+vars:
+  - name: CLUSTER_NAME
+    objref:
+      kind: OCloud
+      name: edge-ocloud
+      apiVersion: o2ims.oran.org/v1
+    fieldref:
+      fieldpath: metadata.name
+  - name: TEMPLATE_NAME
+    objref:
+      kind: TemplateInfo
+      name: edge-5g-template
+      apiVersion: focom.oran.org/v1
+    fieldref:
+      fieldpath: metadata.name
+
+# Resource ordering
+buildMetadata:
+  - originAnnotations
+  - transformerAnnotations
+  - internalAnnotations

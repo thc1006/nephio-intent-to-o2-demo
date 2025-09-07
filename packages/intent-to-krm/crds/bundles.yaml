@@ -1,0 +1,216 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: cnbundles.cn.nephio.org
+spec:
+  group: cn.nephio.org
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true
+    schema:
+      openAPIV3Schema:
+        type: object
+        properties:
+          apiVersion:
+            type: string
+          kind:
+            type: string
+          metadata:
+            type: object
+          spec:
+            type: object
+            properties:
+              expectationId:
+                type: string
+              expectationType:
+                type: string
+              networkSlices:
+                type: array
+                items:
+                  type: string
+              objectInstance:
+                type: string
+              capacity:
+                type: object
+                properties:
+                  latency:
+                    type: object
+                    properties:
+                      condition:
+                        type: string
+                      value:
+                        type: string
+                  bandwidth:
+                    type: object
+                    properties:
+                      condition:
+                        type: string
+                      value:
+                        type: string
+                  jitter:
+                    type: object
+                    properties:
+                      condition:
+                        type: string
+                      value:
+                        type: string
+                  packetLoss:
+                    type: object
+                    properties:
+                      condition:
+                        type: string
+                      value:
+                        type: string
+          status:
+            type: object
+  scope: Namespaced
+  names:
+    plural: cnbundles
+    singular: cnbundle
+    kind: CNBundle
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: ranbundles.ran.nephio.org
+spec:
+  group: ran.nephio.org
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true
+    schema:
+      openAPIV3Schema:
+        type: object
+        properties:
+          apiVersion:
+            type: string
+          kind:
+            type: string
+          metadata:
+            type: object
+          spec:
+            type: object
+            properties:
+              expectationId:
+                type: string
+              expectationType:
+                type: string
+              networkFunctions:
+                type: array
+                items:
+                  type: string
+              objectInstance:
+                type: string
+              performance:
+                type: object
+                properties:
+                  throughput:
+                    type: object
+                    properties:
+                      condition:
+                        type: string
+                      value:
+                        type: string
+                  subscribers:
+                    type: object
+                    properties:
+                      condition:
+                        type: string
+                      value:
+                        type: integer
+                  coverage:
+                    type: object
+                    properties:
+                      condition:
+                        type: string
+                      value:
+                        type: string
+                  frequency:
+                    type: object
+                    properties:
+                      condition:
+                        type: string
+                      value:
+                        type: string
+          status:
+            type: object
+  scope: Namespaced
+  names:
+    plural: ranbundles
+    singular: ranbundle
+    kind: RANBundle
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: tnbundles.tn.nephio.org
+spec:
+  group: tn.nephio.org
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true
+    schema:
+      openAPIV3Schema:
+        type: object
+        properties:
+          apiVersion:
+            type: string
+          kind:
+            type: string
+          metadata:
+            type: object
+          spec:
+            type: object
+            properties:
+              expectationId:
+                type: string
+              expectationType:
+                type: string
+              transportNetworks:
+                type: array
+                items:
+                  type: string
+              objectInstance:
+                type: string
+              coverage:
+                type: object
+                properties:
+                  availability:
+                    type: object
+                    properties:
+                      condition:
+                        type: string
+                      value:
+                        type: string
+                  sites:
+                    type: object
+                    properties:
+                      condition:
+                        type: string
+                      value:
+                        type: integer
+              bandwidth:
+                type: object
+                properties:
+                  condition:
+                    type: string
+                  value:
+                    type: string
+              redundancy:
+                type: object
+                properties:
+                  condition:
+                    type: string
+                  value:
+                    type: string
+          status:
+            type: object
+  scope: Namespaced
+  names:
+    plural: tnbundles
+    singular: tnbundle
+    kind: TNBundle

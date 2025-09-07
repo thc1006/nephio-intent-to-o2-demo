@@ -253,6 +253,143 @@ kubectl apply -f o2ims-sdk/examples/pr-minimal.yaml
 ./scripts/p0.3_o2ims_install.sh --timeout 600
 ```
 
+## CLI Usage with o2imsctl
+
+### Kubeconfig Support
+
+The `o2imsctl` CLI supports multiple ways to specify the Kubernetes configuration:
+
+1. **Command-line flag** (highest priority):
+```bash
+o2imsctl cluster health --kubeconfig /tmp/kubeconfig-edge.yaml
+```
+
+2. **Environment variable**:
+```bash
+export KUBECONFIG=/tmp/kubeconfig-edge.yaml
+o2imsctl cluster nodes
+```
+
+3. **Default location** (lowest priority):
+```bash
+# Uses ~/.kube/config by default
+o2imsctl pr list
+```
+
+### Fake vs Real Mode
+
+The CLI supports both fake (testing) and real cluster modes:
+
+#### Fake Mode (for testing without a cluster)
+```bash
+# Use --fake flag to run in mock mode
+o2imsctl pr create --from examples/pr.yaml --fake
+o2imsctl cluster health --fake
+o2imsctl pr list --fake
+```
+
+#### Real Mode (connects to actual cluster)
+```bash
+# Specify kubeconfig for edge cluster
+export KUBECONFIG=/tmp/kubeconfig-edge.yaml
+
+# Cluster operations
+o2imsctl cluster health
+o2imsctl cluster nodes
+o2imsctl cluster namespaces
+
+# ProvisioningRequest operations
+o2imsctl pr create --from examples/pr.yaml --namespace o2ims-system
+o2imsctl pr get my-pr --namespace o2ims-system
+o2imsctl pr list --namespace o2ims-system
+o2imsctl pr delete my-pr --namespace o2ims-system
+
+# Wait for ProvisioningRequest to be ready
+o2imsctl pr wait my-pr --condition Ready --timeout 10m
+```
+
+### Verbose Output
+Enable detailed logging with the `-v` or `--verbose` flag:
+```bash
+o2imsctl cluster health --kubeconfig /tmp/kubeconfig-edge.yaml --verbose
+```
+
+## Architecture: Fake vs Real Mode
+
+### Fake Mode Architecture
+```
+┌──────────────────┐
+│   o2imsctl CLI   │
+│   (--fake flag)  │
+└────────┬─────────┘
+         │
+         ▼
+┌──────────────────┐
+│  Fake Client     │
+│  (In-Memory)     │
+├──────────────────┤
+│ • Mock CRDs      │
+│ • Test Data      │
+│ • No Network     │
+└──────────────────┘
+```
+
+### Real Mode Architecture  
+```
+┌──────────────────┐
+│   o2imsctl CLI   │
+│  (--kubeconfig)  │
+└────────┬─────────┘
+         │
+         ▼
+┌──────────────────┐
+│  Kubeconfig      │
+│  Resolution      │
+├──────────────────┤
+│ 1. CLI Flag      │
+│ 2. KUBECONFIG    │
+│ 3. ~/.kube/config│
+└────────┬─────────┘
+         │
+         ▼
+┌──────────────────┐
+│  Kubernetes API  │
+│  (Real Cluster)  │
+├──────────────────┤
+│ • Edge Cluster   │
+│ • O2IMS CRDs     │
+│ • Real Resources │
+└──────────────────┘
+         │
+         ▼
+┌──────────────────┐
+│  O2IMS System    │
+│  (o2ims-system)  │
+├──────────────────┤
+│ • Controller     │
+│ • Webhooks       │
+│ • Metrics        │
+└──────────────────┘
+```
+
+### Mode Selection Decision Tree
+```
+Start
+  │
+  ├─ --fake flag present?
+  │    └─ Yes → Use Fake Client (testing mode)
+  │
+  └─ No → Real Mode
+       │
+       ├─ --kubeconfig flag?
+       │    └─ Yes → Use specified kubeconfig
+       │
+       ├─ KUBECONFIG env var?
+       │    └─ Yes → Use env kubeconfig
+       │
+       └─ No → Use ~/.kube/config (default)
+```
+
 ## Security Considerations
 
 ### RBAC Configuration
@@ -339,14 +476,53 @@ kubectl run debug-pod --image=nicolaka/netshoot -it --rm -- /bin/bash
 ## Integration Testing
 
 ### End-to-End Workflow Test
-```bash
-# Complete pipeline test
-make test-e2e-wfd
 
+The `wf_d_e2e.sh` script provides comprehensive testing for WF-D functionality:
+
+```bash
+# Run fake mode tests only (no cluster required)
+./scripts/wf_d_e2e.sh --mode fake
+
+# Run real cluster tests with specific kubeconfig
+./scripts/wf_d_e2e.sh --mode real --kubeconfig /tmp/kubeconfig-edge.yaml
+
+# Run both fake and real tests
+./scripts/wf_d_e2e.sh --mode both
+
+# Run with verbose output and skip cleanup
+./scripts/wf_d_e2e.sh --mode real --verbose --no-cleanup
+
+# Run with custom namespace
+./scripts/wf_d_e2e.sh --mode real --namespace my-test-ns
+```
+
+#### Test Coverage
+The e2e script includes:
+- **Unit Tests**: Go tests for the O2IMS SDK
+- **Fake Mode Tests**: CLI functionality without a real cluster
+- **Smoke Tests**: Basic cluster operations and ProvisioningRequest CRUD
+- **Integration Tests**: Full workflow from intent to deployment
+
+#### Test Reports
+Test artifacts and reports are saved to:
+```bash
+artifacts/wf-d-e2e-{timestamp}/
+├── test.log           # Complete test output
+├── build.log          # CLI build logs
+├── unit-tests.log     # Unit test results
+├── test-pr.yaml       # Generated test resources
+└── report.md          # Test summary report
+```
+
+### Component Testing
+```bash
 # Individual component tests
 make test-intent-gateway
 make test-o2ims-controller
 make test-slo-gate
+
+# O2IMS SDK specific tests
+cd o2ims-sdk && make test
 ```
 
 ### Performance Testing

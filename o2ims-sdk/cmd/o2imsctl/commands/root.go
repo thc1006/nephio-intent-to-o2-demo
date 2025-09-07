@@ -46,6 +46,7 @@ O-RAN O2 IMS specifications.`,
 
 	// Add subcommands
 	cmd.AddCommand(NewProvisioningRequestCommand())
+	cmd.AddCommand(NewClusterCommand())
 	cmd.AddCommand(NewVersionCommand())
 
 	return cmd
@@ -53,20 +54,36 @@ O-RAN O2 IMS specifications.`,
 
 // setupKubeconfig sets up the kubeconfig for the CLI
 func setupKubeconfig() error {
+	// Priority order:
+	// 1. --kubeconfig flag
+	// 2. KUBECONFIG environment variable
+	// 3. Default ~/.kube/config
 	if globalOpts.Kubeconfig == "" {
-		if home := homedir.HomeDir(); home != "" {
+		if envKubeconfig := os.Getenv("KUBECONFIG"); envKubeconfig != "" {
+			globalOpts.Kubeconfig = envKubeconfig
+			if globalOpts.Verbose {
+				fmt.Printf("Using kubeconfig from KUBECONFIG env: %s\n", envKubeconfig)
+			}
+		} else if home := homedir.HomeDir(); home != "" {
 			globalOpts.Kubeconfig = filepath.Join(home, ".kube", "config")
 		}
 	}
 
 	// In fake mode, we don't need a real kubeconfig
 	if globalOpts.Fake {
+		if globalOpts.Verbose {
+			fmt.Println("Running in FAKE mode - skipping kubeconfig validation")
+		}
 		return nil
 	}
 
 	// Check if kubeconfig file exists
 	if _, err := os.Stat(globalOpts.Kubeconfig); os.IsNotExist(err) {
 		return fmt.Errorf("kubeconfig file does not exist: %s", globalOpts.Kubeconfig)
+	}
+
+	if globalOpts.Verbose {
+		fmt.Printf("Using kubeconfig: %s\n", globalOpts.Kubeconfig)
 	}
 
 	return nil

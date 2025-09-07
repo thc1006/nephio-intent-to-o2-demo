@@ -1,0 +1,139 @@
+apiVersion: focom.oran.org/v1
+kind: TemplateInfo
+metadata:
+  name: edge-5g-template
+  namespace: o2ims
+  labels:
+    workload.nephio.org/type: 5g-ran
+    template.focom.org/version: v1.0.0
+spec:
+  name: edge-5g-template
+  description: "Template for 5G RAN DU/CU deployment on edge clusters"
+  version: "1.0.0"
+  type: "5g-ran"
+  provider: "nephio"
+  
+  # Template parameters with validation
+  parameters:
+    - name: namespace
+      type: string
+      default: "ran-workloads"
+      description: "Target namespace for RAN workloads"
+      validation:
+        pattern: "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"
+    
+    - name: du_replicas
+      type: integer
+      default: 3
+      description: "Number of DU pod replicas"
+      validation:
+        minimum: 1
+        maximum: 10
+    
+    - name: cu_replicas
+      type: integer
+      default: 2
+      description: "Number of CU pod replicas"
+      validation:
+        minimum: 1
+        maximum: 5
+    
+    - name: cpu_request
+      type: string
+      default: "2"
+      description: "CPU request per pod"
+      validation:
+        pattern: "^[0-9]+(\\.[0-9]+)?$"
+    
+    - name: memory_request
+      type: string
+      default: "4Gi"
+      description: "Memory request per pod"
+      validation:
+        pattern: "^[0-9]+(Mi|Gi)$"
+    
+    - name: cpu_limit
+      type: string
+      default: "4"
+      description: "CPU limit per pod"
+      validation:
+        pattern: "^[0-9]+(\\.[0-9]+)?$"
+    
+    - name: memory_limit
+      type: string
+      default: "8Gi"
+      description: "Memory limit per pod"
+      validation:
+        pattern: "^[0-9]+(Mi|Gi)$"
+    
+    - name: enable_gpu
+      type: boolean
+      default: false
+      description: "Enable GPU acceleration for RAN processing"
+    
+    - name: storage_class
+      type: string
+      default: "fast-ssd"
+      description: "Storage class for persistent volumes"
+    
+    - name: network_config
+      type: object
+      description: "Network configuration for RAN interfaces"
+      default:
+        f1_interface: "eth1"
+        e1_interface: "eth2"
+        x2_interface: "eth3"
+  
+  # Workload specifications
+  workloadType: "5g-ran-du-cu"
+  
+  # Target cluster selection criteria
+  targetCluster:
+    selector:
+      matchLabels:
+        environment: edge
+        capability: 5g-ran
+      matchExpressions:
+        - key: node.kubernetes.io/instance-type
+          operator: In
+          values: ["m5.xlarge", "m5.2xlarge", "m5.4xlarge"]
+  
+  # Package source information
+  packageSource:
+    repository: "https://github.com/nephio-project/catalog"
+    path: "workloads/5g-ran"
+    revision: "v2.0.0"
+  
+  # Deployment strategy
+  deploymentStrategy:
+    type: "RollingUpdate"
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  
+  # Resource quotas
+  resourceQuota:
+    requests:
+      cpu: "20"
+      memory: "40Gi"
+    limits:
+      cpu: "40"
+      memory: "80Gi"
+  
+  # Service mesh configuration
+  serviceMesh:
+    enabled: true
+    provider: "istio"
+    mtls: true
+  
+  # Observability configuration
+  observability:
+    metrics:
+      enabled: true
+      prometheus: true
+    tracing:
+      enabled: true
+      jaeger: true
+    logging:
+      enabled: true
+      fluentbit: true

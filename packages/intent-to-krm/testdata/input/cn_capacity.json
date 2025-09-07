@@ -1,0 +1,18 @@
+{
+  "intentExpectationId": "cn-cap-001", 
+  "intentExpectationType": "ServiceCapacity",
+  "intentExpectationContext": {
+    "contextAttribute": "networkSlice",
+    "contextCondition": "EQUAL",
+    "contextValueRange": ["slice-urllc"]
+  },
+  "intentExpectationTarget": {
+    "targetAttribute": "latency",
+    "targetCondition": "LESS_THAN",
+    "targetValue": "1ms"
+  },
+  "intentExpectationObject": {
+    "objectType": "CoreNetwork",
+    "objectInstance": "5gc-upf-001"
+  }
+}

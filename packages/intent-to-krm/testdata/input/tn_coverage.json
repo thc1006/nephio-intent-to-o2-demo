@@ -1,0 +1,18 @@
+{
+  "intentExpectationId": "tn-cov-001",
+  "intentExpectationType": "ServiceCoverage", 
+  "intentExpectationContext": {
+    "contextAttribute": "transportNetwork",
+    "contextCondition": "EQUAL",
+    "contextValueRange": ["fronthaul", "midhaul", "backhaul"]
+  },
+  "intentExpectationTarget": {
+    "targetAttribute": "availability",
+    "targetCondition": "GREATER_THAN_OR_EQUAL",
+    "targetValue": "99.9%"
+  },
+  "intentExpectationObject": {
+    "objectType": "TransportNetwork",
+    "objectInstance": "tn-segment-001"
+  }
+}
