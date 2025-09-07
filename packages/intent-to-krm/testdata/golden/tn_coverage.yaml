@@ -1,0 +1,56 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: expectation-tn-cov-001
+  namespace: intent-to-krm
+  labels:
+    expectation.nephio.org/id: tn-cov-001
+    expectation.nephio.org/object-type: TransportNetwork
+    expectation.nephio.org/type: ServiceCoverage
+  annotations:
+    expectation.nephio.org/context-attribute: transportNetwork
+    expectation.nephio.org/context-condition: EQUAL
+    expectation.nephio.org/target-attribute: availability
+    expectation.nephio.org/target-condition: GREATER_THAN_OR_EQUAL
+    expectation.nephio.org/target-value: 99.9%
+data:
+  expectation.json: |-
+    {
+      "intentExpectationId": "tn-cov-001",
+      "intentExpectationType": "ServiceCoverage",
+      "intentExpectationContext": {
+        "contextAttribute": "transportNetwork",
+        "contextCondition": "EQUAL",
+        "contextValueRange": ["fronthaul", "midhaul", "backhaul"]
+      },
+      "intentExpectationTarget": {
+        "targetAttribute": "availability",
+        "targetCondition": "GREATER_THAN_OR_EQUAL",
+        "targetValue": "99.9%"
+      },
+      "intentExpectationObject": {
+        "objectType": "TransportNetwork",
+        "objectInstance": "tn-segment-001"
+      }
+    }
+---
+apiVersion: tn.nephio.org/v1alpha1
+kind: TNBundle
+metadata:
+  name: tn-bundle-tn-cov-001
+  namespace: intent-to-krm
+  labels:
+    expectation.nephio.org/id: tn-cov-001
+    expectation.nephio.org/type: ServiceCoverage
+spec:
+  expectationId: tn-cov-001
+  expectationType: ServiceCoverage
+  transportNetworks:
+    - backhaul
+    - fronthaul
+    - midhaul
+  coverage:
+    availability:
+      condition: GREATER_THAN_OR_EQUAL
+      value: 99.9%
+  objectInstance: tn-segment-001

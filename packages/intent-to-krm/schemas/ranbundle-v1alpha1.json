@@ -1,0 +1,200 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "apiVersion": {
+      "type": "string",
+      "enum": ["ran.nephio.org/v1alpha1"]
+    },
+    "kind": {
+      "type": "string",
+      "enum": ["RANBundle"]
+    },
+    "metadata": {
+      "$ref": "#/definitions/metadata"
+    },
+    "spec": {
+      "$ref": "#/definitions/ranBundleSpec"
+    },
+    "status": {
+      "$ref": "#/definitions/ranBundleStatus"
+    }
+  },
+  "required": ["apiVersion", "kind", "metadata", "spec"],
+  "additionalProperties": false,
+  "definitions": {
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z0-9]([a-z0-9\\-]{0,61}[a-z0-9])?$"
+        },
+        "namespace": {
+          "type": "string",
+          "pattern": "^[a-z0-9]([a-z0-9\\-]{0,61}[a-z0-9])?$"
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "annotations": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      },
+      "required": ["name"],
+      "additionalProperties": true
+    },
+    "ranBundleSpec": {
+      "type": "object",
+      "properties": {
+        "expectationId": {
+          "type": "string",
+          "description": "ID of the 3GPP TS 28.312 expectation this bundle implements"
+        },
+        "expectationType": {
+          "type": "string",
+          "enum": ["ServicePerformance", "ServiceCapacity", "ServiceCoverage"],
+          "description": "Type of expectation from 3GPP TS 28.312"
+        },
+        "networkFunctions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["gNB", "CU", "DU", "UE", "AMF", "SMF", "UPF", "NSSF", "NEF", "NRF", "PCF", "UDM", "AUSF"]
+          },
+          "description": "List of network functions this bundle applies to"
+        },
+        "performance": {
+          "$ref": "#/definitions/performanceRequirement"
+        },
+        "capacity": {
+          "$ref": "#/definitions/capacityRequirement"
+        },
+        "coverage": {
+          "$ref": "#/definitions/coverageRequirement"
+        },
+        "objectInstance": {
+          "type": "string",
+          "description": "Instance identifier of the target object"
+        }
+      },
+      "required": ["expectationId", "expectationType", "objectInstance"],
+      "additionalProperties": false
+    },
+    "ranBundleStatus": {
+      "type": "object",
+      "properties": {
+        "phase": {
+          "type": "string",
+          "enum": ["Pending", "Ready", "Failed"]
+        },
+        "conditions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/condition"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "performanceRequirement": {
+      "type": "object",
+      "properties": {
+        "throughput": {
+          "$ref": "#/definitions/requirement"
+        },
+        "latency": {
+          "$ref": "#/definitions/requirement"
+        },
+        "jitter": {
+          "$ref": "#/definitions/requirement"
+        }
+      },
+      "additionalProperties": false
+    },
+    "capacityRequirement": {
+      "type": "object",
+      "properties": {
+        "latency": {
+          "$ref": "#/definitions/requirement"
+        },
+        "throughput": {
+          "$ref": "#/definitions/requirement"
+        },
+        "connections": {
+          "$ref": "#/definitions/requirement"
+        }
+      },
+      "additionalProperties": false
+    },
+    "coverageRequirement": {
+      "type": "object",
+      "properties": {
+        "availability": {
+          "$ref": "#/definitions/requirement"
+        },
+        "reliability": {
+          "$ref": "#/definitions/requirement"
+        },
+        "coverage": {
+          "$ref": "#/definitions/requirement"
+        }
+      },
+      "additionalProperties": false
+    },
+    "requirement": {
+      "type": "object",
+      "properties": {
+        "condition": {
+          "type": "string",
+          "enum": [
+            "EQUAL",
+            "NOT_EQUAL",
+            "GREATER_THAN",
+            "GREATER_THAN_OR_EQUAL",
+            "LESS_THAN",
+            "LESS_THAN_OR_EQUAL",
+            "CONTAINS",
+            "NOT_CONTAINS"
+          ]
+        },
+        "value": {
+          "type": "string",
+          "description": "Value with appropriate units (e.g., '100Mbps', '5ms', '99.9%')"
+        }
+      },
+      "required": ["condition", "value"],
+      "additionalProperties": false
+    },
+    "condition": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["True", "False", "Unknown"]
+        },
+        "reason": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "lastTransitionTime": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["type", "status"],
+      "additionalProperties": false
+    }
+  }
+}

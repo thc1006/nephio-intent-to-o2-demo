@@ -1,0 +1,18 @@
+{
+  "intentExpectationId": "ran-perf-001",
+  "intentExpectationType": "ServicePerformance",
+  "intentExpectationContext": {
+    "contextAttribute": "networkFunction",
+    "contextCondition": "EQUAL",
+    "contextValueRange": ["gNB", "CU", "DU"]
+  },
+  "intentExpectationTarget": {
+    "targetAttribute": "throughput",
+    "targetCondition": "GREATER_THAN",
+    "targetValue": "1000Mbps"
+  },
+  "intentExpectationObject": {
+    "objectType": "RANFunction",
+    "objectInstance": "ran-cell-001"
+  }
+}
