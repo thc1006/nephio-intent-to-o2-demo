@@ -1,0 +1,87 @@
+{
+  "security_report": {
+    "metadata": {
+      "timestamp": "2025-09-07T10:05:19Z",
+      "version": "1.0.0",
+      "project_root": "/home/ubuntu/nephio-intent-to-o2-demo",
+      "git": {
+        "commit": "493e6fd",
+        "branch": "feat/slo-gate"
+      }
+    },
+    "configuration": {
+      "security_policy_level": "permissive",
+      "allow_unsigned": true,
+      "allowed_registries": [
+        "gcr.io",
+        "ghcr.io",
+        "registry.k8s.io",
+        "docker.io/library",
+        "quay.io",
+        "docker.io/nephio",
+        "docker.io/oransc"
+      ]
+    },
+    "summary": {
+      "total_images": 8,
+      "registry_violations": 0,
+      "signature_issues": 3,
+      "kubeconform_files": 15,
+      "policy_compliance_score": 75
+    },
+    "findings": {
+      "kubeconform_validation": [
+        {
+          "file": "packages/intent-to-krm/crds/bundles.yaml",
+          "status": "valid",
+          "message": "passed validation"
+        },
+        {
+          "file": "samples/ocloud/provisioning-request.yaml",
+          "status": "valid",
+          "message": "passed validation"
+        },
+        {
+          "file": "packages/intent-to-krm/testdata/golden/ran_performance.yaml",
+          "status": "warning",
+          "message": "schema not found - custom resource"
+        }
+      ],
+      "image_signature_verification": [
+        {
+          "image": "gcr.io/distroless/static:nonroot",
+          "status": "signed",
+          "message": "signature verified"
+        },
+        {
+          "image": "docker.io/nephio/nephio-controller:latest",
+          "status": "unsigned",
+          "message": "no signature found"
+        },
+        {
+          "image": "registry.k8s.io/kustomize/kustomize:v5.0.1",
+          "status": "signed",
+          "message": "signature verified"
+        }
+      ],
+      "registry_allowlist_violations": [],
+      "policy_compliance": {
+        "score": 75,
+        "level": "good",
+        "violations": [
+          "Unsigned images in permissive security policy mode"
+        ],
+        "total_violations": 1
+      }
+    },
+    "recommendations": [
+      "Sign all container images with cosign for production deployment",
+      "Implement automated image signing in CI/CD pipeline",
+      "Regularly update base container images",
+      "Implement vulnerability scanning in CI/CD pipeline",
+      "Enable audit logging for all Kubernetes API access",
+      "Implement certificate rotation policy",
+      "Set up monitoring for security policy violations"
+    ]
+  }
+}

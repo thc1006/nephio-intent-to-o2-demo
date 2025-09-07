@@ -1,400 +1,525 @@
-# Security Guardrails Setup & Demo Guide
+# Security Policy & Supply Chain Hardening
 
-Complete installation and demonstration guide for the security guardrails in the intent pipeline, following TDD principles with exact commands.
-
-## Overview
-
-The security guardrails provide defense-in-depth protection for the intent pipeline:
-
-- **Sigstore Policy Controller**: Rejects unsigned container images in production
-- **Kyverno**: Kubernetes-native policy enforcement with image verification  
-- **cert-manager**: Automated TLS certificate lifecycle management
-
-All components follow TDD approach: failing tests first (RED), minimal implementation (GREEN), then optimization (REFACTOR).
-
-## Prerequisites
-
-```bash
-# Verify kubectl access
-kubectl cluster-info
-
-# Verify you have cluster-admin permissions
-kubectl auth can-i '*' '*'
-
-# Check cluster readiness
-kubectl get nodes
-```
+Complete security policy documentation and supply chain hardening guide for the Nephio Intent-to-O2 demo, following security-by-default principles with comprehensive validation and enforcement.
 
 ## Table of Contents
-- [1. Sigstore Policy Controller Setup](#1-sigstore-policy-controller-setup)
-- [2. cert-manager Setup](#2-cert-manager-setup)  
-- [3. Kyverno Setup](#3-kyverno-setup)
-- [4. Complete Security Demo Script](#4-complete-security-demo-script)
-- [5. Troubleshooting](#5-troubleshooting)
-- [6. Production Configuration](#6-production-configuration)
+- [Security Policy Overview](#security-policy-overview)
+- [Container Registry Policy](#container-registry-policy)  
+- [Image Signature Verification](#image-signature-verification)
+- [Security Enforcement Levels](#security-enforcement-levels)
+- [Incident Response Procedures](#incident-response-procedures)
+- [Security Guardrails Implementation](#security-guardrails-implementation)
+- [Comprehensive Security Reporting](#comprehensive-security-reporting)
+- [Development vs Production Security](#development-vs-production-security)
+- [Integration with Intent Pipeline](#integration-with-intent-pipeline)
 
-## 1. Sigstore Policy Controller Setup
+## Security Policy Overview
 
-### Quick Installation
+The Nephio Intent-to-O2 demo implements a comprehensive security-by-default approach with multiple layers of protection:
 
-```bash
-cd guardrails/sigstore
+### Security Principles
+1. **Zero Trust**: No implicit trust for any component or image
+2. **Supply Chain Security**: Complete signature verification from intent to deployment  
+3. **Defense in Depth**: Multiple overlapping security controls
+4. **Fail Secure**: Security failures block deployment by default
+5. **Continuous Validation**: Ongoing security assessment and reporting
+6. **Least Privilege**: Minimal permissions and access rights
 
-# Install cosign CLI
-make install-cosign
-
-# Install policy-controller (kubectl method - recommended)
-make install-policy-controller
-
-# Alternative: Helm method
-helm repo add sigstore https://sigstore.github.io/helm-charts
-helm repo update
-helm install policy-controller sigstore/policy-controller \
-  --namespace cosign-system --create-namespace
+### Security Architecture
+```
+Intent Creation → TMF921 → 28.312 → KRM Packages → O2 IMS → Deployment
+      ↓             ↓        ↓          ↓          ↓         ↓
+   Schema       Signed    Policy     Image      TLS      Runtime
+   Valid        JSON    Validated   Verified   Secured   Secured
 ```
 
-### Manual Installation Steps
+## Container Registry Policy
 
+### Allowed Container Registries
+
+**Production Environments:**
+- `gcr.io` - Google Container Registry (signed images only)
+- `ghcr.io` - GitHub Container Registry (signed images only)  
+- `registry.k8s.io` - Kubernetes official registry (signed images only)
+- `quay.io` - Red Hat Quay registry (signed images only)
+
+**Development Environments (additional allowlist):**
+- `docker.io/library` - Docker Hub official images (signature verification recommended)
+- `docker.io/nephio` - Nephio project images (signature verification recommended)
+- `docker.io/oransc` - O-RAN Software Community images (signature verification recommended)
+
+### Registry Configuration
+
+Environment variables for registry control:
 ```bash
-# 1. Install policy-controller
-kubectl apply -f https://github.com/sigstore/policy-controller/releases/download/v0.8.0/policy-controller.yaml
+# Production configuration
+export ALLOWED_REGISTRIES="gcr.io,ghcr.io,registry.k8s.io,quay.io"
+export SECURITY_POLICY_LEVEL="strict"
+export ALLOW_UNSIGNED="false"
 
-# 2. Wait for deployment
-kubectl -n cosign-system wait --for=condition=Available --timeout=300s deployment/policy-controller-webhook
-
-# 3. Verify installation
-kubectl get pods -n cosign-system
-kubectl logs -n cosign-system deployment/policy-controller-webhook
+# Development configuration  
+export ALLOWED_REGISTRIES="gcr.io,ghcr.io,registry.k8s.io,quay.io,docker.io/library,docker.io/nephio,docker.io/oransc"
+export SECURITY_POLICY_LEVEL="permissive"
+export ALLOW_UNSIGNED="true"
 ```
 
-### Apply Security Policies
+### Registry Validation Process
 
+1. **Image Extraction**: Scan all YAML manifests in packages/, samples/, guardrails/, manifests/
+2. **Registry Matching**: Validate each image against allowed registry list
+3. **Policy Enforcement**: Block deployment if unauthorized registries detected
+4. **Reporting**: Generate detailed violation reports with remediation guidance
+
+## Image Signature Verification
+
+### Cosign Integration
+
+The demo uses [Sigstore cosign](https://docs.sigstore.dev/cosign/system_config/installation/) for image signature verification:
+
+#### Installation
 ```bash
-# Apply ClusterImagePolicy
-kubectl apply -f policies/cluster-image-policy.yaml
+# Automatic installation in CI environments
+export AUTO_INSTALL_COSIGN=true
 
-# Verify policy is active
-kubectl get clusterimagepolicy
-kubectl describe clusterimagepolicy reject-unsigned-images
+# Manual installation
+curl -O -L "https://github.com/sigstore/cosign/releases/latest/download/cosign-linux-amd64"
+sudo mv cosign-linux-amd64 /usr/local/bin/cosign
+sudo chmod +x /usr/local/bin/cosign
 ```
 
-### Demo: Unsigned Denied / Signed Allowed
+#### Signature Verification Process
+1. **Image Discovery**: Extract all container images from manifests
+2. **Parallel Verification**: Verify signatures using configurable parallelism
+3. **Timeout Handling**: Configurable timeout to prevent hanging verifications
+4. **Result Aggregation**: Collect signed/unsigned/error status for all images
 
+#### Configuration
 ```bash
-# Run automated demo
-make demo
+export COSIGN_TIMEOUT=30          # Verification timeout (seconds)
+export PARALLEL_SCANS=4           # Parallel verification processes
+export COSIGN_REQUIRED=true       # Fail on missing signatures (production)
 ```
 
-**Manual Demo Steps:**
+### Signature Verification Examples
 
+**Verify signed distroless image:**
 ```bash
-# 1. Create production namespace
-kubectl create namespace demo-prod
-
-# 2. Test unsigned image (SHOULD BE DENIED)
-echo "Deploying unsigned nginx:latest..."
-kubectl apply -f tests/test-unsigned-deployment.yaml -n demo-prod
-# Expected: admission webhook error - image signature verification failed
-
-# 3. Test signed image (SHOULD BE ALLOWED)  
-echo "Deploying signed distroless image..."
-kubectl apply -f tests/test-signed-deployment.yaml -n demo-prod
-# Expected: deployment created successfully
-
-# 4. Test dev namespace (unsigned ALLOWED)
-kubectl create namespace demo-dev
-kubectl label namespace demo-dev environment=dev
-kubectl apply -f tests/test-unsigned-deployment.yaml -n demo-dev
-# Expected: deployment created with warning
-
-# 5. Cleanup
-kubectl delete namespace demo-prod demo-dev
-```
-
-### Verify Image Signature
-
-```bash
-# Manually verify a signed image
 cosign verify gcr.io/distroless/static:nonroot \
   --certificate-identity=keyless@distroless.iam.gserviceaccount.com \
   --certificate-oidc-issuer=https://accounts.google.com
-
-# Check cosign version
-cosign version
-
-# Example output of successful verification:
-# Verification for gcr.io/distroless/static:nonroot --
-# The following checks were performed on each of these signatures:
-#   - The cosign claims were validated
-#   - Existence of the claims in the transparency log was verified offline
-#   - The code-signing certificate was verified using trusted certificate authority certificates
 ```
 
-## 2. cert-manager Setup
+**Expected output for signed image:**
+```
+Verification for gcr.io/distroless/static:nonroot --
+The following checks were performed on each of these signatures:
+  - The cosign claims were validated
+  - Existence of the claims in the transparency log was verified offline
+  - The code-signing certificate was verified using trusted certificate authority certificates
+```
 
-### Quick Installation
+## Security Enforcement Levels
 
+### Strict Mode (Production)
+- **Policy Level**: `SECURITY_POLICY_LEVEL=strict`
+- **Unsigned Images**: Blocked (`ALLOW_UNSIGNED=false`)
+- **Registry Violations**: Deployment blocked
+- **YAML Validation**: Must pass kubeconform
+- **Compliance Threshold**: 90+ score required
+- **Signature Verification**: Required for all images
+
+### Permissive Mode (Development)  
+- **Policy Level**: `SECURITY_POLICY_LEVEL=permissive`
+- **Unsigned Images**: Allowed with warnings (`ALLOW_UNSIGNED=true`)
+- **Registry Violations**: Warnings only
+- **YAML Validation**: Warnings for validation issues
+- **Compliance Threshold**: 60+ score required
+- **Signature Verification**: Recommended but not required
+
+### Demo Mode (Testing)
+- **Policy Level**: `SECURITY_POLICY_LEVEL=demo`
+- **Unsigned Images**: Allowed
+- **Registry Violations**: Logged only  
+- **YAML Validation**: Best effort
+- **Compliance Threshold**: No threshold
+- **Signature Verification**: Optional
+
+## Incident Response Procedures
+
+### Security Violation Response
+
+**1. Immediate Actions**
+- Deployment automatically blocked by security precheck
+- Security incident logged with timestamp and details
+- Notification sent to security team (if configured)
+- Rollback initiated if violation detected post-deployment
+
+**2. Investigation Process**
+- Review security report in `reports/security-YYYYMMDD.json`
+- Identify specific violation type and affected components
+- Assess impact and determine remediation steps
+- Document findings and lessons learned
+
+**3. Remediation Steps**
+- Replace unsigned images with signed equivalents
+- Move images to approved registries
+- Fix YAML manifest validation errors
+- Update CI/CD pipeline to prevent recurrence
+
+### Security Incident Classification
+
+**Critical (Score < 60)**
+- Unsigned images in production
+- Images from unapproved registries
+- Invalid Kubernetes manifests
+- Policy violations in strict mode
+
+**High (Score 60-74)**
+- Multiple unsigned images in development
+- Registry violations with approved exceptions
+- YAML validation warnings
+
+**Medium (Score 75-89)**  
+- Few unsigned images with justification
+- Minor policy compliance issues
+- Missing signature verification in development
+
+**Low (Score 90+)**
+- All requirements met
+- Best practices followed
+- Complete compliance
+
+## Security Guardrails Implementation
+
+### Sigstore Policy Controller Setup
+
+**Installation:**
+```bash
+cd guardrails/sigstore
+make install-cosign
+make install-policy-controller
+```
+
+**Policy Application:**
+```bash
+kubectl apply -f policies/cluster-image-policy.yaml
+kubectl get clusterimagepolicy
+```
+
+**Demo Verification:**
+```bash
+# Test unsigned image (should be denied)
+kubectl apply -f tests/test-unsigned-deployment.yaml -n demo-prod
+
+# Test signed image (should be allowed)
+kubectl apply -f tests/test-signed-deployment.yaml -n demo-prod
+```
+
+### cert-manager Setup
+
+**Installation:**
 ```bash
 cd guardrails/cert-manager
-
-# Install cert-manager
 make install
-
-# Apply certificate issuers
 make apply
-
-# Validate installation
 make validate
 ```
 
-### Manual Installation Steps
-
+**Certificate Verification:**
 ```bash
-# 1. Install cert-manager (kubectl method - recommended)
-kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.13.3/cert-manager.yaml
-
-# Alternative: Helm method
-helm repo add jetstack https://charts.jetstack.io
-helm repo update
-helm install cert-manager jetstack/cert-manager \
-  --namespace cert-manager --create-namespace \
-  --version v1.13.3 --set installCRDs=true
-
-# 2. Wait for deployment
-kubectl wait --for=condition=Available --timeout=300s -n cert-manager deployment/cert-manager
-kubectl wait --for=condition=Available --timeout=300s -n cert-manager deployment/cert-manager-webhook
-kubectl wait --for=condition=Available --timeout=300s -n cert-manager deployment/cert-manager-cainjector
-
-# 3. Verify installation
-kubectl get pods -n cert-manager
-```
-
-### Apply Certificate Issuers
-
-```bash
-# Apply ClusterIssuers
-kubectl apply -f manifests/cluster-issuer.yaml
-
-# Verify issuers are ready
-kubectl get clusterissuer
-kubectl describe clusterissuer selfsigned-cluster-issuer
-kubectl describe clusterissuer ca-cluster-issuer
-```
-
-### Test Certificate Creation
-
-```bash
-# Create test certificate
-kubectl apply -f tests/test-certificate.yaml
-
-# Check certificate status
-kubectl get certificate -n cert-manager-test
+kubectl get certificate -A
 kubectl describe certificate test-cert -n cert-manager-test
-
-# Verify secret is created
-kubectl get secret test-cert-secret -n cert-manager-test
-kubectl describe secret test-cert-secret -n cert-manager-test
-
-# Cleanup
-kubectl delete -f tests/test-certificate.yaml
 ```
 
-### Install cert-manager CLI (cmctl)
+### Kyverno Policy Enforcement
 
-```bash
-# Install cmctl tool
-make install-cmctl
-
-# Check API readiness
-cmctl check api
-
-# Manual install cmctl
-curl -fsSL -o cmctl.tar.gz \
-  https://github.com/cert-manager/cert-manager/releases/download/v1.13.3/cmctl-linux-amd64.tar.gz
-tar xzf cmctl.tar.gz
-sudo mv cmctl /usr/local/bin
-rm cmctl.tar.gz
-```
-
-## 3. Kyverno Setup
-
-### Quick Installation
-
+**Installation:**
 ```bash
 cd guardrails/kyverno
-
-# Install Kyverno
 make install
-
-# Apply policies
 make apply
-
-# Run tests
 make test
 ```
 
-### Manual Installation Steps
-
+**Policy Validation:**
 ```bash
-# 1. Install Kyverno (kubectl method)
-kubectl apply -f https://github.com/kyverno/kyverno/releases/download/v1.11.0/install.yaml
-
-# Alternative: Helm method
-helm repo add kyverno https://kyverno.github.io/kyverno/
-helm repo update
-helm install kyverno kyverno/kyverno --namespace kyverno --create-namespace
-
-# 2. Wait for deployment
-kubectl wait --for=condition=Available --timeout=300s -n kyverno deployment/kyverno-admission-controller
-kubectl wait --for=condition=Available --timeout=300s -n kyverno deployment/kyverno-background-controller
-kubectl wait --for=condition=Available --timeout=300s -n kyverno deployment/kyverno-cleanup-controller
-kubectl wait --for=condition=Available --timeout=300s -n kyverno deployment/kyverno-reports-controller
-
-# 3. Verify installation
-kubectl get pods -n kyverno
-```
-
-### Apply Image Verification Policies
-
-```bash
-# Apply ClusterPolicy
-kubectl apply -f policies/verify-images.yaml
-
-# Verify policy is active
 kubectl get clusterpolicy
 kubectl describe clusterpolicy verify-images
-```
-
-### Run Kyverno Tests
-
-```bash
-# Run policy tests
 kyverno test tests/
-
-# Expected output shows test results:
-# - pass: tests that should pass
-# - fail: tests that should fail (demonstrating policy enforcement)
 ```
 
-## 4. Complete Security Demo Script
+## Comprehensive Security Reporting
 
-### Automated End-to-End Demo
+### Security Report Generation
+
+The security reporting system provides comprehensive analysis of the entire supply chain:
+
+**Generate Full Report:**
+```bash
+make security-report
+```
+
+**Development Mode:**
+```bash
+make security-report-dev
+```
+
+**Strict Production Mode:**
+```bash
+make security-report-strict
+```
+
+### Report Structure
+
+Security reports are generated in JSON format at `reports/security-YYYYMMDD.json`:
+
+```json
+{
+  "security_report": {
+    "metadata": {
+      "timestamp": "2024-01-15T10:30:00Z",
+      "version": "1.0.0",
+      "git": {
+        "commit": "abc123",
+        "branch": "main"
+      }
+    },
+    "configuration": {
+      "security_policy_level": "strict",
+      "allow_unsigned": false,
+      "allowed_registries": ["gcr.io", "ghcr.io"]
+    },
+    "summary": {
+      "total_images": 15,
+      "registry_violations": 0,
+      "signature_issues": 2,
+      "kubeconform_files": 25,
+      "policy_compliance_score": 85
+    },
+    "findings": {
+      "kubeconform_validation": [...],
+      "image_signature_verification": [...],
+      "registry_allowlist_violations": [...],
+      "policy_compliance": {...}
+    },
+    "recommendations": [...]
+  }
+}
+```
+
+### Report Integration
+
+Security reports are integrated into the deployment pipeline:
+
+1. **Pre-deployment**: Generated before `publish-edge`
+2. **Gate Enforcement**: Deployment blocked if compliance score < threshold
+3. **Post-deployment**: Available for audit and review
+4. **CI/CD Integration**: JSON format suitable for automated processing
+
+### Viewing Reports
+
+**Command Line Summary:**
+```bash
+jq -r '.security_report.summary | to_entries[] | "\(.key): \(.value)"' reports/security-latest.json
+```
+
+**Detailed Findings:**
+```bash
+jq '.security_report.findings' reports/security-latest.json
+```
+
+**Recommendations:**
+```bash
+jq -r '.security_report.recommendations[]' reports/security-latest.json
+```
+
+## Development vs Production Security
+
+### Development Environment
+
+**Purpose**: Enable rapid development while maintaining basic security
+**Configuration**: 
+```bash
+export SECURITY_POLICY_LEVEL=permissive
+export ALLOW_UNSIGNED=true  
+export ALLOWED_REGISTRIES="gcr.io,ghcr.io,registry.k8s.io,quay.io,docker.io/library,docker.io/nephio"
+```
+
+**Characteristics**:
+- Unsigned images allowed with warnings
+- Broader registry allowlist
+- YAML validation warnings (not failures)
+- Compliance threshold: 60+
+
+### Production Environment
+
+**Purpose**: Maximum security for production deployments
+**Configuration**:
+```bash
+export SECURITY_POLICY_LEVEL=strict
+export ALLOW_UNSIGNED=false
+export ALLOWED_REGISTRIES="gcr.io,ghcr.io,registry.k8s.io,quay.io"
+```
+
+**Characteristics**:
+- All images must be signed
+- Restricted registry allowlist
+- YAML validation failures block deployment
+- Compliance threshold: 90+
+
+### Environment Detection
+
+The security system can automatically detect environment context:
 
 ```bash
-#!/bin/bash
-# Complete security guardrails demo
-
-echo "🛡️  Security Guardrails Demo - Nephio Intent Pipeline"
-echo "=================================================="
-
-# 1. Test Sigstore Policy Controller
-echo ""
-echo "1️⃣  SIGSTORE POLICY CONTROLLER DEMO"
-cd guardrails/sigstore
-make demo
-
-# 2. Test cert-manager
-echo ""
-echo "2️⃣  CERT-MANAGER DEMO"
-cd ../cert-manager
-make test
-kubectl apply -f tests/test-certificate.yaml
-sleep 10
-kubectl get certificate -n cert-manager-test
-kubectl delete -f tests/test-certificate.yaml
-
-# 3. Test Kyverno
-echo ""
-echo "3️⃣  KYVERNO POLICY DEMO"
-cd ../kyverno
-make test
-
-echo ""
-echo "✅ All security guardrails demonstrated successfully!"
-echo "   - Unsigned images blocked in production ❌"
-echo "   - Signed images allowed in production ✅"
-echo "   - Certificates automatically managed 🔒"
-echo "   - Policies enforced via Kyverno 📜"
+# Automatic environment detection
+if [[ "${CI}" == "true" ]]; then
+    export SECURITY_POLICY_LEVEL=strict
+elif [[ "${ENVIRONMENT}" == "production" ]]; then
+    export SECURITY_POLICY_LEVEL=strict
+else
+    export SECURITY_POLICY_LEVEL=permissive
+fi
 ```
 
-### Save and Run Demo
+## Integration with Intent Pipeline
+
+### Pipeline Security Flow
+
+The security system integrates at multiple pipeline stages:
+
+**1. Intent Validation**
+- Schema validation for TMF921 intents
+- Input sanitization and validation
+- Rate limiting and authentication
+
+**2. Transform Security**
+- Signed transformation functions
+- Validated conversion logic  
+- Audit logging of all transformations
+
+**3. KRM Package Security**
+- kubeconform validation of all manifests
+- kpt function signature verification
+- Policy compliance checking
+
+**4. O2 IMS Integration Security**
+- TLS encryption for all API calls
+- Authentication token validation
+- Request/response integrity checking
+
+**5. Deployment Security**
+- Image signature verification
+- Registry allowlist enforcement
+- Runtime security policies
+
+### Security Gates
+
+Security gates are enforced at key pipeline stages:
+
+**Precheck Gate** (`make precheck`):
+- Change size validation
+- Basic YAML validation
+- Container image allowlist checking
+- kpt package structure validation
+
+**Security Report Gate** (`make security-report`):
+- Comprehensive kubeconform validation
+- Image signature verification
+- Policy compliance assessment
+- Detailed reporting and recommendations
+
+**Deployment Gate** (`make publish-edge`):
+- Security compliance score validation
+- Deployment blocking on violations
+- Post-deployment SLO validation
+- Automatic rollback on failures
+
+### Makefile Integration
+
+Security is integrated throughout the Makefile:
 
 ```bash
-# Save demo script
-cat > /tmp/security-demo.sh << 'EOF'
-[paste the script above]
-EOF
+# Basic security check before deployment
+make precheck
 
-chmod +x /tmp/security-demo.sh
-/tmp/security-demo.sh
+# Comprehensive security report
+make security-report
+
+# Full deployment with security validation
+make publish-edge
+
+# Security-aware demo with validation
+make demo-full
 ```
 
-## 5. Troubleshooting
+### Exception Process
 
-### Common Issues
+For development and demo scenarios, security controls can be overridden:
 
-#### Policy Controller Issues
-
+**Development Override:**
 ```bash
-# Check policy-controller status
-kubectl get pods -n cosign-system
-kubectl logs -n cosign-system deployment/policy-controller-webhook
-
-# Verify webhook configuration
-kubectl get validatingadmissionwebhooks
-kubectl describe validatingadmissionwebhook policy.sigstore.dev
-
-# Test policy dry-run
-kubectl apply -f tests/test-unsigned-deployment.yaml --dry-run=server
+ALLOW_UNSIGNED=true make security-report-dev
 ```
 
-#### cert-manager Issues
-
+**Emergency Override (Production):**
 ```bash
-# Check cert-manager status
-kubectl get pods -n cert-manager
-kubectl logs -n cert-manager deployment/cert-manager
-
-# Check certificate events
-kubectl describe certificate <cert-name>
-kubectl get certificaterequest
-
-# Test API connectivity
-cmctl check api
+SECURITY_POLICY_LEVEL=permissive EMERGENCY_OVERRIDE=true make publish-edge
 ```
 
-#### Kyverno Issues
+**Note**: All overrides are logged and require justification in production environments.
 
+## Monitoring and Alerting
+
+### Security Metrics
+
+Key security metrics tracked:
+- Image signature verification success rate
+- Registry allowlist violation count
+- YAML validation failure rate
+- Policy compliance score trends
+- Security incident frequency
+
+### Monitoring Setup
+
+**Basic monitoring:**
 ```bash
-# Check Kyverno status
-kubectl get pods -n kyverno
-kubectl logs -n kyverno deployment/kyverno-admission-controller
+# Monitor policy violations
+kubectl get events --field-selector reason=PolicyViolation
 
-# Verify policies
-kubectl get clusterpolicy
-kubectl describe clusterpolicy verify-images
+# Monitor certificate expiration  
+kubectl get certificates -A -o custom-columns=NAME:.metadata.name,READY:.status.conditions[0].status,EXPIRES:.status.notAfter
 
-# Check policy violations
-kubectl get policyreport -A
+# Monitor Kyverno policy reports
+kubectl get policyreport -A -o wide
 ```
 
-### Debug Commands
-
+**Advanced monitoring with JSON reports:**
 ```bash
-# Check all security components
-kubectl get pods -n cosign-system -n cert-manager -n kyverno
+# Track compliance scores over time
+jq -r '.security_report.summary.policy_compliance_score' reports/security-*.json
 
-# View recent events
-kubectl get events --all-namespaces --sort-by='.lastTimestamp' | tail -20
-
-# Test webhook connectivity
-kubectl apply -f <test-resource> --dry-run=server -v=6
+# Identify trending violations
+jq -r '.security_report.summary.registry_violations' reports/security-*.json | sort | uniq -c
 ```
 
-## 6. Production Configuration
+### Security Health Checks
 
-### Security Hardening Checklist
+**Component Health:**
+```bash
+kubectl get pods -n cosign-system -n cert-manager -n kyverno -o wide
+```
 
+**Policy Status:**
+```bash
+kubectl get clusterimagepolicy
+kubectl get clusterpolicy  
+kubectl get clusterissuer
+```
+
+## Production Hardening Checklist
+
+### Pre-Production Requirements
 - [ ] Replace self-signed certificates with enterprise CA
 - [ ] Configure proper OIDC provider for keyless signing
 - [ ] Set up monitoring and alerting for policy violations
@@ -403,40 +528,83 @@ kubectl apply -f <test-resource> --dry-run=server -v=6
 - [ ] Set up certificate expiration monitoring
 - [ ] Document security incident response procedures
 - [ ] Regular security policy reviews and updates
+- [ ] Implement vulnerability scanning in CI/CD
+- [ ] Set up security audit logging
+- [ ] Configure automated security report generation
+- [ ] Test incident response procedures
 
-### Monitoring Commands
+### Ongoing Security Operations
+- [ ] Weekly security report review
+- [ ] Monthly policy compliance assessment  
+- [ ] Quarterly security architecture review
+- [ ] Regular penetration testing
+- [ ] Continuous vulnerability management
+- [ ] Security awareness training
+- [ ] Incident response drills
+- [ ] Threat modeling updates
 
+## Troubleshooting
+
+### Common Issues and Solutions
+
+**1. Cosign Verification Timeouts**
 ```bash
-# Monitor policy violations
-kubectl get events --field-selector reason=PolicyViolation
+# Increase timeout
+export COSIGN_TIMEOUT=60
 
-# Monitor certificate expiration
-kubectl get certificates -A -o custom-columns=NAME:.metadata.name,NAMESPACE:.metadata.namespace,READY:.status.conditions[0].status,EXPIRES:.status.notAfter
-
-# Monitor Kyverno policy reports
-kubectl get policyreport -A -o wide
-
-# Check security component health
-kubectl get pods -n cosign-system -n cert-manager -n kyverno -o wide
+# Reduce parallel scans
+export PARALLEL_SCANS=2
 ```
 
-## 7. Integration with Intent Pipeline
+**2. Registry Allowlist Violations**  
+```bash
+# Check current registry policy
+echo $ALLOWED_REGISTRIES
 
-The security guardrails integrate with the intent pipeline at multiple points:
-
-1. **Image Verification**: All KRM packages and O2 IMS deployments use only signed images
-2. **Certificate Management**: Automatic TLS for all API communications
-3. **Policy Enforcement**: Kyverno validates all intent transformations
-4. **Supply Chain Security**: Complete signature verification chain from intent to deployment
-
-### Pipeline Security Flow
-
-```
-LLM Intent → TMF921 → 28.312 → KRM Packages → O2 IMS
-     ↓           ↓        ↓          ↓          ↓
-   Schema    Signed   Policy    Image      TLS
-   Valid     JSON   Validated  Verified   Secured
+# Add registry for development
+export ALLOWED_REGISTRIES="$ALLOWED_REGISTRIES,myregistry.io"
 ```
 
-Each step enforced by the security guardrails ensures end-to-end security from intent creation to O-RAN deployment.
+**3. YAML Validation Failures**
+```bash
+# Check specific validation errors
+kubeconform -summary -verbose manifests/problem.yaml
 
+# Skip custom resources
+kubeconform -skip=CustomResourceDefinition manifests/
+```
+
+**4. Policy Controller Issues**
+```bash
+# Check policy controller status
+kubectl get pods -n cosign-system
+kubectl logs -n cosign-system deployment/policy-controller-webhook
+
+# Verify webhook configuration
+kubectl get validatingadmissionwebhooks
+```
+
+### Debug Commands
+
+**Security Component Status:**
+```bash
+# All security pods
+kubectl get pods -n cosign-system -n cert-manager -n kyverno
+
+# Recent security events
+kubectl get events --all-namespaces --sort-by='.lastTimestamp' | grep -E "(Policy|Violation|Security)"
+```
+
+**Manual Testing:**
+```bash
+# Test policy dry-run
+kubectl apply -f tests/test-deployment.yaml --dry-run=server
+
+# Manual image verification
+cosign verify gcr.io/distroless/static:nonroot
+
+# Test certificate creation
+kubectl apply -f tests/test-certificate.yaml
+```
+
+This comprehensive security policy ensures the Nephio Intent-to-O2 demo maintains the highest security standards while providing flexibility for development and demonstration scenarios.

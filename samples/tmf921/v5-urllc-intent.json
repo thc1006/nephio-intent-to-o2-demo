@@ -1,0 +1,191 @@
+{
+  "id": "intent-urllc-enhanced-001",
+  "href": "/serviceIntent/intent-urllc-enhanced-001",
+  "intentType": "ServiceIntent",
+  "name": "Enhanced URLLC Service Intent",
+  "description": "Ultra-reliable low-latency communication service with comprehensive SLO monitoring and rollout gating",
+  "version": "2.0",
+  "validFor": {
+    "startDateTime": "2024-01-01T00:00:00Z",
+    "endDateTime": "2024-12-31T23:59:59Z"
+  },
+  "lifecycleStatus": "Active",
+  "category": "Performance",
+  "priority": "High",
+  "intentSpecification": {
+    "id": "spec-urllc-enhanced-001",
+    "href": "/intentSpecification/spec-urllc-enhanced-001",
+    "name": "Enhanced URLLC Specification",
+    "description": "Comprehensive specification for ultra-reliable low-latency service with SLO-gated deployment",
+    "version": "2.0",
+    "intentExpectations": [
+      {
+        "id": "expectation-latency-p95-001",
+        "name": "P95 Latency Expectation",
+        "description": "95th percentile latency must be under 5ms",
+        "expectationType": "deliver",
+        "expectationObject": {
+          "objectType": "O-RAN-DU",
+          "objectInstance": "urllc-du-enhanced-001",
+          "objectDescription": "Enhanced O-RAN DU with ultra-low latency capabilities",
+          "objectParameters": {
+            "deployment": "edge",
+            "location": "metro-cell-001",
+            "resources": {
+              "cpu": "8",
+              "memory": "16Gi", 
+              "storage": "200Gi"
+            },
+            "hwAcceleration": "dpdk-enabled",
+            "networkSlicing": "urllc-slice-001"
+          }
+        },
+        "expectationTargets": [
+          {
+            "targetName": "latency",
+            "targetDescription": "End-to-end user-plane latency",
+            "targetCondition": "lessThan",
+            "targetValue": "5",
+            "targetUnit": "ms",
+            "targetValueType": "numeric",
+            "targetContexts": [
+              {
+                "contextAttribute": "percentile",
+                "contextCondition": "Equal",
+                "contextValueType": "number",
+                "contextValue": 95,
+                "contextDescription": "95th percentile measurement"
+              },
+              {
+                "contextAttribute": "measurement-window",
+                "contextCondition": "Equal",
+                "contextValueType": "string",
+                "contextValue": "5m",
+                "contextDescription": "5-minute sliding window"
+              }
+            ]
+          },
+          {
+            "targetName": "availability",
+            "targetDescription": "Service availability percentage",
+            "targetCondition": "greaterThan",
+            "targetValue": "99.999",
+            "targetUnit": "percentage",
+            "targetValueType": "numeric",
+            "targetContexts": [
+              {
+                "contextAttribute": "measurement-window",
+                "contextCondition": "Equal",
+                "contextValueType": "string",
+                "contextValue": "1h",
+                "contextDescription": "1-hour measurement window"
+              }
+            ]
+          },
+          {
+            "targetName": "throughput",
+            "targetDescription": "Minimum guaranteed throughput",
+            "targetCondition": "greaterThan",
+            "targetValue": "1000",
+            "targetUnit": "Mbps",
+            "targetValueType": "numeric",
+            "targetContexts": [
+              {
+                "contextAttribute": "percentile",
+                "contextCondition": "Equal", 
+                "contextValueType": "number",
+                "contextValue": 95,
+                "contextDescription": "95th percentile sustained throughput"
+              }
+            ]
+          }
+        ],
+        "expectationContext": [
+          {
+            "contextParameter": "networkSlice",
+            "contextValue": "slice-urllc-enhanced-001",
+            "contextDescription": "Enhanced URLLC network slice with QoS guarantees"
+          },
+          {
+            "contextParameter": "geographicArea",
+            "contextValue": "metro-region-001",
+            "contextDescription": "Metropolitan coverage area"
+          },
+          {
+            "contextParameter": "targetNamespaces",
+            "contextValue": "o-ran-urllc,o-ran-edge",
+            "contextDescription": "Target Kubernetes namespaces for deployment"
+          },
+          {
+            "contextParameter": "measurementJob",
+            "contextValue": "urllc-slo-monitoring-001",
+            "contextDescription": "O2 IMS measurement job for SLO validation"
+          }
+        ]
+      }
+    ]
+  },
+  "intentCharacteristic": [
+    {
+      "name": "serviceType",
+      "value": "URLLC",
+      "description": "Ultra-reliable low-latency communications service type"
+    },
+    {
+      "name": "priority",
+      "value": "critical",
+      "description": "Critical priority level requiring immediate attention"
+    },
+    {
+      "name": "rolloutStrategy",
+      "value": "canary",
+      "description": "Canary deployment strategy with SLO gating"
+    },
+    {
+      "name": "rollout-canaryPercentage",
+      "value": "10",
+      "description": "Initial canary deployment percentage"
+    },
+    {
+      "name": "rollout-progressDeadline",
+      "value": "600s",
+      "description": "Maximum time allowed for rollout progression"
+    },
+    {
+      "name": "sloCompliance",
+      "value": "required",
+      "description": "SLO compliance is mandatory for deployment progression"
+    }
+  ],
+  "intentRelationship": [
+    {
+      "relationshipType": "dependsOn",
+      "relatedIntent": {
+        "id": "intent-network-slice-urllc-001",
+        "href": "/serviceIntent/intent-network-slice-urllc-001"
+      }
+    },
+    {
+      "relationshipType": "enabledBy",
+      "relatedIntent": {
+        "id": "intent-edge-compute-001",
+        "href": "/serviceIntent/intent-edge-compute-001"
+      }
+    }
+  ],
+  "party": [
+    {
+      "id": "operator-telco-alpha",
+      "role": "RequestingParty",
+      "name": "Telco Operator Alpha"
+    },
+    {
+      "id": "vendor-oran-beta",
+      "role": "ServiceProvider",
+      "name": "O-RAN Vendor Beta"
+    }
+  ],
+  "@type": "ServiceIntent",
+  "@schemaLocation": "https://tmforum.org/schemas/TMF921/v5.0/ServiceIntent.schema.json",
+  "@baseType": "Intent"
+}
