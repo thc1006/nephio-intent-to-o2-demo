@@ -1,6 +1,6 @@
 # Nephio Intent-to-O2 Demo Pipeline
 SHELL := /bin/bash
-.PHONY: init fmt lint test build p0-check e2e clean
+.PHONY: init fmt lint test build p0-check e2e clean precheck publish-edge postcheck rollback
 
 # Tool versions
 GO_VERSION := 1.22
@@ -54,6 +54,10 @@ build: ## Build all components
 	@cd o2ims-sdk && go build -o ../artifacts/o2imsctl ./cmd/... || true
 	@echo "Build complete"
 
+precheck: ## Run supply chain security precheck gate
+	@echo "Running supply chain security precheck..."
+	@./scripts/precheck.sh
+
 p0-check: ## Validate Nephio Phase-0 infrastructure readiness
 	@echo "Checking Nephio Phase-0 infrastructure..."
 	@./scripts/p0.2_smokecheck.sh
@@ -62,6 +66,20 @@ e2e: ## Run end-to-end tests
 	@echo "Starting e2e tests..."
 	@./scripts/e2e-test.sh || exit 1
 	@echo "E2E complete"
+
+publish-edge: precheck ## Publish edge overlay to GitOps repository (with security precheck and SLO validation)
+	@echo "Publishing edge overlay with security validation..."
+	@cd packages/intent-to-krm && $(MAKE) publish-edge
+	@echo "Running post-deployment SLO validation..."
+	@./scripts/postcheck.sh
+
+postcheck: ## Run post-deployment SLO validation
+	@echo "Running post-deployment SLO validation..."
+	@./scripts/postcheck.sh
+
+rollback: ## Execute automated rollback
+	@echo "Executing automated rollback..."
+	@./scripts/rollback.sh
 
 clean: ## Clean build artifacts
 	@echo "Cleaning artifacts..."
