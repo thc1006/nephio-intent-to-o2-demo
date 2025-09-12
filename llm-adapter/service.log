@@ -1,0 +1,49 @@
+/home/ubuntu/nephio-intent-to-o2-demo/llm-adapter/main.py:33: PydanticDeprecatedSince20: Pydantic V1 style `@validator` validators are deprecated. You should migrate to Pydantic V2 style `@field_validator` validators, see the migration guide for more details. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.5/migration/
+  @validator('text')
+/home/ubuntu/.local/lib/python3.10/site-packages/pydantic/_internal/_config.py:318: UserWarning: Valid config keys have changed in V2:
+* 'schema_extra' has been renamed to 'json_schema_extra'
+  warnings.warn(message, UserWarning)
+INFO:     Started server process [48927]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     127.0.0.1:57946 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57956 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58948 - "POST /generate_intent HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43846 - "POST /generate_intent HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54994 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55728 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55730 - "POST /generate_intent HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49674 - "POST /generate_intent HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35066 - "POST /generate_intent HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35710 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35712 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49976 - "POST /generate_intent HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36112 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49906 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49910 - "POST /generate_intent HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36998 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37012 - "POST /generate_intent HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50068 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50082 - "POST /generate_intent HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34954 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34966 - "POST /generate_intent HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52854 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42598 - "GET /docs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39380 - "GET /openapi.json HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53880 - "GET /health HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [48927]
+/home/ubuntu/nephio-intent-to-o2-demo/llm-adapter/.venv/lib/python3.10/site-packages/pydantic/_internal/_config.py:318: UserWarning: Valid config keys have changed in V2:
+* 'schema_extra' has been renamed to 'json_schema_extra'
+  warnings.warn(message, UserWarning)
+INFO:     Started server process [79929]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     127.0.0.1:49684 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49698 - "POST /generate_intent HTTP/1.1" 200 OK
+INFO:     127.0.0.1:32784 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56334 - "GET /?id=89d00b6a-2b6e-4dfc-af28-8d3baf6791ca&vscodeBrowserReqId=1757704176467 HTTP/1.1" 200 OK
