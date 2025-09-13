@@ -1,6 +1,6 @@
 # Nephio Intent-to-O2 Demo Pipeline
 SHELL := /bin/bash
-.PHONY: init fmt lint test build p0-check e2e clean precheck security-report publish-edge postcheck rollback demo demo-rollback o2ims-install ocloud-provision
+.PHONY: init fmt lint test build p0-check e2e clean precheck security-report publish-edge postcheck rollback demo demo-rollback o2ims-install ocloud-provision summit sbom sign verify
 
 # Tool versions
 GO_VERSION := 1.22
@@ -43,6 +43,10 @@ test: ## Run unit tests
 	@echo "Running Go tests..."
 	@cd kpt-functions/expectation-to-krm && go test ./... -v || exit 1
 	@cd o2ims-sdk && go test ./... -v || exit 1
+	@echo "Running multi-site integration tests..."
+	@./tests/integration_test_multisite.sh || exit 1
+	@echo "Running KRM rendering tests..."
+	@./tests/test_krm_rendering.sh || exit 1
 	@echo "Tests complete"
 
 build: ## Build all components
@@ -143,6 +147,26 @@ docs-pdf: ## Export documentation to PDF using pandoc
 	@pandoc docs/DEMO_TALK.md -o artifacts/docs-pdf/DEMO_TALK.pdf --pdf-engine=pdflatex 2>/dev/null || echo "Warning: Failed to export DEMO_TALK.md"
 	@echo "PDF documentation exported to artifacts/docs-pdf/"
 
+test-multisite: ## Test multi-site GitOps routing functionality
+	@echo "=== Testing Multi-Site GitOps Routing ==="
+	@./tests/integration_test_multisite.sh || exit 1
+	@echo "=== Multi-Site Tests Passed ==="
+
+test-golden: ## Run golden tests for KRM rendering
+	@echo "=== Running Golden Tests for KRM Rendering ==="
+	@./tests/test_krm_rendering.sh || exit 1
+	@echo "=== Golden Tests Passed ==="
+
+test-krm: test-golden ## Run all KRM rendering tests (alias for test-golden)
+	@echo "=== All KRM Tests Completed ==="
+
+test-krm-quick: ## Run quick KRM rendering tests (subset for CI)
+	@echo "=== Running Quick KRM Tests ==="
+	@OUTPUT_BASE=/tmp/krm-test-quick ./scripts/render_krm.sh tests/golden/intent_edge1.json --target edge1 || exit 1
+	@OUTPUT_BASE=/tmp/krm-test-quick ./scripts/render_krm.sh tests/golden/intent_edge2.json --target edge2 || exit 1
+	@rm -rf /tmp/krm-test-quick
+	@echo "=== Quick KRM Tests Passed ==="
+
 check-prereqs: ## Check demo prerequisites and environment
 	@echo "Checking demo prerequisites..."
 	@command -v python3.11 >/dev/null 2>&1 && echo "✓ Python 3.11" || echo "✗ Python 3.11 missing"
@@ -214,5 +238,105 @@ o2ims-install: ## Install O2 IMS operator components
 ocloud-provision: ## Provision O-Cloud using FoCoM operator
 	@echo "Provisioning O-Cloud..."
 	@./scripts/p0.4A_ocloud_provision.sh
+
+summit: ## Generate complete summit presentation materials (slides, KPIs, pocket reference, demo artifacts)
+	@echo "=== GENERATING SUMMIT PRESENTATION MATERIALS ==="
+	@echo "1. Setting up directories..."
+	@mkdir -p slides runbook artifacts/summit-bundle reports
+	@echo "2. Creating latest reports symlink..."
+	@./scripts/create_latest_link.sh
+	@echo "3. Generating presentation slides..."
+	@./scripts/generate_slides.sh
+	@echo "4. Creating KPI visualizations..."
+	@./scripts/generate_kpi_charts.sh
+	@echo "5. Building pocket reference..."
+	@./scripts/generate_pocket_qa.sh
+	@echo "6. Packaging demo artifacts..."
+	@./scripts/package_summit_demo.sh
+	@echo "7. Creating executive summary..."
+	@./scripts/generate_executive_summary.sh
+	@echo "\n=== SUMMIT MATERIALS GENERATED ==="
+	@echo "📊 Slides: slides/SLIDES.md"
+	@echo "📈 KPI Charts: slides/kpi.png"
+	@echo "🔖 Pocket Q&A: runbook/POCKET_QA.md"
+	@echo "📦 Demo Bundle: artifacts/summit-bundle/"
+	@echo "📋 Executive Summary: reports/latest/executive_summary.md"
+	@echo "\n✅ Ready for summit presentation!"
+
+sbom: ## Generate SBOM for custom images using syft
+	@echo "=== GENERATING SBOM FOR CUSTOM IMAGES ==="
+	@command -v syft >/dev/null 2>&1 || (echo "Installing syft..." && curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin)
+	@mkdir -p reports/$$(date +%Y%m%d_%H%M%S)/sbom
+	@echo "Scanning for custom images..."
+	@if [ -f artifacts/custom-images.txt ]; then \
+		while IFS= read -r image; do \
+			echo "Generating SBOM for $$image..."; \
+			syft "$$image" -o json > "reports/$$(date +%Y%m%d_%H%M%S)/sbom/$$(echo $$image | tr '/:' '_').sbom.json"; \
+			syft "$$image" -o spdx > "reports/$$(date +%Y%m%d_%H%M%S)/sbom/$$(echo $$image | tr '/:' '_').sbom.spdx"; \
+		done < artifacts/custom-images.txt; \
+	else \
+		echo "No custom images found. Create artifacts/custom-images.txt with image list."; \
+	fi
+	@echo "✅ SBOM generation complete"
+
+sign: sbom ## Sign custom images and SBOMs using cosign
+	@echo "=== SIGNING CUSTOM IMAGES AND SBOMS ==="
+	@command -v cosign >/dev/null 2>&1 || (echo "Installing cosign..." && COSIGN_VERSION=$$(curl -s https://api.github.com/repos/sigstore/cosign/releases/latest | grep tag_name | cut -d'"' -f4 | sed 's/v//') && \
+		curl -L "https://github.com/sigstore/cosign/releases/latest/download/cosign-linux-amd64" -o /usr/local/bin/cosign && chmod +x /usr/local/bin/cosign)
+	@mkdir -p reports/$$(date +%Y%m%d_%H%M%S)/signatures
+	@echo "Signing images and SBOMs..."
+	@if [ -f artifacts/custom-images.txt ]; then \
+		export COSIGN_EXPERIMENTAL=1; \
+		while IFS= read -r image; do \
+			echo "Signing image $$image..."; \
+			cosign sign --yes "$$image" 2>/dev/null || echo "⚠️ Failed to sign $$image (keyless mode)"; \
+			if [ -f "reports/$$(date +%Y%m%d_%H%M%S)/sbom/$$(echo $$image | tr '/:' '_').sbom.json" ]; then \
+				echo "Signing SBOM for $$image..."; \
+				cosign sign-blob --yes "reports/$$(date +%Y%m%d_%H%M%S)/sbom/$$(echo $$image | tr '/:' '_').sbom.json" \
+					> "reports/$$(date +%Y%m%d_%H%M%S)/signatures/$$(echo $$image | tr '/:' '_').sbom.sig" 2>/dev/null || \
+					echo "⚠️ Failed to sign SBOM for $$image"; \
+			fi; \
+		done < artifacts/custom-images.txt; \
+	else \
+		echo "No custom images to sign. Create artifacts/custom-images.txt first."; \
+	fi
+	@echo "✅ Signing complete"
+
+verify: ## Verify signatures of custom images and SBOMs
+	@echo "=== VERIFYING SIGNATURES ==="
+	@command -v cosign >/dev/null 2>&1 || (echo "Error: cosign not installed. Run 'make sign' first." && exit 1)
+	@echo "Verifying image and SBOM signatures..."
+	@if [ -f artifacts/custom-images.txt ]; then \
+		export COSIGN_EXPERIMENTAL=1; \
+		VERIFY_FAILED=0; \
+		while IFS= read -r image; do \
+			echo "Verifying image $$image..."; \
+			if cosign verify --certificate-identity-regexp '.*' --certificate-oidc-issuer-regexp '.*' "$$image" 2>/dev/null; then \
+				echo "✅ Image $$image signature valid"; \
+			else \
+				echo "❌ Image $$image signature invalid or not found"; \
+				VERIFY_FAILED=1; \
+			fi; \
+			LATEST_REPORT=$$(ls -t reports/*/sbom/$$(echo $$image | tr '/:' '_').sbom.json 2>/dev/null | head -1); \
+			LATEST_SIG=$$(ls -t reports/*/signatures/$$(echo $$image | tr '/:' '_').sbom.sig 2>/dev/null | head -1); \
+			if [ -f "$$LATEST_REPORT" ] && [ -f "$$LATEST_SIG" ]; then \
+				echo "Verifying SBOM for $$image..."; \
+				if cosign verify-blob --certificate-identity-regexp '.*' --certificate-oidc-issuer-regexp '.*' \
+					--signature "$$LATEST_SIG" "$$LATEST_REPORT" 2>/dev/null; then \
+					echo "✅ SBOM signature valid"; \
+				else \
+					echo "❌ SBOM signature invalid"; \
+					VERIFY_FAILED=1; \
+				fi; \
+			fi; \
+		done < artifacts/custom-images.txt; \
+		if [ $$VERIFY_FAILED -eq 1 ]; then \
+			echo "⚠️ Some verifications failed"; \
+			exit 1; \
+		fi; \
+	else \
+		echo "No custom images to verify."; \
+	fi
+	@echo "✅ Verification complete"
 
 .DEFAULT_GOAL := help

@@ -1,0 +1,30 @@
+{
+  "intentExpectationId": "failing-ci-test-001",
+  "intentExpectationType": "NetworkSliceIntent",
+  "targetSite": "invalid_site_name_123",
+  "intent": {
+    "serviceName": "failing-test-service",
+    "serviceType": "INVALID_TYPE",
+    "networkSlice": {
+      "sliceId": "failing-slice-001",
+      "sliceType": "INVALID",
+      "maxNumberofUEs": -1000,
+      "maxNumberofConnections": "not_a_number"
+    },
+    "qos": {
+      "downlinkThroughput": "invalid",
+      "uplinkThroughput": null,
+      "latency": "999999ms",
+      "reliability": "200%"
+    },
+    "coverageArea": {
+      "site": "",
+      "region": null
+    },
+    "lifecycle": {
+      "startTime": "invalid-date",
+      "endTime": "2024-12-31T23:59:59Z"
+    },
+    "missingRequiredField": false
+  }
+}

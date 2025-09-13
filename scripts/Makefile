@@ -1,7 +1,7 @@
 # Makefile for Nephio Intent to O2 Demo Scripts
 # Provides convenient targets for running provisioning scripts
 
-.PHONY: help all bootstrap smokecheck o2ims ocloud clean status logs
+.PHONY: help all bootstrap smokecheck o2ims ocloud clean status logs package verify-package test-package package-dry-run clean-packages package-status
 
 # Default target
 help:
@@ -21,6 +21,11 @@ help:
 	@echo "  make clean        - Clean up resources and clusters"
 	@echo "  make dry-run      - Run P0.4A in dry-run mode"
 	@echo ""
+	@echo "Packaging & Supply Chain:"
+	@echo "  make package      - Package deployment artifacts with attestation"
+	@echo "  make verify-package - Verify checksums and signatures of packages"
+	@echo "  make test-package - Run comprehensive packaging tests"
+	@echo ""
 	@echo "Configuration:"
 	@echo "  make config       - Display current configuration"
 	@echo "  make validate     - Validate prerequisites"
@@ -34,6 +39,12 @@ O2IMS_NAMESPACE ?= o2ims
 FOCOM_NAMESPACE ?= focom-system
 VM2_IP ?= 172.16.4.45
 TIMEOUT ?= 600
+
+# Packaging configuration
+REPORTS_DIR ?= ../reports
+PACKAGE_TIMESTAMP ?= $(shell date +%Y%m%d-%H%M%S)
+ATTESTATION_KEY ?=
+PACKAGE_MAINTAINER ?= nephio-demo@example.com
 
 # Run all scripts in sequence
 all: bootstrap smokecheck o2ims ocloud
@@ -173,4 +184,83 @@ port-forward:
 		echo "SMO kubeconfig not found"; \
 	fi
 
-.SILENT: help config
+# Package deployment artifacts with attestation
+package:
+	@echo "📦 Packaging deployment artifacts..."
+	@export REPORTS_BASE_DIR=$(REPORTS_DIR) && \
+	export PACKAGE_MAINTAINER=$(PACKAGE_MAINTAINER) && \
+	if [ -n "$(ATTESTATION_KEY)" ]; then \
+		./package_artifacts.sh --timestamp=$(PACKAGE_TIMESTAMP) --attestation-key=$(ATTESTATION_KEY); \
+	else \
+		./package_artifacts.sh --timestamp=$(PACKAGE_TIMESTAMP); \
+	fi
+	@echo "✅ Package created: $(REPORTS_DIR)/$(PACKAGE_TIMESTAMP).tar.gz"
+
+# Verify checksums and signatures of packages
+verify-package:
+	@echo "🔍 Verifying package integrity..."
+	@if [ -L "$(REPORTS_DIR)/latest" ]; then \
+		latest_pkg=$$(readlink $(REPORTS_DIR)/latest); \
+		echo "Verifying latest package: $$latest_pkg"; \
+		if [ -f "$(REPORTS_DIR)/$$latest_pkg.tar.gz.sha256" ]; then \
+			cd $(REPORTS_DIR) && sha256sum -c "$$latest_pkg.tar.gz.sha256"; \
+			echo "✅ Package checksum verified"; \
+		else \
+			echo "❌ Package checksum file not found"; \
+			exit 1; \
+		fi; \
+		if [ -f "$(REPORTS_DIR)/$$latest_pkg/attestations/attest.signed.json" ]; then \
+			echo "✅ Signed attestation found"; \
+		else \
+			echo "ℹ️  No signed attestation found (unsigned build)"; \
+		fi; \
+		if [ -f "$(REPORTS_DIR)/$$latest_pkg/checksums.txt" ]; then \
+			cd $(REPORTS_DIR)/$$latest_pkg/artifacts && sha256sum -c ../checksums.txt; \
+			echo "✅ All artifact checksums verified"; \
+		else \
+			echo "❌ Artifact checksums file not found"; \
+			exit 1; \
+		fi; \
+	else \
+		echo "❌ No latest package found. Run 'make package' first."; \
+		exit 1; \
+	fi
+
+# Run comprehensive packaging tests
+test-package:
+	@echo "🧪 Running packaging integration tests..."
+	@cd .. && ./tests/test_package_artifacts.sh
+	@echo "✅ All packaging tests passed"
+
+# Package with dry run
+package-dry-run:
+	@echo "🧪 Dry run packaging..."
+	@export REPORTS_BASE_DIR=$(REPORTS_DIR) && \
+	export PACKAGE_MAINTAINER=$(PACKAGE_MAINTAINER) && \
+	./package_artifacts.sh --dry-run --timestamp=dry-run-$(shell date +%s)
+
+# Clean package artifacts
+clean-packages:
+	@echo "🧹 Cleaning package artifacts..."
+	@read -p "Delete all packages in $(REPORTS_DIR)? [y/N] " confirm && \
+	if [ "$$confirm" = "y" ] || [ "$$confirm" = "Y" ]; then \
+		rm -rf $(REPORTS_DIR)/*/; \
+		rm -f $(REPORTS_DIR)/*.tar.gz*; \
+		rm -f $(REPORTS_DIR)/latest; \
+		echo "✅ Package artifacts cleaned"; \
+	else \
+		echo "Clean up cancelled"; \
+	fi
+
+# Display packaging status
+package-status:
+	@echo "📊 Package Status:"
+	@echo "  Reports Directory: $(REPORTS_DIR)"
+	@echo "  Latest Package:    $$([ -L "$(REPORTS_DIR)/latest" ] && readlink $(REPORTS_DIR)/latest || echo "none")"
+	@echo "  Total Packages:    $$(ls -1d $(REPORTS_DIR)/*/ 2>/dev/null | wc -l || echo 0)"
+	@echo "  Available Tools:"
+	@which cosign >/dev/null 2>&1 && echo "    ✅ cosign" || echo "    ❌ cosign"
+	@which syft >/dev/null 2>&1 && echo "    ✅ syft" || echo "    ❌ syft"
+	@which jq >/dev/null 2>&1 && echo "    ✅ jq" || echo "    ❌ jq"
+
+.SILENT: help config package-status

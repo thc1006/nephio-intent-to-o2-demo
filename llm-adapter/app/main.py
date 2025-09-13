@@ -72,6 +72,7 @@ The JSON must include these fields:
 - intentType: one of "SERVICE_INTENT", "RESOURCE_INTENT", "NETWORK_SLICE_INTENT"
 - intentState: "CREATED"
 - intentPriority: number 1-10 (10 being highest)
+- targetSite: one of "edge1", "edge2", "both" (based on service type - eMBB: "edge1", URLLC: "edge2", mMTC: "both")
 - intentExpectations: array of expectation objects, each containing:
   - expectationId: unique identifier
   - expectationName: name of the expectation
@@ -93,6 +94,8 @@ User request: "{user_request}"
         
         if "intentId" not in intent_json:
             intent_json["intentId"] = str(uuid.uuid4())
+        if "targetSite" not in intent_json:
+            intent_json["targetSite"] = "edge1"
         if "intentMetadata" not in intent_json:
             intent_json["intentMetadata"] = {}
         if "createdAt" not in intent_json["intentMetadata"]:
@@ -108,8 +111,10 @@ User request: "{user_request}"
             "intentType": "SERVICE_INTENT",
             "intentState": "CREATED",
             "intentPriority": 5,
+            "targetSite": "edge1",
             "userRequest": user_request,
             "error": str(e),
+            "intentExpectations": [],
             "intentMetadata": {
                 "createdAt": datetime.utcnow().isoformat(),
                 "generationFailed": True

@@ -49,7 +49,14 @@ class LLMClient:
     def _parse_with_claude(self, text: str) -> Dict[str, Any]:
         """Parse using Claude CLI"""
         prompt = f"""Convert this 5G network request to JSON with ONLY this structure (no other text):
-{{"service": "eMBB/URLLC/mMTC", "location": "edge1/zone1/etc", "qos": {{"downlink_mbps": int, "uplink_mbps": int, "latency_ms": int}}}}
+{{"service": "eMBB/URLLC/mMTC", "location": "edge1/zone1/etc", "targetSite": "edge1/edge2/both", "qos": {{"downlink_mbps": int, "uplink_mbps": int, "latency_ms": int}}}}
+
+Rules for targetSite selection:
+- eMBB (enhanced mobile broadband) → typically "edge1"
+- URLLC (ultra-reliable low latency) → typically "edge2"
+- mMTC (massive machine type) → typically "both"
+- If explicit site is mentioned (edge1/edge2), use that site
+- If both sites or multi-site mentioned, use "both"
 
 Request: {text}"""
         
@@ -84,7 +91,26 @@ Request: {text}"""
         # Extract location
         location_match = re.search(r'(edge\d+|zone\d+|core\d+)', text_lower)
         location = location_match.group(1) if location_match else "edge1"
-        
+
+        # Determine targetSite based on service type and explicit mentions
+        targetSite = "edge1"  # default
+
+        # Check for explicit site mentions
+        if re.search(r'\b(both|multi|multiple)\s*(site|edge|node)', text_lower):
+            targetSite = "both"
+        elif 'edge2' in text_lower:
+            targetSite = "edge2"
+        elif 'edge1' in text_lower:
+            targetSite = "edge1"
+        else:
+            # Use service type defaults
+            if service == "URLLC":
+                targetSite = "edge2"  # URLLC typically needs edge2 for ultra-low latency
+            elif service == "mMTC":
+                targetSite = "both"   # mMTC typically needs coverage across both sites
+            else:  # eMBB
+                targetSite = "edge1"  # eMBB typically uses edge1
+
         # Extract QoS
         qos = {"downlink_mbps": None, "uplink_mbps": None, "latency_ms": None}
         
@@ -106,6 +132,7 @@ Request: {text}"""
         return {
             "service": service,
             "location": location,
+            "targetSite": targetSite,
             "qos": qos
         }
     
@@ -124,16 +151,17 @@ Request: {text}"""
         # Map service types to TMF921 format
         service_type = intent_dict.get("service", "eMBB")
         location = intent_dict.get("location", "edge1")
+        target_site = intent_dict.get("targetSite", "edge1")
         qos = intent_dict.get("qos", {})
         
         # Build TMF921 structure
         tmf921_intent = {
             "intentId": intent_id,
             "intentName": f"{service_type} Service at {location}",
-            "intentType": "5G_NETWORK_SLICE",
-            "scope": "NETWORK_SLICE",
-            "priority": "HIGH" if service_type == "URLLC" else "MEDIUM",
-            "requestTime": datetime.utcnow().isoformat() + "Z",
+            "intentType": "NETWORK_SLICE_INTENT",
+            "intentState": "CREATED",
+            "intentPriority": 9 if service_type == "URLLC" else 5,
+            "targetSite": target_site,
             "intentParameters": {
                 "serviceType": service_type,
                 "location": location,
@@ -156,9 +184,41 @@ Request: {text}"""
                     "entityId": f"slice_{service_type.lower()}_{location}"
                 }
             ],
-            "expectedOutcome": f"Deploy {service_type} network slice at {location} with specified QoS parameters"
+            "expectedOutcome": f"Deploy {service_type} network slice at {location} with specified QoS parameters",
+            "intentExpectations": [
+                {
+                    "expectationId": str(uuid.uuid4()),
+                    "expectationName": "Service Quality",
+                    "expectationType": "PERFORMANCE",
+                    "expectationTargets": [
+                        {
+                            "targetName": "latency",
+                            "targetValue": qos.get("latency_ms") or 50,
+                            "targetUnit": "ms",
+                            "targetOperator": "<="
+                        },
+                        {
+                            "targetName": "throughput",
+                            "targetValue": qos.get("downlink_mbps") or 100,
+                            "targetUnit": "Mbps",
+                            "targetOperator": ">="
+                        }
+                    ],
+                    "priority": 8
+                }
+            ],
+            "intentMetadata": {
+                "createdAt": datetime.utcnow().isoformat(),
+                "createdBy": "LLM-Adapter",
+                "version": "1.0",
+                "source": "Natural Language Processing",
+                "additionalInfo": {
+                    "targetSite": target_site,
+                    "serviceType": service_type
+                }
+            }
         }
-        
+
         return tmf921_intent
 
 

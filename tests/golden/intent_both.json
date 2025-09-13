@@ -1,0 +1,36 @@
+{
+  "intentExpectationId": "golden-both-001",
+  "intentExpectationType": "NetworkSliceIntent",
+  "targetSite": "both",
+  "intent": {
+    "serviceName": "golden-service-multisite",
+    "serviceType": "mMTC",
+    "networkSlice": {
+      "sliceId": "golden-slice-both-001",
+      "sliceType": "mMTC",
+      "maxNumberofUEs": 100000,
+      "maxNumberofConnections": 500000
+    },
+    "qos": {
+      "downlinkThroughput": "100Mbps",
+      "uplinkThroughput": "50Mbps",
+      "latency": "100ms",
+      "reliability": "99%",
+      "connectionDensity": "1000000/km2"
+    },
+    "coverageArea": {
+      "site": "multi-site",
+      "region": "us-all",
+      "zones": ["zone-1", "zone-2"]
+    },
+    "lifecycle": {
+      "startTime": "2025-01-01T00:00:00Z",
+      "endTime": "2025-12-31T23:59:59Z"
+    },
+    "multiSite": {
+      "loadBalancing": "round-robin",
+      "failover": "automatic",
+      "syncInterval": "30s"
+    }
+  }
+}

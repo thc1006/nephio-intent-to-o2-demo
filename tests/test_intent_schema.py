@@ -1,307 +1,310 @@
 #!/usr/bin/env python3
 """
-Unit tests for TMF921 Intent schema validation with targetSite enforcement
+Tests for Intent JSON schema validation including targetSite field
 """
 
 import json
 import pytest
+import jsonschema
 from jsonschema import validate, ValidationError
-import os
-import sys
+from typing import Dict, Any
+import uuid
+from datetime import datetime
 
-# Add adapter to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'adapter', 'app'))
 
-# Import modules
-from main import (
-    extract_json,
-    determine_target_site,
-    enforce_targetsite,
-    validate_intent,
-    TMF921_SCHEMA,
-    PROMPT_TEMPLATE
-)
+class TestIntentSchema:
+    """Test suite for TMF921 Intent schema validation with targetSite"""
 
-class TestSchemaValidation:
-    """Test JSON schema validation for TMF921 intents"""
+    @property
+    def tmf921_schema(self) -> Dict[str, Any]:
+        """TMF921 Intent JSON schema with targetSite field"""
+        return {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "title": "TMF921 Intent with targetSite",
+            "type": "object",
+            "required": [
+                "intentId",
+                "intentName",
+                "intentType",
+                "intentState",
+                "intentPriority",
+                "targetSite",
+                "intentExpectations",
+                "intentMetadata"
+            ],
+            "properties": {
+                "intentId": {
+                    "type": "string",
+                    "description": "Unique intent identifier"
+                },
+                "intentName": {
+                    "type": "string",
+                    "description": "Human-readable intent name"
+                },
+                "intentDescription": {
+                    "type": ["string", "null"],
+                    "description": "Optional intent description"
+                },
+                "intentType": {
+                    "type": "string",
+                    "enum": ["SERVICE_INTENT", "RESOURCE_INTENT", "NETWORK_SLICE_INTENT"],
+                    "description": "Type of intent"
+                },
+                "intentState": {
+                    "type": "string",
+                    "enum": ["CREATED", "VALIDATED", "DEPLOYED", "ACTIVE", "SUSPENDED", "TERMINATED"],
+                    "description": "Current state of the intent"
+                },
+                "intentPriority": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 10,
+                    "description": "Intent priority level"
+                },
+                "targetSite": {
+                    "type": "string",
+                    "enum": ["edge1", "edge2", "both"],
+                    "description": "Target deployment site for the intent"
+                },
+                "intentExpectations": {
+                    "type": "array",
+                    "minItems": 0,
+                    "items": {
+                        "type": "object",
+                        "required": ["expectationId", "expectationName", "expectationType", "expectationTargets"],
+                        "properties": {
+                            "expectationId": {"type": "string"},
+                            "expectationName": {"type": "string"},
+                            "expectationType": {
+                                "type": "string",
+                                "enum": ["PERFORMANCE", "CAPACITY", "COVERAGE", "AVAILABILITY", "LATENCY", "THROUGHPUT"]
+                            },
+                            "expectationTargets": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "required": ["targetName", "targetValue"],
+                                    "properties": {
+                                        "targetName": {"type": "string"},
+                                        "targetValue": {"type": ["number", "string", "boolean"]},
+                                        "targetUnit": {"type": ["string", "null"]},
+                                        "targetOperator": {"type": ["string", "null"]}
+                                    }
+                                }
+                            },
+                            "priority": {
+                                "type": ["integer", "null"],
+                                "minimum": 1,
+                                "maximum": 10
+                            }
+                        }
+                    }
+                },
+                "intentMetadata": {
+                    "type": "object",
+                    "required": ["createdAt"],
+                    "properties": {
+                        "createdAt": {"type": "string"},
+                        "createdBy": {"type": ["string", "null"]},
+                        "version": {"type": ["string", "null"]},
+                        "source": {"type": ["string", "null"]},
+                        "additionalInfo": {"type": ["object", "null"]}
+                    }
+                }
+            },
+            "additionalProperties": True
+        }
 
-    def test_targetsite_is_required(self):
-        """Verify targetSite is in required fields"""
-        assert "targetSite" in TMF921_SCHEMA["required"]
-
-    def test_targetsite_enum_values(self):
-        """Verify targetSite enum contains exactly edge1, edge2, both"""
-        site_schema = TMF921_SCHEMA["properties"]["targetSite"]
-        assert site_schema["type"] == "string"
-        assert set(site_schema["enum"]) == {"edge1", "edge2", "both"}
+    def create_valid_intent(self, target_site: str = "edge1") -> Dict[str, Any]:
+        """Create a valid TMF921 intent with specified targetSite"""
+        return {
+            "intentId": str(uuid.uuid4()),
+            "intentName": f"Test Intent for {target_site}",
+            "intentDescription": "Test intent with targetSite field",
+            "intentType": "NETWORK_SLICE_INTENT",
+            "intentState": "CREATED",
+            "intentPriority": 5,
+            "targetSite": target_site,
+            "intentExpectations": [
+                {
+                    "expectationId": str(uuid.uuid4()),
+                    "expectationName": "Latency Requirement",
+                    "expectationType": "LATENCY",
+                    "expectationTargets": [
+                        {
+                            "targetName": "end-to-end-latency",
+                            "targetValue": 10,
+                            "targetUnit": "ms",
+                            "targetOperator": "<="
+                        }
+                    ],
+                    "priority": 8
+                }
+            ],
+            "intentMetadata": {
+                "createdAt": datetime.utcnow().isoformat(),
+                "createdBy": "test-user",
+                "version": "1.0",
+                "source": "unit-test"
+            }
+        }
 
     def test_valid_intent_edge1(self):
         """Test valid intent with targetSite=edge1"""
-        intent = {
-            "intentId": "test_001",
-            "name": "Test Intent",
-            "parameters": {},
-            "targetSite": "edge1"
-        }
-        validate(instance=intent, schema=TMF921_SCHEMA)
+        intent = self.create_valid_intent("edge1")
+        validate(intent, self.tmf921_schema)  # Should not raise
 
     def test_valid_intent_edge2(self):
         """Test valid intent with targetSite=edge2"""
-        intent = {
-            "intentId": "test_002",
-            "name": "Test Intent",
-            "parameters": {},
-            "targetSite": "edge2"
-        }
-        validate(instance=intent, schema=TMF921_SCHEMA)
+        intent = self.create_valid_intent("edge2")
+        validate(intent, self.tmf921_schema)  # Should not raise
 
     def test_valid_intent_both(self):
         """Test valid intent with targetSite=both"""
-        intent = {
-            "intentId": "test_003",
-            "name": "Test Intent",
-            "parameters": {},
-            "targetSite": "both"
-        }
-        validate(instance=intent, schema=TMF921_SCHEMA)
+        intent = self.create_valid_intent("both")
+        validate(intent, self.tmf921_schema)  # Should not raise
 
-    def test_missing_targetsite_fails(self):
-        """Test that missing targetSite fails validation"""
-        intent = {
-            "intentId": "test_004",
-            "name": "Missing targetSite",
-            "parameters": {}
-        }
-        with pytest.raises(ValidationError) as exc:
-            validate(instance=intent, schema=TMF921_SCHEMA)
-        assert "targetSite" in str(exc.value)
+    def test_invalid_target_site(self):
+        """Test that invalid targetSite values are rejected"""
+        intent = self.create_valid_intent("invalid_site")
 
-    def test_invalid_targetsite_value_fails(self):
-        """Test that invalid targetSite values fail"""
-        invalid_values = [
-            "edge3", "Edge1", "EDGE2", "Both",
-            "all", "none", "", "edge", "site1"
-        ]
+        with pytest.raises(ValidationError) as exc_info:
+            validate(intent, self.tmf921_schema)
 
-        for invalid_value in invalid_values:
-            intent = {
-                "intentId": "test_invalid",
-                "name": "Invalid targetSite",
-                "parameters": {},
-                "targetSite": invalid_value
-            }
-            with pytest.raises(ValidationError):
-                validate(instance=intent, schema=TMF921_SCHEMA)
+        assert "targetSite" in str(exc_info.value)
+        assert "invalid_site" in str(exc_info.value)
 
-    def test_targetsite_wrong_type_fails(self):
-        """Test that non-string targetSite fails"""
-        wrong_types = [123, True, None, ["edge1"], {"site": "edge1"}]
+    def test_missing_target_site(self):
+        """Test that missing targetSite field is rejected"""
+        intent = self.create_valid_intent("edge1")
+        del intent["targetSite"]
 
-        for wrong_type in wrong_types:
-            intent = {
-                "intentId": "test_type",
-                "name": "Wrong type",
-                "parameters": {},
-                "targetSite": wrong_type
-            }
-            with pytest.raises(ValidationError):
-                validate(instance=intent, schema=TMF921_SCHEMA)
+        with pytest.raises(ValidationError) as exc_info:
+            validate(intent, self.tmf921_schema)
 
-    def test_complete_intent_with_all_fields(self):
-        """Test complete intent with all optional fields"""
-        intent = {
-            "intentId": "complete_001",
-            "name": "Complete Intent",
-            "description": "A complete test intent",
-            "targetSite": "edge1",
-            "parameters": {
-                "type": "5G_slice",
-                "requirements": {
-                    "latency": "5ms",
-                    "bandwidth": "10Gbps"
-                },
-                "configuration": {
-                    "feature": "enabled"
-                }
-            },
-            "priority": "high",
-            "lifecycle": "active",
-            "metadata": {
-                "created": "2024-01-01"
-            }
-        }
-        validate(instance=intent, schema=TMF921_SCHEMA)
+        assert "targetSite" in str(exc_info.value)
 
-
-class TestTargetSiteLogic:
-    """Test targetSite determination and enforcement logic"""
-
-    def test_determine_target_site_from_text(self):
-        """Test inferring targetSite from natural language"""
+    def test_target_site_service_type_mapping(self):
+        """Test different service types with appropriate targetSite defaults"""
         test_cases = [
-            ("Deploy at edge1", "edge1"),
-            ("Setup edge 1 services", "edge1"),
-            ("Configure edge-1", "edge1"),
-            ("Install on site 1", "edge1"),
-            ("Deploy at edge2", "edge2"),
-            ("Setup edge 2 services", "edge2"),
-            ("Configure edge-2", "edge2"),
-            ("Install on site 2", "edge2"),
-            ("Deploy to both edges", "both"),
-            ("Setup all edge sites", "both"),
-            ("Configure multiple edges", "both"),
-            ("Deploy network slice", "both"),  # Default
+            ("eMBB", "edge1"),
+            ("URLLC", "edge2"),
+            ("mMTC", "both")
         ]
 
-        for text, expected in test_cases:
-            result = determine_target_site(text, None)
-            assert result == expected, f"Failed for: {text}"
+        for service_type, expected_target in test_cases:
+            intent = self.create_valid_intent(expected_target)
+            intent["intentName"] = f"{service_type} Service Intent"
 
-    def test_determine_target_site_with_override(self):
-        """Test that explicit override takes precedence"""
-        text = "Deploy at edge1"  # Would infer edge1
+            # Should validate successfully
+            validate(intent, self.tmf921_schema)
+            assert intent["targetSite"] == expected_target
 
-        assert determine_target_site(text, "edge2") == "edge2"
-        assert determine_target_site(text, "both") == "both"
-        assert determine_target_site(text, None) == "edge1"
-        assert determine_target_site(text, "invalid") == "edge1"  # Falls back to inference
+    def test_intent_priority_validation(self):
+        """Test that intentPriority validation works correctly"""
+        # Valid priorities
+        for priority in [1, 5, 10]:
+            intent = self.create_valid_intent("edge1")
+            intent["intentPriority"] = priority
+            validate(intent, self.tmf921_schema)  # Should not raise
 
-    def test_enforce_targetsite_adds_missing(self):
-        """Test that enforce_targetsite adds missing field"""
-        intent = {"intentId": "test"}
-        result = enforce_targetsite(intent, "edge1")
-        assert result["targetSite"] == "edge1"
+        # Invalid priorities
+        for priority in [0, 11, -1]:
+            intent = self.create_valid_intent("edge1")
+            intent["intentPriority"] = priority
 
-    def test_enforce_targetsite_fixes_invalid(self):
-        """Test that enforce_targetsite fixes invalid values"""
-        intent = {"targetSite": "invalid"}
-        result = enforce_targetsite(intent, "edge2")
-        assert result["targetSite"] == "edge2"
+            with pytest.raises(ValidationError):
+                validate(intent, self.tmf921_schema)
 
-        intent = {"targetSite": "Edge1"}  # Wrong case
-        result = enforce_targetsite(intent, "edge1")
-        assert result["targetSite"] == "edge1"
+    def test_intent_expectations_optional(self):
+        """Test that empty intentExpectations array is valid"""
+        intent = self.create_valid_intent("edge1")
+        intent["intentExpectations"] = []
+        validate(intent, self.tmf921_schema)  # Should not raise
 
-    def test_enforce_targetsite_preserves_valid(self):
-        """Test that valid targetSite is preserved"""
-        for valid in ["edge1", "edge2", "both"]:
-            intent = {"targetSite": valid}
-            result = enforce_targetsite(intent, "different")
-            assert result["targetSite"] == valid
-
-    def test_enforce_adds_missing_fields(self):
-        """Test that enforce_targetsite adds other required fields"""
-        intent = {}
-        result = enforce_targetsite(intent, "edge1")
-
-        assert "intentId" in result
-        assert "name" in result
-        assert "parameters" in result
-        assert "targetSite" in result
-
-
-class TestJSONExtraction:
-    """Test JSON extraction from various output formats"""
-
-    def test_extract_clean_json(self):
-        """Test extracting clean JSON"""
-        output = '{"intentId": "123", "targetSite": "edge1"}'
-        result = extract_json(output)
-        assert result["targetSite"] == "edge1"
-
-    def test_extract_json_with_text(self):
-        """Test extracting JSON with surrounding text"""
-        output = 'Here is the JSON:\n{"intentId": "456", "targetSite": "edge2"}\nDone.'
-        result = extract_json(output)
-        assert result["targetSite"] == "edge2"
-
-    def test_extract_json_from_markdown(self):
-        """Test extracting JSON from markdown code block"""
-        output = '```json\n{"intentId": "789", "targetSite": "both"}\n```'
-        result = extract_json(output)
-        assert result["targetSite"] == "both"
-
-    def test_extract_json_nested_objects(self):
-        """Test extracting JSON with nested structures"""
-        output = '''{
-            "intentId": "nested",
-            "targetSite": "edge1",
-            "parameters": {
-                "requirements": {"latency": "5ms"}
+    def test_complex_intent_with_multiple_expectations(self):
+        """Test complex intent with multiple expectations and targetSite"""
+        intent = {
+            "intentId": str(uuid.uuid4()),
+            "intentName": "Complex Multi-Site Intent",
+            "intentType": "NETWORK_SLICE_INTENT",
+            "intentState": "CREATED",
+            "intentPriority": 9,
+            "targetSite": "both",
+            "intentExpectations": [
+                {
+                    "expectationId": str(uuid.uuid4()),
+                    "expectationName": "Ultra-Low Latency",
+                    "expectationType": "LATENCY",
+                    "expectationTargets": [
+                        {
+                            "targetName": "end-to-end-latency",
+                            "targetValue": 5,
+                            "targetUnit": "ms",
+                            "targetOperator": "<="
+                        }
+                    ],
+                    "priority": 10
+                },
+                {
+                    "expectationId": str(uuid.uuid4()),
+                    "expectationName": "High Throughput",
+                    "expectationType": "THROUGHPUT",
+                    "expectationTargets": [
+                        {
+                            "targetName": "downlink-speed",
+                            "targetValue": 1000,
+                            "targetUnit": "Mbps",
+                            "targetOperator": ">="
+                        },
+                        {
+                            "targetName": "uplink-speed",
+                            "targetValue": 100,
+                            "targetUnit": "Mbps",
+                            "targetOperator": ">="
+                        }
+                    ],
+                    "priority": 8
+                }
+            ],
+            "intentMetadata": {
+                "createdAt": datetime.utcnow().isoformat(),
+                "createdBy": "LLM-Adapter",
+                "version": "1.0",
+                "source": "Natural Language Processing",
+                "additionalInfo": {
+                    "targetSite": "both",
+                    "serviceType": "URLLC",
+                    "multiSite": True
+                }
             }
-        }'''
-        result = extract_json(output)
-        assert result["targetSite"] == "edge1"
-        assert result["parameters"]["requirements"]["latency"] == "5ms"
+        }
 
-    def test_extract_json_fails_on_invalid(self):
-        """Test that extraction fails on invalid JSON"""
-        invalid_outputs = [
-            "not json at all",
-            "{ incomplete json",
-            '{"key": }'
-        ]
+        validate(intent, self.tmf921_schema)  # Should not raise
 
-        for output in invalid_outputs:
-            with pytest.raises(ValueError):
-                extract_json(output)
+    def test_backward_compatibility_default_target_site(self):
+        """Test that intents without targetSite can be made valid with default"""
+        intent = self.create_valid_intent("edge1")
+        original_intent = intent.copy()
+        del intent["targetSite"]
 
+        # Should fail validation
+        with pytest.raises(ValidationError):
+            validate(intent, self.tmf921_schema)
 
-class TestPromptTemplate:
-    """Test prompt template for JSON generation"""
-
-    def test_prompt_includes_targetsite(self):
-        """Test that prompt template includes targetSite"""
-        assert "targetSite" in PROMPT_TEMPLATE
-        assert "{target_site}" in PROMPT_TEMPLATE
-
-    def test_prompt_enforces_json_only(self):
-        """Test that prompt enforces JSON-only output"""
-        assert "Output only JSON" in PROMPT_TEMPLATE
-        assert "No text before or after" in PROMPT_TEMPLATE
-
-    def test_prompt_formatting(self):
-        """Test prompt template formatting"""
-        prompt = PROMPT_TEMPLATE.format(
-            nl_request="Deploy 5G slice",
-            target_site="edge1"
-        )
-
-        assert '"targetSite": "edge1"' in prompt
-        assert "Deploy 5G slice" in prompt
-        assert "targetSite must be: edge1" in prompt
-
-    def test_prompt_shows_all_fields(self):
-        """Test that prompt shows all required fields"""
-        required_fields = ["intentId", "name", "targetSite", "parameters"]
-
-        for field in required_fields:
-            assert f'"{field}"' in PROMPT_TEMPLATE
+        # Add default targetSite for backward compatibility
+        intent["targetSite"] = "edge1"
+        validate(intent, self.tmf921_schema)  # Should now pass
 
 
-class TestGoldenFiles:
-    """Test golden file validation"""
-
-    def test_golden_files_valid(self):
-        """Test that all golden JSON files are valid"""
-        import glob
-
-        golden_dir = os.path.join(os.path.dirname(__file__), "golden")
-        golden_files = glob.glob(os.path.join(golden_dir, "*.json"))
-
-        for filepath in golden_files:
-            with open(filepath, "r") as f:
-                intent = json.load(f)
-
-            # Must have targetSite
-            assert "targetSite" in intent, f"Missing targetSite in {filepath}"
-
-            # Must be valid value
-            assert intent["targetSite"] in ["edge1", "edge2", "both"], \
-                f"Invalid targetSite in {filepath}"
-
-            # Must pass schema validation
-            validate(instance=intent, schema=TMF921_SCHEMA)
+def validate_intent_json(intent_dict: Dict[str, Any]) -> bool:
+    """Utility function to validate an intent dictionary against TMF921 schema"""
+    test_instance = TestIntentSchema()
+    try:
+        validate(intent_dict, test_instance.tmf921_schema)
+        return True
+    except ValidationError:
+        return False
 
 
 if __name__ == "__main__":

@@ -1,0 +1,32 @@
+{
+  "intentExpectationId": "invalid-test-001",
+  "intentExpectationType": "NetworkSliceIntent",
+  "targetSite": "invalid_site_not_in_enum",
+  "intent": {
+    "serviceName": "invalid-test-service",
+    "serviceType": "InvalidServiceType",
+    "networkSlice": {
+      "sliceId": "",
+      "sliceType": "InvalidSliceType",
+      "maxNumberofUEs": -1,
+      "maxNumberofConnections": -100
+    },
+    "qos": {
+      "downlinkThroughput": "invalid_format",
+      "uplinkThroughput": "",
+      "latency": "not_a_number",
+      "reliability": "invalid_percentage"
+    },
+    "coverageArea": {
+      "site": "non_existent_site",
+      "region": "",
+      "zone": null
+    },
+    "lifecycle": {
+      "startTime": "invalid_timestamp",
+      "endTime": "2025-13-45T25:99:99Z"
+    }
+  },
+  "invalidField": "this should not be allowed",
+  "missingRequiredFields": true
+}

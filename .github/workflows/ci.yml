@@ -2,99 +2,568 @@ name: CI Pipeline
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, develop, summit-llm-e2e]
   pull_request:
-    branches: [main]
+    branches: [main, develop]
+  workflow_dispatch:
+    inputs:
+      skip_tests:
+        description: 'Skip test execution (for urgent deployments)'
+        required: false
+        default: 'false'
+        type: boolean
+
+env:
+  GO_VERSION: '1.22'
+  PYTHON_VERSION: '3.11'
+  KPT_VERSION: 'v1.0.0-beta.49'
+  KUBECONFORM_VERSION: 'v0.6.4'
+  COSIGN_VERSION: 'v2.2.3'
 
 jobs:
-  python-checks:
+  # Dependency caching and setup
+  setup:
     runs-on: ubuntu-22.04
+    outputs:
+      cache-key: ${{ steps.cache-key.outputs.key }}
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Set up Python 3.11
+
+      - name: Generate cache key
+        id: cache-key
+        run: |
+          echo "key=deps-${{ hashFiles('**/go.mod', '**/go.sum', '**/requirements.txt', '**/pyproject.toml') }}-${{ env.GO_VERSION }}-${{ env.PYTHON_VERSION }}" >> $GITHUB_OUTPUT
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+            ~/.cache/pip
+            /usr/local/bin/kpt
+            /usr/local/bin/kubeconform
+            /usr/local/bin/cosign
+          key: ${{ steps.cache-key.outputs.key }}
+          restore-keys: |
+            deps-${{ hashFiles('**/go.mod', '**/go.sum', '**/requirements.txt', '**/pyproject.toml') }}-
+            deps-
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
         uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
-      
-      - name: Install Python dependencies
-        run: |
-          pip install ruff black pytest pytest-cov
-      
-      - name: Run Black formatter check
-        run: |
-          black --check tools/ || true
-      
-      - name: Run Ruff linter
-        run: |
-          ruff check tools/ || true
-      
-      - name: Run Python tests
-        run: |
-          cd tools/intent-gateway && pytest tests/ -v || true
-          cd ../tmf921-to-28312 && pytest tests/ -v || true
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
 
-  go-checks:
-    runs-on: ubuntu-22.04
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Set up Go 1.22
+      - name: Set up Go ${{ env.GO_VERSION }}
         uses: actions/setup-go@v4
         with:
-          go-version: '1.22'
-      
-      - name: Install golangci-lint
-        run: |
-          go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
-      
-      - name: Run Go tests
-        run: |
-          cd kpt-functions/expectation-to-krm && go test ./... -v || true
-          cd ../../o2ims-sdk && go test ./... -v || true
-      
-      - name: Run golangci-lint
-        run: |
-          cd kpt-functions/expectation-to-krm && golangci-lint run || true
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
 
-  yaml-checks:
+      - name: Install tools
+        run: |
+          # Python tools
+          pip install --upgrade pip
+          pip install ruff black pytest pytest-cov yamllint
+
+          # Go tools
+          go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+
+          # Install kpt if not cached
+          if [ ! -f "/usr/local/bin/kpt" ]; then
+            curl -LO "https://github.com/GoogleContainerTools/kpt/releases/download/${{ env.KPT_VERSION }}/kpt_linux_amd64"
+            sudo mv kpt_linux_amd64 /usr/local/bin/kpt
+            sudo chmod +x /usr/local/bin/kpt
+          fi
+
+          # Install kubeconform if not cached
+          if [ ! -f "/usr/local/bin/kubeconform" ]; then
+            curl -LO "https://github.com/yannh/kubeconform/releases/download/${{ env.KUBECONFORM_VERSION }}/kubeconform-linux-amd64.tar.gz"
+            tar xf kubeconform-linux-amd64.tar.gz
+            sudo mv kubeconform /usr/local/bin/
+          fi
+
+          # Install cosign if not cached
+          if [ ! -f "/usr/local/bin/cosign" ]; then
+            curl -LO "https://github.com/sigstore/cosign/releases/download/${{ env.COSIGN_VERSION }}/cosign-linux-amd64"
+            sudo mv cosign-linux-amd64 /usr/local/bin/cosign
+            sudo chmod +x /usr/local/bin/cosign
+          fi
+
+  # Code quality and linting
+  lint:
     runs-on: ubuntu-22.04
+    needs: setup
+    if: ${{ !inputs.skip_tests }}
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Set up Python for yamllint
+
+      - name: Restore cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+            ~/.cache/pip
+            /usr/local/bin/kpt
+            /usr/local/bin/kubeconform
+            /usr/local/bin/cosign
+          key: ${{ needs.setup.outputs.cache-key }}
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
         uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
-      
-      - name: Install yamllint
-        run: pip install yamllint
-      
-      - name: Run yamllint
-        run: yamllint -d relaxed . || true
-      
-      - name: Install kubeconform
-        run: |
-          wget https://github.com/yannh/kubeconform/releases/latest/download/kubeconform-linux-amd64.tar.gz
-          tar xf kubeconform-linux-amd64.tar.gz
-          sudo mv kubeconform /usr/local/bin
-      
-      - name: Run kubeconform
-        run: |
-          find . -name "*.yaml" -o -name "*.yml" | grep -E "(packages|samples)/.*krm" | xargs -I {} kubeconform -summary {} || true
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
 
-  kyverno-checks:
+      - name: Set up Go ${{ env.GO_VERSION }}
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Install Python dependencies
+        run: |
+          pip install ruff black pytest pytest-cov yamllint
+
+      - name: Python formatting check
+        run: |
+          echo "::group::Black formatter check"
+          black --check --diff tools/ || {
+            echo "::error::Python code formatting issues detected. Run 'black tools/' to fix."
+            exit 1
+          }
+          echo "::endgroup::"
+
+      - name: Python linting
+        run: |
+          echo "::group::Ruff linter"
+          ruff check tools/ --output-format=github || {
+            echo "::error::Python linting issues detected. Check output above."
+            exit 1
+          }
+          echo "::endgroup::"
+
+      - name: YAML linting
+        run: |
+          echo "::group::YAML linting"
+          yamllint -d relaxed -f github . || {
+            echo "::error::YAML formatting issues detected."
+            exit 1
+          }
+          echo "::endgroup::"
+
+      - name: Go linting
+        run: |
+          echo "::group::Go linting"
+          cd kpt-functions/expectation-to-krm && golangci-lint run --out-format=github-actions || {
+            echo "::error::Go linting issues detected."
+            exit 1
+          }
+          echo "::endgroup::"
+
+  # Unit and contract tests
+  test:
     runs-on: ubuntu-22.04
-    if: hashFiles('guardrails/kyverno/*.yaml') != ''
+    needs: setup
+    if: ${{ !inputs.skip_tests }}
+    strategy:
+      matrix:
+        test-suite: [python, go, integration]
+      fail-fast: false
     steps:
       - uses: actions/checkout@v4
-      
+
+      - name: Restore cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+            ~/.cache/pip
+            /usr/local/bin/kpt
+            /usr/local/bin/kubeconform
+            /usr/local/bin/cosign
+          key: ${{ needs.setup.outputs.cache-key }}
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        if: matrix.test-suite == 'python' || matrix.test-suite == 'integration'
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Set up Go ${{ env.GO_VERSION }}
+        if: matrix.test-suite == 'go' || matrix.test-suite == 'integration'
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Python tests
+        if: matrix.test-suite == 'python'
+        run: |
+          pip install pytest pytest-cov jsonschema
+
+          echo "::group::Golden test validation (CRITICAL - MUST PASS)"
+          cd tests && python3 test_golden_validation.py || {
+            echo "::error::Golden test validation failed - this is a blocking failure"
+            exit 1
+          }
+          echo "::endgroup::"
+
+          echo "::group::Intent schema tests"
+          cd tests && pytest test_intent_schema.py -v --cov=. --cov-report=xml --cov-report=term || {
+            echo "::error::Intent schema tests failed"
+            exit 1
+          }
+          echo "::endgroup::"
+
+          echo "::group::Intent Gateway tests"
+          cd ../tools/intent-gateway && pytest tests/ -v --cov=. --cov-report=xml --cov-report=term || {
+            echo "::error::Intent Gateway tests failed"
+            exit 1
+          }
+          echo "::endgroup::"
+
+          echo "::group::TMF921 to 28312 tests"
+          cd ../tmf921-to-28312 && pytest tests/ -v --cov=. --cov-report=xml --cov-report=term || {
+            echo "::error::TMF921 to 28312 tests failed"
+            exit 1
+          }
+          echo "::endgroup::"
+
+      - name: Go tests
+        if: matrix.test-suite == 'go'
+        run: |
+          echo "::group::KPT function tests"
+          cd kpt-functions/expectation-to-krm && go test ./... -v -race -coverprofile=coverage.out
+          echo "::endgroup::"
+
+          echo "::group::O2IMS SDK tests"
+          cd ../../o2ims-sdk && go test ./... -v -race -coverprofile=coverage.out
+          echo "::endgroup::"
+
+      - name: Integration tests
+        if: matrix.test-suite == 'integration'
+        run: |
+          pip install jsonschema
+
+          echo "::group::Golden test regression check"
+          cd tests && python3 test_golden_validation.py || {
+            echo "::error::Golden test regression detected in integration suite"
+            exit 1
+          }
+          echo "::endgroup::"
+
+          echo "::group::Contract tests"
+          # Test TMF921 -> 28312 -> KRM pipeline
+          cd ../tools/tmf921-to-28312
+          python3 tmf921-to-28312.py convert --input ../../samples/tmf921/valid_01.json --output /tmp/test_output.json || {
+            echo "::error::TMF921 conversion failed"
+            exit 1
+          }
+          test -f /tmp/test_output.json || { echo "::error::Contract test failed - output file not created"; exit 1; }
+
+          # Validate that the conversion produced valid JSON
+          python3 -c "import json; json.load(open('/tmp/test_output.json'))" || {
+            echo "::error::Contract test failed - invalid JSON output"
+            exit 1
+          }
+          echo "::endgroup::"
+
+          echo "::group::E2E integration test"
+          # Test that scripts exist and are executable
+          if [ -f "../scripts/demo_llm.sh" ]; then
+            bash -n ../scripts/demo_llm.sh || {
+              echo "::error::demo_llm.sh has syntax errors"
+              exit 1
+            }
+          fi
+
+          if [ -f "../scripts/render_krm.sh" ]; then
+            bash -n ../scripts/render_krm.sh || {
+              echo "::error::render_krm.sh has syntax errors"
+              exit 1
+            }
+          fi
+          echo "::endgroup::"
+
+      - name: Upload coverage reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ matrix.test-suite }}
+          path: |
+            **/coverage.out
+            **/coverage.xml
+          retention-days: 7
+
+  # KRM rendering and validation
+  krm-validation:
+    runs-on: ubuntu-22.04
+    needs: [setup, lint]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Restore cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+            ~/.cache/pip
+            /usr/local/bin/kpt
+            /usr/local/bin/kubeconform
+            /usr/local/bin/cosign
+          key: ${{ needs.setup.outputs.cache-key }}
+
+      - name: KPT function render validation
+        run: |
+          echo "::group::KPT function render"
+          # Create packages directory if it doesn't exist
+          mkdir -p packages/intent-to-krm
+
+          # Check if KPT package exists, if not create a minimal one for testing
+          if [ ! -f "packages/intent-to-krm/Kptfile" ]; then
+            echo "Creating minimal KPT package for testing..."
+            cat > packages/intent-to-krm/Kptfile << 'EOF'
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: intent-to-krm-test
+pipeline:
+  mutators:
+    - image: gcr.io/kpt-fn/set-labels:v0.2.0
+      configMap:
+        app: nephio-intent
+EOF
+          fi
+
+          cd packages/intent-to-krm
+          kpt fn render . --dry-run || {
+            echo "::error::KPT function render failed"
+            exit 1
+          }
+          echo "::endgroup::"
+
+      - name: Kubeconform validation
+        run: |
+          echo "::group::Kubernetes manifest validation"
+          find packages samples -name "*.yaml" -o -name "*.yml" | \
+            xargs kubeconform -summary -verbose -kubernetes-version 1.28.0 || {
+            echo "::error::Kubernetes manifest validation failed"
+            exit 1
+          }
+          echo "::endgroup::"
+
+      - name: Render KRM packages for edge targets
+        run: |
+          echo "::group::Render KRM for edge1"
+          cd packages/intent-to-krm
+          kpt fn render . --results-dir ../../artifacts/render-results-edge1
+          echo "::endgroup::"
+
+          echo "::group::Validate rendered KRM"
+          kubeconform -summary ../../artifacts/render-results-edge1/*.yaml || {
+            echo "::warning::Some rendered KRM validation issues detected"
+          }
+          echo "::endgroup::"
+
+      - name: Upload render artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: krm-render-results
+          path: artifacts/render-results-*
+          retention-days: 7
+
+  # Policy and security validation
+  policy-validation:
+    runs-on: ubuntu-22.04
+    needs: [setup, krm-validation]
+    if: hashFiles('guardrails/**/*.yaml') != ''
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Restore cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+            ~/.cache/pip
+            /usr/local/bin/kpt
+            /usr/local/bin/kubeconform
+            /usr/local/bin/cosign
+          key: ${{ needs.setup.outputs.cache-key }}
+
       - name: Install Kyverno CLI
         run: |
-          wget https://github.com/kyverno/kyverno/releases/latest/download/kyverno-cli_v1.11.0_linux_x86_64.tar.gz
+          curl -LO "https://github.com/kyverno/kyverno/releases/latest/download/kyverno-cli_v1.11.0_linux_x86_64.tar.gz"
           tar xf kyverno-cli_v1.11.0_linux_x86_64.tar.gz
-          sudo mv kyverno /usr/local/bin
-      
+          sudo mv kyverno /usr/local/bin/
+
       - name: Test Kyverno policies
         run: |
-          kyverno test guardrails/kyverno/ || true
+          echo "::group::Kyverno policy validation"
+          if [ -d "guardrails/kyverno" ]; then
+            kyverno test guardrails/kyverno/ || {
+              echo "::error::Kyverno policy tests failed"
+              exit 1
+            }
+          fi
+          echo "::endgroup::"
+
+      - name: Test Sigstore policies
+        run: |
+          echo "::group::Sigstore policy validation"
+          if [ -d "guardrails/sigstore" ]; then
+            cd guardrails/sigstore && make test || {
+              echo "::warning::Sigstore policy tests failed"
+            }
+          fi
+          echo "::endgroup::"
+
+  # Build artifacts
+  build:
+    runs-on: ubuntu-22.04
+    needs: [setup, test]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Restore cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+            ~/.cache/pip
+            /usr/local/bin/kpt
+            /usr/local/bin/kubeconform
+            /usr/local/bin/cosign
+          key: ${{ needs.setup.outputs.cache-key }}
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Set up Go ${{ env.GO_VERSION }}
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Build components
+        run: |
+          mkdir -p artifacts
+
+          echo "::group::Build Go components"
+          cd kpt-functions/expectation-to-krm
+          go build -ldflags="-s -w" -o ../../artifacts/expectation-to-krm ./...
+
+          cd ../../o2ims-sdk
+          go build -ldflags="-s -w" -o ../artifacts/o2imsctl ./cmd/...
+          echo "::endgroup::"
+
+          echo "::group::Package Python components"
+          cd ../tools/intent-gateway
+          python3 -m py_compile *.py
+          tar -czf ../../artifacts/intent-gateway.tar.gz .
+
+          cd ../tmf921-to-28312
+          python3 -m py_compile *.py
+          tar -czf ../../artifacts/tmf921-to-28312.tar.gz .
+          echo "::endgroup::"
+
+      - name: Generate build metadata
+        run: |
+          cat > artifacts/build-metadata.json << EOF
+          {
+            "build_time": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "git_commit": "${{ github.sha }}",
+            "git_ref": "${{ github.ref }}",
+            "workflow_run": "${{ github.run_number }}",
+            "go_version": "${{ env.GO_VERSION }}",
+            "python_version": "${{ env.PYTHON_VERSION }}"
+          }
+          EOF
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: artifacts/
+          retention-days: 30
+
+  # Final validation and artifact publication
+  publish:
+    runs-on: ubuntu-22.04
+    needs: [lint, test, krm-validation, policy-validation, build]
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+
+      - name: Security scan and package
+        run: |
+          echo "::group::Generate checksums"
+          find artifacts/ -type f -exec sha256sum {} \; > artifacts/checksums.txt
+          echo "::endgroup::"
+
+          echo "::group::Security compliance check"
+          # Run security report if script exists
+          if [ -f "scripts/security_report.sh" ]; then
+            SECURITY_POLICY_LEVEL=permissive ./scripts/security_report.sh || {
+              echo "::warning::Security report generation failed"
+            }
+          fi
+          echo "::endgroup::"
+
+      - name: Create release package
+        run: |
+          TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+          PACKAGE_NAME="nephio-intent-o2-${TIMESTAMP}-${{ github.sha:0:7 }}"
+
+          mkdir -p "packages/${PACKAGE_NAME}"
+          cp -r artifacts/* "packages/${PACKAGE_NAME}/"
+
+          tar -czf "${PACKAGE_NAME}.tar.gz" -C packages "${PACKAGE_NAME}"
+
+          echo "PACKAGE_NAME=${PACKAGE_NAME}" >> $GITHUB_ENV
+
+      - name: Upload final package
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.PACKAGE_NAME }}
+          path: ${{ env.PACKAGE_NAME }}.tar.gz
+          retention-days: 90
+
+  # Status reporting
+  status:
+    runs-on: ubuntu-22.04
+    needs: [publish]
+    if: always()
+    steps:
+      - name: CI Summary
+        run: |
+          echo "## CI Pipeline Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Job | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Lint | ${{ needs.lint.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Test | ${{ needs.test.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| KRM Validation | ${{ needs.krm-validation.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Policy Validation | ${{ needs.policy-validation.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Build | ${{ needs.build.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Publish | ${{ needs.publish.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Run:** ${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY

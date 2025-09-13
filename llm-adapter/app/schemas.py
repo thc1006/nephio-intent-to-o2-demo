@@ -30,6 +30,7 @@ class TMF921Intent(BaseModel):
     intentType: Literal["SERVICE_INTENT", "RESOURCE_INTENT", "NETWORK_SLICE_INTENT"]
     intentState: Literal["CREATED", "VALIDATED", "DEPLOYED", "ACTIVE", "SUSPENDED", "TERMINATED"] = "CREATED"
     intentPriority: int = Field(default=5, ge=1, le=10)
+    targetSite: Literal["edge1", "edge2", "both"] = "edge1"
     intentExpectations: List[IntentExpectation]
     intentMetadata: IntentMetadata = Field(default_factory=IntentMetadata)
     
@@ -55,6 +56,7 @@ def create_example_intent() -> Dict[str, Any]:
         "intentType": "NETWORK_SLICE_INTENT",
         "intentState": "CREATED",
         "intentPriority": 8,
+        "targetSite": "edge2",
         "intentExpectations": [
             {
                 "expectationId": str(uuid.uuid4()),

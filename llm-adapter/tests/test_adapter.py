@@ -133,6 +133,7 @@ def test_generate_intent_success(mock_claude):
         "intentType": "NetworkSliceDeployment",
         "scope": "5G-NetworkSlice",
         "priority": "high",
+        "targetSite": "edge1",
         "requestTime": "2025-01-12T10:30:00Z",
         "intentParameters": {
             "sliceType": "eMBB",
@@ -151,6 +152,7 @@ def test_generate_intent_success(mock_claude):
     assert data["intentName"] == "Deploy Network Slice"
     assert data["intentType"] == "NetworkSliceDeployment"
     assert data["priority"] == "high"
+    assert data["targetSite"] == "edge1"
     assert "intentParameters" in data
 
 
@@ -183,6 +185,82 @@ def test_call_claude_cli_timeout(mock_run):
     assert response.status_code == 504
     data = response.json()
     assert "timeout" in data["detail"].lower() or "timed out" in data["detail"].lower()
+
+
+@patch('main.call_claude_cli')
+def test_generate_intent_urllc_edge2(mock_claude):
+    """Test URLLC intent defaults to edge2"""
+    mock_claude.return_value = json.dumps({
+        "intentId": "intent-urllc-123",
+        "intentName": "Deploy URLLC Slice",
+        "intentType": "NETWORK_SLICE_INTENT",
+        "intentState": "CREATED",
+        "intentPriority": 9,
+        "targetSite": "edge2",
+        "intentExpectations": [],
+        "intentMetadata": {"createdAt": "2025-01-12T10:30:00Z"}
+    })
+
+    response = client.post(
+        "/generate_intent",
+        json={"text": "Deploy URLLC slice with ultra-low latency"}
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["targetSite"] == "edge2"
+    assert "URLLC" in data["intentName"]
+
+
+@patch('main.call_claude_cli')
+def test_generate_intent_mmtc_both(mock_claude):
+    """Test mMTC intent defaults to both sites"""
+    mock_claude.return_value = json.dumps({
+        "intentId": "intent-mmtc-123",
+        "intentName": "Deploy mMTC Slice",
+        "intentType": "NETWORK_SLICE_INTENT",
+        "intentState": "CREATED",
+        "intentPriority": 5,
+        "targetSite": "both",
+        "intentExpectations": [],
+        "intentMetadata": {"createdAt": "2025-01-12T10:30:00Z"}
+    })
+
+    response = client.post(
+        "/generate_intent",
+        json={"text": "Deploy mMTC slice for IoT devices across multiple sites"}
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["targetSite"] == "both"
+    assert "mMTC" in data["intentName"]
+
+
+def test_target_site_validation():
+    """Test that targetSite field is properly validated"""
+    from tests.test_intent_schema import validate_intent_json
+
+    # Valid targetSite values
+    valid_intent = {
+        "intentId": "test-123",
+        "intentName": "Test Intent",
+        "intentType": "NETWORK_SLICE_INTENT",
+        "intentState": "CREATED",
+        "intentPriority": 5,
+        "targetSite": "edge1",
+        "intentExpectations": [],
+        "intentMetadata": {"createdAt": "2025-01-12T10:30:00Z"}
+    }
+
+    # Test all valid values
+    for site in ["edge1", "edge2", "both"]:
+        valid_intent["targetSite"] = site
+        assert validate_intent_json(valid_intent), f"Failed to validate targetSite: {site}"
+
+    # Test invalid value
+    valid_intent["targetSite"] = "invalid_site"
+    assert not validate_intent_json(valid_intent), "Should fail validation for invalid targetSite"
 
 
 if __name__ == "__main__":
