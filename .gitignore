@@ -88,3 +88,34 @@ CLAUDE.md.bak
 # Temporary files
 **/waiting_for_*.txt
 **/*.tmp
+### vm-2 defaults
+# toolchains / binaries / archives
+go/
+kubectl
+kind
+kpt
+cosign
+*.tar.gz
+*.tgz
+*.zip
+*.img
+*.iso
+
+# python / node / build cache
+__pycache__/
+*.pyc
+node_modules/
+dist/
+
+# local env & secrets
+.env
+.env.*
+*secret*.yaml
+*token*.yaml
+gitea-secret.yaml
+!*.example.yaml
+
+# misc
+.DS_Store
+CLAUDE.md
+.claude*
