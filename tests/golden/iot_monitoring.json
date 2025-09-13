@@ -1,0 +1,21 @@
+{
+  "intentId": "intent_iot_monitoring",
+  "name": "IoT Monitoring Infrastructure",
+  "description": "Create IoT monitoring infrastructure with high capacity for industrial sensors across both edge sites",
+  "targetSite": "both",
+  "parameters": {
+    "type": "iot_infrastructure",
+    "requirements": {
+      "capacity": "100000 devices",
+      "bandwidth": "10Gbps",
+      "reliability": "99.9%"
+    },
+    "configuration": {
+      "service": "iot_monitoring",
+      "protocol": "mqtt",
+      "deviceType": "industrial_sensors"
+    }
+  },
+  "priority": "medium",
+  "lifecycle": "draft"
+}

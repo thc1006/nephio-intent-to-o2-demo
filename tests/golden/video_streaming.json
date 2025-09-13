@@ -1,0 +1,22 @@
+{
+  "intentId": "intent_video_edge2",
+  "name": "Video Streaming Service - Edge Site 2",
+  "description": "Set up high-bandwidth video streaming service for edge site 2 with CDN capabilities",
+  "targetSite": "edge2",
+  "parameters": {
+    "type": "video_streaming",
+    "requirements": {
+      "bandwidth": "10Gbps",
+      "latency": "20ms",
+      "capacity": "10000 concurrent users"
+    },
+    "configuration": {
+      "service": "video_streaming",
+      "cdn": true,
+      "encoding": "h265",
+      "quality": "4K"
+    }
+  },
+  "priority": "high",
+  "lifecycle": "draft"
+}

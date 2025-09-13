@@ -1,0 +1,21 @@
+{
+  "intentId": "intent_gaming_edge1",
+  "name": "5G Gaming Slice - Edge Site 1",
+  "description": "Deploy a 5G network slice with ultra-low latency for gaming services at edge site 1",
+  "targetSite": "edge1",
+  "parameters": {
+    "type": "5G_network_slice",
+    "requirements": {
+      "latency": "5ms",
+      "bandwidth": "100Mbps",
+      "reliability": "99.99%"
+    },
+    "configuration": {
+      "service": "gaming",
+      "qos": "ultra-low-latency",
+      "sliceType": "eMBB"
+    }
+  },
+  "priority": "high",
+  "lifecycle": "draft"
+}
