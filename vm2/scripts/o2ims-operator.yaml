@@ -1,0 +1,41 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: o2ims-system
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: o2ims-controller
+  namespace: o2ims-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: o2ims-controller
+  template:
+    metadata:
+      labels:
+        app: o2ims-controller
+    spec:
+      containers:
+      - name: controller
+        image: busybox:latest  # Placeholder
+        command: ["sh", "-c", "echo 'O2IMS controller running'; sleep infinity"]
+        ports:
+        - containerPort: 8080
+          name: metrics
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: o2ims-api
+  namespace: o2ims-system
+spec:
+  type: NodePort
+  ports:
+  - port: 8080
+    targetPort: 8080
+    nodePort: 31280
+  selector:
+    app: o2ims-controller

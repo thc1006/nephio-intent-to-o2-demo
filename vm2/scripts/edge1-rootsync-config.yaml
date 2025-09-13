@@ -1,0 +1,29 @@
+# RootSync configuration for Edge1 (VM-2)
+# Note: This requires Config Sync operator to be installed
+# Currently using custom deployment instead
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: git-creds-edge1
+  namespace: config-management-system
+type: Opaque
+data:
+  username: YWRtaW4x  # admin1
+  token: YWRtaW4xMjM=  # admin123
+---
+apiVersion: configsync.gke.io/v1beta1
+kind: RootSync
+metadata:
+  name: edge1-rootsync
+  namespace: config-management-system
+spec:
+  sourceFormat: unstructured
+  git:
+    repo: http://172.16.0.78:30924/admin1/edge1-config.git
+    branch: main
+    dir: clusters/edge1
+    period: 60s
+    auth: token
+    secretRef:
+      name: git-creds-edge1
