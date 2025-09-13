@@ -4,10 +4,10 @@ set -euo pipefail
 # o2ims_probe.sh - Multi-site O2IMS Infrastructure Management System Probe
 # Supports probing edge1 and edge2 clusters with comprehensive health checks
 
-# Sites configuration
+# Sites configuration (both VM-2 and VM-4 ready)
 declare -A SITES=(
     [edge1]="http://172.16.4.45:31280"
-    [edge2]="http://172.16.4.55:31280"
+    [edge2]="http://172.16.0.89:31280"
 )
 
 # Configuration defaults
