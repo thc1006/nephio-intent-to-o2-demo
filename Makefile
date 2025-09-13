@@ -56,7 +56,19 @@ contract-test: ## Run contract tests for Intent to KRM translator
 	@echo "Testing exact field mappings and deterministic outputs..."
 	@python$(PYTHON_VERSION) tests/contract/test_contract.py || exit 1
 	@echo ""
+	@echo "Testing current implementation features..."
+	@python$(PYTHON_VERSION) tests/contract/test_contract_current.py || exit 1
+	@echo ""
 	@echo "Contract tests complete!"
+
+contract-test-full: ## Run all contract tests including future features
+	@echo "================================================="
+	@echo "Running Full Contract Test Suite"
+	@echo "================================================="
+	@python$(PYTHON_VERSION) tests/contract/test_contract.py || exit 1
+	@python$(PYTHON_VERSION) tests/contract/test_contract_current.py || exit 1
+	@python$(PYTHON_VERSION) tests/contract/test_enhanced_contract.py || true
+	@echo "Full test suite complete!"
 
 build: ## Build all components
 	@echo "Building Python components..."
