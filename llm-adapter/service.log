@@ -62,3 +62,7 @@ INFO:     Waiting for application startup.
 INFO:     Application startup complete.
 INFO:     Uvicorn running on http://0.0.0.0:8888 (Press CTRL+C to quit)
 INFO:     127.0.0.1:50730 - "GET /health HTTP/1.1" 200 OK
+INFO:     172.16.0.78:41476 - "GET /health HTTP/1.1" 200 OK
+WARNING:  Invalid HTTP request received.
+INFO:     172.16.0.78:41570 - "GET /health HTTP/1.1" 200 OK
+INFO:     172.16.0.78:55030 - "GET /health HTTP/1.1" 200 OK
