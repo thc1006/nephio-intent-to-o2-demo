@@ -1,0 +1,80 @@
+{
+  "timestamp": "2025-09-13T12:25:00Z",
+  "cluster": "edge1",
+  "verification_status": "READY",
+  "cluster_health": {
+    "nodes": {
+      "edge-control-plane": {
+        "status": "Ready",
+        "roles": "control-plane",
+        "version": "v1.27.3"
+      }
+    },
+    "total_nodes": 1,
+    "ready_nodes": 1
+  },
+  "o2ims_resources": {
+    "measurement_jobs": {
+      "count": 1,
+      "items": [
+        {
+          "name": "slo-metrics-scraper",
+          "namespace": "o2ims-system",
+          "target": "http://slo-collector.slo-monitoring.svc.cluster.local:8090",
+          "status": "Active"
+        }
+      ]
+    },
+    "pr_resources": {
+      "status": "No PR CRD found",
+      "note": "Using MeasurementJobs CRD for O2IMS operations"
+    }
+  },
+  "service_endpoints": {
+    "o2ims_api": {
+      "endpoint": "http://172.16.4.45:31280",
+      "status": "Deployed",
+      "note": "API deployed but not fully configured"
+    },
+    "slo_collector": {
+      "endpoint": "http://172.16.4.45:30090",
+      "status": "Active",
+      "metrics_available": true
+    },
+    "echo_service_v2": {
+      "endpoint": "http://172.16.4.45:31080",
+      "status": "Active",
+      "replicas": 3
+    }
+  },
+  "slo_metrics": {
+    "last_update": "2025-09-13T12:17:38.142745Z",
+    "service": "echo-service-v2",
+    "success_rate": 99.5,
+    "requests_per_second": 33.3,
+    "latency_p50_ms": 12.5,
+    "latency_p95_ms": 45.2,
+    "latency_p99_ms": 78.9,
+    "total_requests": 1000
+  },
+  "workload_status": {
+    "slo_monitoring": {
+      "running_pods": 9,
+      "completed_jobs": 4,
+      "active_services": 3
+    }
+  },
+  "validation_summary": {
+    "cluster_ready": true,
+    "services_available": true,
+    "slo_metrics_flowing": true,
+    "o2ims_partial": true,
+    "overall_status": "READY_WITH_NOTES",
+    "notes": [
+      "Cluster is healthy and operational",
+      "SLO monitoring and metrics collection active",
+      "O2IMS API deployed but configuration pending",
+      "All critical services responding"
+    ]
+  }
+}
