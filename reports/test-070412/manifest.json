@@ -1,0 +1,195 @@
+{
+  "package_info": {
+    "timestamp": "2025-09-13T07:04:41Z",
+    "version": "1.0.0",
+    "generator": "package_artifacts.sh",
+    "maintainer": "nephio-demo@example.com",
+    "report_id": "test-070412"
+  },
+  "artifacts": {
+    "total_count": 24,
+    "total_size_bytes": 66771,
+    "checksums_file": "checksums.txt",
+    "files": [
+      {
+        "path": "intent.json",
+        "size_bytes": 458,
+        "sha256": "e79afaae7c8a354482981bdfca12af9720c76f283259bd4cda65e97dee6c44b3",
+        "type": "application/json"
+      }
+,
+      {
+        "path": "o2ims.json",
+        "size_bytes": 184,
+        "sha256": "f219446eff461f81730f3529e787dfd7443618da4bdc4015a8171c8b73c6fba9",
+        "type": "application/json"
+      }
+,
+      {
+        "path": "postcheck.json",
+        "size_bytes": 182,
+        "sha256": "b05a3df0eb3b76308dd39ca8624510a531c0d77a3e17bf9177294a71b40ce9a8",
+        "type": "application/json"
+      }
+,
+      {
+        "path": "rendered/edge1-config/kustomization.yaml",
+        "size_bytes": 336,
+        "sha256": "4f2a8df3bb424bdaa34ec0dad4bbf7b7fec665d783c1dd8c2fdafbe5fcc07c65",
+        "type": "text/plain"
+      }
+,
+      {
+        "path": "rendered/edge1-config/monitoring/kustomization.yaml",
+        "size_bytes": 217,
+        "sha256": "3a70918d632b7149967da327d72f74e0302f46e6c589a011404237ca01d65e09",
+        "type": "text/plain"
+      }
+,
+      {
+        "path": "rendered/edge1-config/namespaces.yaml",
+        "size_bytes": 188,
+        "sha256": "2e4bfd66d74d8b8e54b19d11250f06967b49b0e5d6b0ce85908e6016bea2c8ca",
+        "type": "text/plain"
+      }
+,
+      {
+        "path": "rendered/edge1-config/network-functions/kustomization.yaml",
+        "size_bytes": 204,
+        "sha256": "a359ebc9c8838a7e0f21e817c5f6e44e420cbd92a971602548665c46266bd0ae",
+        "type": "text/plain"
+      }
+,
+      {
+        "path": "rendered/edge1-config/services/kustomization.yaml",
+        "size_bytes": 195,
+        "sha256": "f157a32a9bfa2ca5d35cd44e96b1a7c4feb6d7c164597732f3ab6b9dfdaddeee",
+        "type": "text/plain"
+      }
+,
+      {
+        "path": "rendered/edge2-config/README.md",
+        "size_bytes": 4569,
+        "sha256": "79b58393b9274978083d1655da90e28c713eff99a37d7f8da93ce8e65cf1a24f",
+        "type": "text/plain"
+      }
+,
+      {
+        "path": "rendered/edge2-config/kustomization.yaml",
+        "size_bytes": 336,
+        "sha256": "acfa3590608d142f0d48870e853b2c953292b4f7127cff41344303a472e22406",
+        "type": "text/plain"
+      }
+,
+      {
+        "path": "rendered/edge2-config/monitoring/alerting-rules.yaml",
+        "size_bytes": 3745,
+        "sha256": "d80e33a12f476ee185f3fa590edbe97c83017b51c1de0b7f58e7198ec33922c7",
+        "type": "text/plain"
+      }
+,
+      {
+        "path": "rendered/edge2-config/monitoring/dashboards.json",
+        "size_bytes": 1601,
+        "sha256": "42c8d82fc35ab2251ca6eaebb2eb57234a0c927aa37782de94fe8e6b1efd9de2",
+        "type": "application/json"
+      }
+,
+      {
+        "path": "rendered/edge2-config/monitoring/grafana-config.yaml",
+        "size_bytes": 1276,
+        "sha256": "675dcf82af27683dc6973decbc404672f194aba345ea506cc25a229774368bee",
+        "type": "text/plain"
+      }
+,
+      {
+        "path": "rendered/edge2-config/monitoring/kustomization.yaml",
+        "size_bytes": 733,
+        "sha256": "9f0c4c980265dee369f8a1dfa3951ffceeabf4e32f03d4b2e2c3652633f769aa",
+        "type": "text/plain"
+      }
+,
+      {
+        "path": "rendered/edge2-config/monitoring/prometheus-config.yaml",
+        "size_bytes": 2774,
+        "sha256": "d0236a80cbcb5d8b1e72c05af2e85bb9cf15b99c5cd020b1debbe8a7786e38de",
+        "type": "text/plain"
+      }
+,
+      {
+        "path": "rendered/edge2-config/monitoring/slo-monitoring.yaml",
+        "size_bytes": 2013,
+        "sha256": "3cd66e3d5cd0d60c285670d3581bed49422ba69a88925a82615f10f52a1c95a3",
+        "type": "text/plain"
+      }
+,
+      {
+        "path": "rendered/edge2-config/namespaces.yaml",
+        "size_bytes": 188,
+        "sha256": "2e4bfd66d74d8b8e54b19d11250f06967b49b0e5d6b0ce85908e6016bea2c8ca",
+        "type": "text/plain"
+      }
+,
+      {
+        "path": "rendered/edge2-config/network-functions/kustomization.yaml",
+        "size_bytes": 392,
+        "sha256": "f315e0359037588e950725c83a0e6eb1277dbdeea187396dceb4743ece951680",
+        "type": "text/plain"
+      }
+,
+      {
+        "path": "rendered/edge2-config/network-functions/placeholder-configmap.yaml",
+        "size_bytes": 597,
+        "sha256": "f73d9266c80a9babaaa8d7fc8245a4e221c51b9d720c295c79f3f0ebcc88b643",
+        "type": "text/plain"
+      }
+,
+      {
+        "path": "rendered/edge2-config/services/ingress-config.yaml",
+        "size_bytes": 1298,
+        "sha256": "e713c72e74a6268237352b6dd6459bd307d55c17ec2d35ed146aa3c455c1bf1f",
+        "type": "text/plain"
+      }
+,
+      {
+        "path": "rendered/edge2-config/services/kustomization.yaml",
+        "size_bytes": 659,
+        "sha256": "dfec3a59499bbaf51df2ffa971bbf028b20a2fd42533cb4560c9dc523c4c447e",
+        "type": "text/plain"
+      }
+,
+      {
+        "path": "rendered/edge2-config/services/load-balancer.yaml",
+        "size_bytes": 907,
+        "sha256": "de7c3d6d4d14fae69254cbe2cdc174a50f0cb92e6d080370b69b4bdb163aa83d",
+        "type": "text/plain"
+      }
+,
+      {
+        "path": "rendered/edge2-config/services/service-discovery.yaml",
+        "size_bytes": 887,
+        "sha256": "30a02033b5438c2327637a98779471d728e97e89d2c900a81cea19e46fd8882d",
+        "type": "text/plain"
+      }
+,
+      {
+        "path": "rendered/edge2-config/sync-config.yaml",
+        "size_bytes": 1872,
+        "sha256": "8404ca2bf226bfb8263f140f98415742ce9cf329d63207d14b04381eb15966ae",
+        "type": "text/plain"
+      }
+    ]
+  },
+  "compliance": {
+    "o_ran_wg11": true,
+    "tmf921": true,
+    "fips_140_3": true,
+    "supply_chain_levels": ["SLSA_L1", "SLSA_L2"]
+  },
+  "security": {
+    "checksums_verified": true,
+    "cosign_available": true,
+    "sbom_generated": false,
+    "attestation_generated": false
+  }
+}

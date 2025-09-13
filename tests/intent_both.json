@@ -1,0 +1,10 @@
+{
+  "intentId": "test-002",
+  "serviceType": "massive-machine-type",
+  "targetSite": "both",
+  "resourceProfile": "standard",
+  "sla": {
+    "availability": 99.9,
+    "connections": 1000000
+  }
+}

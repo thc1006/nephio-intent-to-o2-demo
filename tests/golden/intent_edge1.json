@@ -1,0 +1,30 @@
+{
+  "intentExpectationId": "golden-edge1-001",
+  "intentExpectationType": "NetworkSliceIntent",
+  "targetSite": "edge1",
+  "intent": {
+    "serviceName": "golden-service-edge1",
+    "serviceType": "eMBB",
+    "networkSlice": {
+      "sliceId": "golden-slice-edge1-001",
+      "sliceType": "eMBB",
+      "maxNumberofUEs": 10000,
+      "maxNumberofConnections": 50000
+    },
+    "qos": {
+      "downlinkThroughput": "1Gbps",
+      "uplinkThroughput": "100Mbps",
+      "latency": "20ms",
+      "reliability": "99.9%"
+    },
+    "coverageArea": {
+      "site": "edge1",
+      "region": "us-west",
+      "zone": "zone-1"
+    },
+    "lifecycle": {
+      "startTime": "2025-01-01T00:00:00Z",
+      "endTime": "2025-12-31T23:59:59Z"
+    }
+  }
+}

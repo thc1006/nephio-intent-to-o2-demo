@@ -1,0 +1,105 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: load-generator-script
+  namespace: slo-monitoring
+data:
+  load-test.sh: |
+    #!/bin/sh
+    set -e
+
+    ECHO_SERVICE="http://echo-service.slo-monitoring.svc.cluster.local:8080"
+    EXPORTER_SERVICE="http://slo-exporter-service.slo-monitoring.svc.cluster.local:8090"
+
+    echo "Starting load test against echo service..."
+
+    # Run load test for 30 seconds
+    for i in $(seq 1 300); do
+      START_TIME=$(date +%s%N)
+
+      # Make request to echo service
+      if curl -s -o /dev/null -w "%{http_code}" --max-time 1 "$ECHO_SERVICE" | grep -q "200"; then
+        SUCCESS=true
+      else
+        SUCCESS=false
+      fi
+
+      END_TIME=$(date +%s%N)
+      LATENCY_NS=$((END_TIME - START_TIME))
+      LATENCY_MS=$((LATENCY_NS / 1000000))
+
+      # Update metrics in exporter
+      curl -s "$EXPORTER_SERVICE/update" > /dev/null 2>&1 || true
+
+      # Small delay between requests
+      sleep 0.1
+    done
+
+    echo "Load test completed. Fetching current SLO metrics..."
+    curl -s "$EXPORTER_SERVICE/metrics/api/v1/slo" | jq . || echo "Failed to fetch metrics"
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: load-generator
+  namespace: slo-monitoring
+spec:
+  schedule: "*/5 * * * *"  # Run every 5 minutes
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: load-generator
+            image: curlimages/curl:latest
+            command: ["/bin/sh"]
+            args: ["/scripts/load-test.sh"]
+            volumeMounts:
+            - name: script
+              mountPath: /scripts
+            resources:
+              requests:
+                cpu: 10m
+                memory: 32Mi
+              limits:
+                cpu: 100m
+                memory: 64Mi
+          restartPolicy: OnFailure
+          volumes:
+          - name: script
+            configMap:
+              name: load-generator-script
+              defaultMode: 0755
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: load-generator-initial
+  namespace: slo-monitoring
+spec:
+  template:
+    spec:
+      containers:
+      - name: load-generator
+        image: curlimages/curl:latest
+        command: ["/bin/sh"]
+        args: ["/scripts/load-test.sh"]
+        volumeMounts:
+        - name: script
+          mountPath: /scripts
+        resources:
+          requests:
+            cpu: 10m
+            memory: 32Mi
+          limits:
+            cpu: 100m
+            memory: 64Mi
+      restartPolicy: OnFailure
+      volumes:
+      - name: script
+        configMap:
+          name: load-generator-script
+          defaultMode: 0755

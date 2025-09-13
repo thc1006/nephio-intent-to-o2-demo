@@ -1,0 +1,58 @@
+# RootSync configuration for Edge2 cluster
+# Deploy this to the edge2 cluster (VM-4: TBD)
+#
+# Prerequisites:
+# 1. Config Sync operator installed on edge2 cluster
+# 2. Git credentials configured if using private repo
+# 3. Proper RBAC permissions for sync
+#
+apiVersion: configsync.gke.io/v1beta1
+kind: RootSync
+metadata:
+  name: edge2-root-sync
+  namespace: config-management-system
+spec:
+  sourceType: git
+  sourceFormat: unstructured
+  git:
+    repo: https://github.com/your-org/nephio-intent-to-o2-demo
+    branch: main
+    dir: gitops/edge2-config
+    period: 30s
+    auth: none  # Change to 'ssh' or 'token' for private repos
+    # secretRef:
+    #   name: git-creds  # Create secret with git credentials if needed
+  override:
+    apiServerEndpoint: https://TBD:6443  # Update with VM-4 IP after deployment
+    clusterName: edge2
+    metadata:
+      labels:
+        site: edge2
+        managed-by: config-sync
+      annotations:
+        config.nephio.org/sync-time: "30s"
+        config.nephio.org/site: "edge2"
+---
+# ClusterRole for edge2 sync permissions
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: edge2-sync-role
+rules:
+- apiGroups: ["*"]
+  resources: ["*"]
+  verbs: ["*"]
+---
+# ClusterRoleBinding for edge2 sync
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: edge2-sync-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: edge2-sync-role
+subjects:
+- kind: ServiceAccount
+  name: root-reconciler
+  namespace: config-management-system

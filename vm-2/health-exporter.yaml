@@ -1,0 +1,110 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: health-exporter
+  namespace: edge-observability
+data:
+  health-check.sh: |
+    #!/bin/sh
+    # Simple health exporter that provides SLO gate endpoints
+    
+    while true; do
+      {
+        echo "HTTP/1.1 200 OK"
+        echo "Content-Type: application/json"
+        echo "Access-Control-Allow-Origin: *"
+        echo ""
+        
+        # Get basic health metrics
+        READY_PODS=$(kubectl get pods --all-namespaces -o json | jq '[.items[] | select(.status.conditions[]? | select(.type=="Ready" and .status=="True"))] | length')
+        TOTAL_PODS=$(kubectl get pods --all-namespaces -o json | jq '.items | length')
+        READY_DEPS=$(kubectl get deployments --all-namespaces -o json | jq '[.items[] | select(.status.replicas == .status.availableReplicas)] | length')
+        TOTAL_DEPS=$(kubectl get deployments --all-namespaces -o json | jq '.items | length')
+        
+        cat <<EOF
+    {
+      "timestamp": "$(date -Iseconds)",
+      "slo_gates": {
+        "pods_ready": {
+          "value": $READY_PODS,
+          "total": $TOTAL_PODS,
+          "threshold": 0.95,
+          "passed": $(echo "$READY_PODS $TOTAL_PODS" | awk '{if ($2 > 0) print ($1/$2 >= 0.95) ? "true" : "false"; else print "false"}')
+        },
+        "deployments_available": {
+          "value": $READY_DEPS,
+          "total": $TOTAL_DEPS,
+          "threshold": 1.0,
+          "passed": $(echo "$READY_DEPS $TOTAL_DEPS" | awk '{if ($2 > 0) print ($1/$2 >= 1.0) ? "true" : "false"; else print "false"}')
+        },
+        "critical_namespaces": {
+          "kube_system": $(kubectl get ns kube-system >/dev/null 2>&1 && echo "true" || echo "false"),
+          "o2ims_system": $(kubectl get ns o2ims-system >/dev/null 2>&1 && echo "true" || echo "false"),
+          "config_management": $(kubectl get ns config-management-system >/dev/null 2>&1 && echo "true" || echo "false")
+        },
+        "api_endpoints": {
+          "kubernetes": $(curl -k -s -f --connect-timeout 2 https://localhost:6443/healthz >/dev/null 2>&1 && echo "true" || echo "false"),
+          "metrics": $(curl -s -f --connect-timeout 2 http://localhost:8080/metrics >/dev/null 2>&1 && echo "true" || echo "false")
+        }
+      },
+      "overall_health": $([ $READY_PODS -ge $(($TOTAL_PODS * 95 / 100)) ] && echo "true" || echo "false")
+    }
+    EOF
+      } | nc -l -p 8090 -q 1
+    done
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: health-exporter
+  namespace: edge-observability
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: health-exporter
+  template:
+    metadata:
+      labels:
+        app: health-exporter
+    spec:
+      serviceAccountName: kube-state-metrics  # Reuse the same SA for simplicity
+      containers:
+      - name: exporter
+        image: alpine:3.18
+        command: ["/bin/sh"]
+        args: ["-c", "apk add --no-cache curl jq kubectl && kubectl version && sh /scripts/health-check.sh"]
+        ports:
+        - containerPort: 8090
+          name: health
+        volumeMounts:
+        - name: script
+          mountPath: /scripts
+        resources:
+          limits:
+            memory: "64Mi"
+            cpu: "50m"
+          requests:
+            memory: "32Mi"
+            cpu: "10m"
+      volumes:
+      - name: script
+        configMap:
+          name: health-exporter
+          defaultMode: 0755
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: health-exporter
+  namespace: edge-observability
+spec:
+  type: NodePort
+  ports:
+  - name: health
+    port: 8090
+    targetPort: 8090
+    nodePort: 31090
+  selector:
+    app: health-exporter

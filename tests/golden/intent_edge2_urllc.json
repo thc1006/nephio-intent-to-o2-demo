@@ -1,0 +1,31 @@
+{
+  "intentExpectationId": "urllc-edge2-001",
+  "intentExpectationType": "ServicePerformance",
+  "intentExpectationContext": {
+    "contextAttribute": "networkSlice",
+    "contextCondition": "EQUAL",
+    "contextValueRange": ["urllc-slice"]
+  },
+  "intentExpectationTarget": {
+    "targetAttribute": "latency",
+    "targetCondition": "LESS_THAN",
+    "targetValue": "1ms"
+  },
+  "intentExpectationObject": {
+    "objectType": "NetworkSlice",
+    "objectInstance": "urllc-slice-edge2"
+  },
+  "targetSite": "edge2",
+  "intent": {
+    "serviceType": "URLLC",
+    "networkSlice": {
+      "sliceId": "urllc-slice-edge2",
+      "sliceType": "URLLC"
+    },
+    "qos": {
+      "latency": "1ms",
+      "reliability": "99.999%",
+      "availability": "99.99%"
+    }
+  }
+}

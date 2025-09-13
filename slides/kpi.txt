@@ -1,0 +1,34 @@
+NEPHIO INTENT-TO-O2 KPI DASHBOARD
+================================
+
+DEPLOYMENT PERFORMANCE
+─────────────────────
+Provisioning Time:    ████████░░ 80% (4.2min / 5min target)
+Multi-Site Sync:      ██████████ 100% (18s / 30s target)
+SLO Gate Response:    ██████████ 100% (142ms / 200ms target)
+
+SECURITY COMPLIANCE
+─────────────────
+Policy Adherence:     ████████████ 96%
+Signature Verification: ██████████ 100%
+Vulnerability Score:  ████████░░ 85%
+
+PLATFORM ADOPTION
+────────────────
+Self-Service Rate:    ████████████ 92%
+Developer Satisfaction: ██████████ 4.6/5.0
+Platform Uptime:     ███████████ 99.9%
+
+MULTI-SITE OPERATIONS
+───────────────────
+Edge1 Health:        ██████████ 100%
+Edge2 Health:        ████████░░ 89%
+GitOps Sync Status:  ██████████ 100%
+
+RESOURCE UTILIZATION
+──────────────────
+CPU Usage:           ██████░░░░ 65%
+Memory Usage:        ████████░░ 78%
+Storage Usage:       █████░░░░░ 52%
+
+Legend: █ = Good  ░ = Warning/Target

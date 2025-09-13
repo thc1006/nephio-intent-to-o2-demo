@@ -1,0 +1,11 @@
+{
+  "intentId": "test-001",
+  "serviceType": "enhanced-mobile-broadband",
+  "targetSite": "edge1",
+  "resourceProfile": "standard",
+  "sla": {
+    "availability": 99.99,
+    "latency": 10,
+    "throughput": 1000
+  }
+}

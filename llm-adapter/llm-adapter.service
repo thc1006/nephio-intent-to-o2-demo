@@ -1,0 +1,18 @@
+[Unit]
+Description=LLM Intent Adapter Service
+After=network.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=5
+User=ubuntu
+WorkingDirectory=/home/ubuntu/nephio-intent-to-o2-demo/llm-adapter
+Environment="PATH=/home/ubuntu/nephio-intent-to-o2-demo/llm-adapter/.venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+ExecStart=/home/ubuntu/nephio-intent-to-o2-demo/llm-adapter/.venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000
+StandardOutput=append:/home/ubuntu/nephio-intent-to-o2-demo/llm-adapter/service.log
+StandardError=append:/home/ubuntu/nephio-intent-to-o2-demo/llm-adapter/service.log
+
+[Install]
+WantedBy=multi-user.target

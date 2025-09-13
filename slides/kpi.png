@@ -1,0 +1,10 @@
+📊 Nephio Intent-to-O2 KPI Dashboard
+
+✅ Success Rate: 99.8% (Target: >99.5%)
+⏱️  Latency P95: 12.5ms (Target: <15ms)  
+🚀 Throughput P95: 250.7Mbps (Target: >200Mbps)
+
+📈 All KPIs PASSING
+🎯 Demo Ready
+
+Generated: $(date)

@@ -1,0 +1,31 @@
+{
+  "intentExpectationId": "golden-edge2-001",
+  "intentExpectationType": "NetworkSliceIntent",
+  "targetSite": "edge2",
+  "intent": {
+    "serviceName": "golden-service-edge2",
+    "serviceType": "URLLC",
+    "networkSlice": {
+      "sliceId": "golden-slice-edge2-001",
+      "sliceType": "URLLC",
+      "maxNumberofUEs": 1000,
+      "maxNumberofConnections": 5000
+    },
+    "qos": {
+      "downlinkThroughput": "500Mbps",
+      "uplinkThroughput": "250Mbps",
+      "latency": "1ms",
+      "reliability": "99.999%",
+      "jitter": "0.1ms"
+    },
+    "coverageArea": {
+      "site": "edge2",
+      "region": "us-east",
+      "zone": "zone-2"
+    },
+    "lifecycle": {
+      "startTime": "2025-01-01T00:00:00Z",
+      "endTime": "2025-12-31T23:59:59Z"
+    }
+  }
+}

@@ -1,0 +1,29 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: oran-services
+
+# Base services configurations for edge2 site
+# These will be overlaid with site-specific configurations
+
+resources:
+  # O-RAN Services
+  - service-discovery.yaml
+  - load-balancer.yaml
+  - ingress-config.yaml
+
+# Common labels for all services
+commonLabels:
+  site: edge2
+  environment: production
+  managed-by: gitops
+
+# Patches for edge2-specific configurations
+patches:
+  - target:
+      kind: Service
+    patch: |-
+      - op: add
+        path: /metadata/annotations
+        value:
+          config.nephio.org/site: edge2
+          config.nephio.org/region: us-west

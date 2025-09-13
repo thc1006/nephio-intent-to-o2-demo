@@ -1,0 +1,31 @@
+{
+  "intentExpectationId": "embb-edge1-001",
+  "intentExpectationType": "ServicePerformance",
+  "intentExpectationContext": {
+    "contextAttribute": "networkSlice",
+    "contextCondition": "EQUAL",
+    "contextValueRange": ["embb-slice"]
+  },
+  "intentExpectationTarget": {
+    "targetAttribute": "throughput",
+    "targetCondition": "GREATER_THAN",
+    "targetValue": "1000Mbps"
+  },
+  "intentExpectationObject": {
+    "objectType": "NetworkSlice",
+    "objectInstance": "embb-slice-edge1"
+  },
+  "targetSite": "edge1",
+  "intent": {
+    "serviceType": "eMBB",
+    "networkSlice": {
+      "sliceId": "embb-slice-edge1",
+      "sliceType": "eMBB"
+    },
+    "qos": {
+      "downlinkThroughput": "1Gbps",
+      "uplinkThroughput": "100Mbps",
+      "latency": "10ms"
+    }
+  }
+}

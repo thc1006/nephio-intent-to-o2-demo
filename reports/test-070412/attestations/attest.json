@@ -1,0 +1,32 @@
+{
+  "buildType": "https://nephio.org/slsa/build-type/artifact-package/v1",
+  "builder": {
+    "id": "package_artifacts.sh",
+    "version": "1.0.0"
+  },
+  "invocation": {
+    "configSource": {},
+    "parameters": {},
+    "environment": {
+      "timestamp": "2025-09-13T07:04:12Z",
+      "report_id": "test-070412"
+    }
+  },
+  "metadata": {
+    "buildInvocationId": "test-070412",
+    "completeness": {
+      "parameters": true,
+      "environment": false,
+      "materials": true
+    },
+    "reproducible": false
+  },
+  "materials": [
+    {
+      "uri": "file://./reports/test-070412/manifest.json",
+      "digest": {
+        "sha256": "8ec121e3ff2d99a5967a6b7d1ab7bd8d56f9ca8daf57b37f47ddeac721f39de3"
+      }
+    }
+  ]
+}

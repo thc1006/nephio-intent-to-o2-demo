@@ -1,0 +1,15 @@
+{
+  "timestamp": "2025-09-13T07:04:41Z",
+  "scanner": "package_artifacts.sh",
+  "scan_type": "basic_pattern_matching",
+  "findings_count": 4,
+  "findings": [
+    "potential_secret:./reports/test-070412/artifacts/rendered/edge2-config/monitoring/kustomization.yaml"    "potential_secret:./reports/test-070412/artifacts/rendered/edge2-config/monitoring/prometheus-config.yaml"    "potential_secret:./reports/test-070412/artifacts/rendered/edge2-config/README.md"    "potential_secret:./reports/test-070412/artifacts/rendered/edge2-config/sync-config.yaml"
+  ],
+  "summary": {
+    "critical": 0,
+    "high": 0,
+    "medium": 4,
+    "low": 0
+  }
+}

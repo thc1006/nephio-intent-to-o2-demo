@@ -1,0 +1,31 @@
+{
+  "intentExpectationId": "mmtc-both-001",
+  "intentExpectationType": "ServiceCapacity",
+  "intentExpectationContext": {
+    "contextAttribute": "networkSlice",
+    "contextCondition": "EQUAL",
+    "contextValueRange": ["mmtc-slice"]
+  },
+  "intentExpectationTarget": {
+    "targetAttribute": "deviceDensity",
+    "targetCondition": "GREATER_THAN",
+    "targetValue": "100000"
+  },
+  "intentExpectationObject": {
+    "objectType": "NetworkSlice",
+    "objectInstance": "mmtc-slice-both"
+  },
+  "targetSite": "both",
+  "intent": {
+    "serviceType": "mMTC",
+    "networkSlice": {
+      "sliceId": "mmtc-slice-both",
+      "sliceType": "mMTC"
+    },
+    "qos": {
+      "deviceDensity": "100000",
+      "batteryLife": "10years",
+      "powerEfficiency": "ultra-low"
+    }
+  }
+}
