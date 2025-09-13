@@ -1,0 +1,20 @@
+# toolchains / binaries / archives
+go/
+kubectl
+kind
+kpt
+*.tar.gz
+*.tgz
+*.zip
+*.img
+# python / node / build cache
+__pycache__/
+*.pyc
+.env
+.env.*
+node_modules/
+dist/
+# local logs
+*.log
+# nested git repos
+nephio-intent-to-o2-demo/
