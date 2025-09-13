@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 LLM Adapter for TMF921 Intent Generation
-Converts natural language to TMF921-compliant JSON with targetSite field
+Converts natural language to TMF921-compliant JSON with service, QoS, slice, and targetSite fields
 """
 
 import json
@@ -10,19 +10,70 @@ import subprocess
 import hashlib
 import time
 import os
-from typing import Dict, Any, Optional
+import random
+from typing import Dict, Any, Optional, Tuple
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse, HTMLResponse
 from pydantic import BaseModel, Field
 from jsonschema import validate, ValidationError
 import logging
+from datetime import datetime
+from dataclasses import dataclass
 
 # Configure logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 logger = logging.getLogger(__name__)
 
 # Initialize FastAPI app
-app = FastAPI(title="TMF921 Intent Generator", version="1.0.0")
+app = FastAPI(title="TMF921 Intent Generator", version="2.0.0")
+
+# Retry configuration
+@dataclass
+class RetryConfig:
+    """Configuration for retry logic with exponential backoff"""
+    max_retries: int = 3
+    initial_delay: float = 1.0  # seconds
+    max_delay: float = 16.0  # seconds
+    exponential_base: float = 2.0
+    jitter: bool = True  # Add random jitter to prevent thundering herd
+
+retry_config = RetryConfig()
+
+# Metrics tracking
+class Metrics:
+    """Track retry metrics for monitoring"""
+    def __init__(self):
+        self.total_requests = 0
+        self.successful_requests = 0
+        self.failed_requests = 0
+        self.retry_attempts = 0
+        self.total_retries = 0
+
+    def record_request(self, success: bool, retries: int):
+        self.total_requests += 1
+        if success:
+            self.successful_requests += 1
+        else:
+            self.failed_requests += 1
+        if retries > 0:
+            self.retry_attempts += 1
+            self.total_retries += retries
+
+    def get_stats(self) -> Dict[str, Any]:
+        return {
+            "total_requests": self.total_requests,
+            "successful_requests": self.successful_requests,
+            "failed_requests": self.failed_requests,
+            "retry_attempts": self.retry_attempts,
+            "total_retries": self.total_retries,
+            "retry_rate": self.retry_attempts / max(1, self.total_requests),
+            "success_rate": self.successful_requests / max(1, self.total_requests)
+        }
+
+metrics = Metrics()
 
 # Load TMF921 schema
 SCHEMA_PATH = os.path.join(os.path.dirname(__file__), "schema.json")
@@ -39,27 +90,52 @@ class IntentResponse(BaseModel):
     execution_time: float
     hash: str
 
-# Strict prompt for JSON-only output with targetSite
-PROMPT_TEMPLATE = """Output only JSON. No text before or after.
+# Deterministic prompt template for TMF921-aligned JSON output
+PROMPT_TEMPLATE = """You are a TMF921 intent generator. Output only valid JSON matching this exact structure. No explanations.
 
-Convert: "{nl_request}"
+Input: "{nl_request}"
+Target Site: {target_site}
 
-Required JSON format:
+Rules for output:
+1. Extract service type: eMBB (broadband), URLLC (low-latency), mMTC (IoT), or generic
+2. Extract QoS requirements: dl_mbps, ul_mbps, latency_ms from the request
+3. Map to network slice: SST 1=eMBB, 2=URLLC, 3=mMTC
+4. targetSite MUST be exactly: "{target_site}"
+
+Output this exact JSON structure:
 {{
-  "intentId": "intent_<timestamp>",
-  "name": "<short name>",
-  "description": "<description>",
-  "targetSite": "{target_site}",
-  "parameters": {{
-    "type": "<type>",
-    "requirements": {{}},
-    "configuration": {{}}
+  "intentId": "intent_<unix_timestamp_ms>",
+  "name": "<concise_name_max_50_chars>",
+  "description": "<full_description>",
+  "service": {{
+    "name": "<service_name>",
+    "type": "<eMBB|URLLC|mMTC|generic>",
+    "characteristics": {{
+      "reliability": "<high|medium|low>",
+      "mobility": "<fixed|nomadic|mobile>"
+    }}
   }},
-  "priority": "medium",
-  "lifecycle": "draft"
+  "targetSite": "{target_site}",
+  "qos": {{
+    "dl_mbps": <number_or_null>,
+    "ul_mbps": <number_or_null>,
+    "latency_ms": <number_or_null>,
+    "jitter_ms": <number_or_null>,
+    "packet_loss_rate": <number_0_to_1_or_null>
+  }},
+  "slice": {{
+    "sst": <1_for_eMBB_2_for_URLLC_3_for_mMTC>,
+    "sd": "<6_hex_digits_or_null>",
+    "plmn": "<5-6_digits_or_null>"
+  }},
+  "priority": "<low|medium|high|critical>",
+  "lifecycle": "draft",
+  "metadata": {{
+    "createdAt": "<ISO8601_timestamp>",
+    "version": "1.0.0"
+  }}
 }}
 
-targetSite must be: {target_site}
 JSON:"""
 
 def extract_json(output: str) -> Dict[str, Any]:
@@ -86,31 +162,93 @@ def extract_json(output: str) -> Dict[str, Any]:
     except json.JSONDecodeError:
         raise ValueError(f"No valid JSON found in output: {output[:200]}")
 
-def call_claude(prompt: str) -> str:
-    """Call Claude CLI with subprocess"""
-    cmd = ["claude", "--dangerously-skip-permissions", "-p", prompt]
+def calculate_backoff_delay(attempt: int, config: RetryConfig) -> float:
+    """Calculate exponential backoff delay with optional jitter"""
+    delay = min(
+        config.initial_delay * (config.exponential_base ** attempt),
+        config.max_delay
+    )
 
-    try:
-        result = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            timeout=20,
-            check=False
-        )
+    if config.jitter:
+        # Add random jitter between 0-25% of the delay
+        jitter_amount = delay * 0.25 * random.random()
+        delay += jitter_amount
 
-        if result.stdout:
-            return result.stdout
+    return delay
 
-        if result.stderr:
-            raise RuntimeError(f"Claude error: {result.stderr}")
+def call_claude_with_retry(prompt: str, config: RetryConfig = retry_config) -> Tuple[str, int]:
+    """Call Claude CLI with retry logic and exponential backoff
 
-        raise RuntimeError("No output from Claude")
+    Returns:
+        Tuple of (output, retry_count)
+    """
+    last_error = None
 
-    except subprocess.TimeoutExpired:
-        raise HTTPException(status_code=504, detail="Claude timeout")
-    except FileNotFoundError:
-        raise HTTPException(status_code=500, detail="Claude CLI not found")
+    for attempt in range(config.max_retries + 1):
+        try:
+            # Log retry attempt
+            if attempt > 0:
+                delay = calculate_backoff_delay(attempt - 1, config)
+                logger.info(f"Retry attempt {attempt}/{config.max_retries} after {delay:.2f}s delay")
+                time.sleep(delay)
+
+            # Call Claude CLI
+            cmd = ["claude", "--dangerously-skip-permissions", "-p", prompt]
+
+            result = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                timeout=20,
+                check=False
+            )
+
+            if result.stdout:
+                # Success - return output and retry count
+                if attempt > 0:
+                    logger.info(f"Successful after {attempt} retries")
+                return result.stdout, attempt
+
+            # Check for errors that should not be retried
+            if result.stderr:
+                error_msg = result.stderr.lower()
+
+                # Don't retry on authentication or permission errors
+                if any(x in error_msg for x in ["permission", "auth", "forbidden", "unauthorized"]):
+                    logger.error(f"Non-retryable error: {result.stderr}")
+                    raise HTTPException(status_code=403, detail=f"Claude error: {result.stderr}")
+
+                # Don't retry on invalid input errors
+                if any(x in error_msg for x in ["invalid", "malformed", "syntax"]):
+                    logger.error(f"Invalid input error: {result.stderr}")
+                    raise HTTPException(status_code=400, detail=f"Invalid prompt: {result.stderr}")
+
+                # Retryable error
+                last_error = RuntimeError(f"Claude error: {result.stderr}")
+                logger.warning(f"Retryable error on attempt {attempt + 1}: {result.stderr}")
+            else:
+                last_error = RuntimeError("No output from Claude")
+                logger.warning(f"No output on attempt {attempt + 1}")
+
+        except subprocess.TimeoutExpired:
+            last_error = HTTPException(status_code=504, detail="Claude timeout")
+            logger.warning(f"Timeout on attempt {attempt + 1}")
+        except FileNotFoundError:
+            # Don't retry if Claude CLI is not found
+            logger.error("Claude CLI not found")
+            raise HTTPException(status_code=500, detail="Claude CLI not found")
+        except HTTPException:
+            # Re-raise HTTPException without catching it
+            raise
+        except Exception as e:
+            last_error = e
+            logger.warning(f"Unexpected error on attempt {attempt + 1}: {e}")
+
+    # All retries exhausted
+    logger.error(f"All {config.max_retries + 1} attempts failed")
+    if isinstance(last_error, HTTPException):
+        raise last_error
+    raise HTTPException(status_code=503, detail=f"Service unavailable after {config.max_retries} retries")
 
 def determine_target_site(nl_text: str, override: Optional[str]) -> str:
     """Determine target site from text or use override"""
@@ -130,21 +268,151 @@ def determine_target_site(nl_text: str, override: Optional[str]) -> str:
     # Default to both if ambiguous
     return "both"
 
-def enforce_targetsite(intent: Dict[str, Any], target_site: str) -> Dict[str, Any]:
-    """Ensure targetSite field is present and valid"""
-    # Enforce targetSite
+def validate_and_fix_json(intent: Dict[str, Any]) -> Dict[str, Any]:
+    """Validate and fix common JSON issues from LLM output"""
+    # Fix common issues with LLM-generated JSON
+
+    # Ensure all required fields have proper types
+    if "qos" in intent and intent["qos"]:
+        for field in ["dl_mbps", "ul_mbps", "latency_ms", "jitter_ms", "packet_loss_rate"]:
+            if field in intent["qos"]:
+                val = intent["qos"][field]
+                # Convert string numbers to actual numbers
+                if isinstance(val, str):
+                    try:
+                        intent["qos"][field] = float(val) if "." in val else int(val)
+                    except (ValueError, TypeError):
+                        intent["qos"][field] = None
+
+    # Fix slice SST if it's a string
+    if "slice" in intent and "sst" in intent.get("slice", {}):
+        sst = intent["slice"]["sst"]
+        if isinstance(sst, str):
+            try:
+                intent["slice"]["sst"] = int(sst)
+            except (ValueError, TypeError):
+                intent["slice"]["sst"] = 1  # Default to eMBB
+
+    # Ensure targetSite is valid
+    if "targetSite" in intent:
+        if intent["targetSite"] not in ["edge1", "edge2", "both"]:
+            intent["targetSite"] = "both"  # Default to both if invalid
+
+    return intent
+
+def infer_service_and_qos(nl_text: str) -> tuple:
+    """Infer service type and QoS requirements from natural language"""
+    text_lower = nl_text.lower()
+
+    # Determine service type
+    if any(x in text_lower for x in ["video", "streaming", "gaming", "broadband", "embb"]):
+        service_type = "eMBB"
+        sst = 1
+    elif any(x in text_lower for x in ["low latency", "ultra-low", "urllc", "critical", "real-time"]):
+        service_type = "URLLC"
+        sst = 2
+    elif any(x in text_lower for x in ["iot", "sensor", "mmtc", "massive", "monitoring"]):
+        service_type = "mMTC"
+        sst = 3
+    else:
+        service_type = "generic"
+        sst = 1
+
+    # Extract QoS values
+    qos = {}
+
+    # Extract bandwidth
+    dl_match = re.search(r'(\d+)\s*(?:mbps|mb/s|gbps|gb/s)\s*(?:download|dl|downlink)', text_lower)
+    ul_match = re.search(r'(\d+)\s*(?:mbps|mb/s|gbps|gb/s)\s*(?:upload|ul|uplink)', text_lower)
+    bw_match = re.search(r'(\d+)\s*(?:mbps|mb/s|gbps|gb/s)', text_lower)
+
+    if dl_match:
+        qos['dl_mbps'] = float(dl_match.group(1)) * (1000 if 'gb' in dl_match.group(0) else 1)
+    elif bw_match:
+        qos['dl_mbps'] = float(bw_match.group(1)) * (1000 if 'gb' in bw_match.group(0) else 1)
+
+    if ul_match:
+        qos['ul_mbps'] = float(ul_match.group(1)) * (1000 if 'gb' in ul_match.group(0) else 1)
+    elif bw_match:
+        qos['ul_mbps'] = float(bw_match.group(1)) * (1000 if 'gb' in bw_match.group(0) else 1) * 0.5  # Assume 50% for upload
+
+    # Extract latency
+    latency_match = re.search(r'(\d+)\s*(?:ms|milliseconds?)', text_lower)
+    if latency_match:
+        qos['latency_ms'] = float(latency_match.group(1))
+    elif "low latency" in text_lower or service_type == "URLLC":
+        qos['latency_ms'] = 10
+    elif service_type == "eMBB":
+        qos['latency_ms'] = 50
+    elif service_type == "mMTC":
+        qos['latency_ms'] = 100
+
+    return service_type, sst, qos
+
+def enforce_tmf921_structure(intent: Dict[str, Any], target_site: str, nl_text: str) -> Dict[str, Any]:
+    """Ensure TMF921-compliant structure with all required fields"""
+    from datetime import datetime
+
+    # Infer service and QoS if not present
+    service_type, sst, qos_defaults = infer_service_and_qos(nl_text)
+
+    # Ensure targetSite
     if "targetSite" not in intent or intent["targetSite"] not in ["edge1", "edge2", "both"]:
         intent["targetSite"] = target_site
 
-    # Ensure required fields
+    # Ensure intentId
     if not intent.get("intentId"):
         intent["intentId"] = f"intent_{int(time.time() * 1000)}"
 
+    # Ensure name
     if not intent.get("name"):
-        intent["name"] = "Generated Intent"
+        intent["name"] = nl_text[:50] if len(nl_text) > 50 else nl_text
 
-    if not intent.get("parameters"):
-        intent["parameters"] = {}
+    # Ensure service structure
+    if "service" not in intent:
+        intent["service"] = {
+            "name": f"{service_type} Service",
+            "type": service_type,
+            "characteristics": {}
+        }
+    elif not isinstance(intent.get("service"), dict):
+        intent["service"] = {
+            "name": "Service",
+            "type": service_type,
+            "characteristics": {}
+        }
+
+    # Ensure QoS structure with defaults
+    if "qos" not in intent:
+        intent["qos"] = qos_defaults
+    else:
+        # Fill missing QoS fields with defaults
+        for key, value in qos_defaults.items():
+            if key not in intent["qos"] or intent["qos"][key] is None:
+                intent["qos"][key] = value
+
+    # Ensure slice structure
+    if "slice" not in intent:
+        intent["slice"] = {
+            "sst": sst,
+            "sd": None,
+            "plmn": None
+        }
+    elif "sst" not in intent.get("slice", {}):
+        intent["slice"]["sst"] = sst
+
+    # Ensure priority and lifecycle
+    if "priority" not in intent:
+        intent["priority"] = "medium"
+    if "lifecycle" not in intent:
+        intent["lifecycle"] = "draft"
+
+    # Ensure metadata
+    if "metadata" not in intent:
+        intent["metadata"] = {
+            "createdAt": datetime.utcnow().isoformat() + "Z",
+            "version": "1.0.0"
+        }
 
     return intent
 
@@ -161,8 +429,10 @@ def validate_intent(intent: Dict[str, Any]) -> None:
 
 @app.post("/generate_intent", response_model=IntentResponse)
 async def generate_intent(request: IntentRequest):
-    """Generate TMF921 intent with mandatory targetSite field"""
+    """Generate TMF921 intent with retry logic and mandatory targetSite field"""
     start_time = time.time()
+    retry_count = 0
+    success = False
 
     # Determine target site
     target_site = determine_target_site(request.natural_language, request.target_site)
@@ -176,14 +446,17 @@ async def generate_intent(request: IntentRequest):
     )
 
     try:
-        # Call Claude
-        output = call_claude(prompt)
+        # Call Claude with retry logic
+        output, retry_count = call_claude_with_retry(prompt)
 
         # Extract JSON
         intent = extract_json(output)
 
-        # Enforce targetSite
-        intent = enforce_targetsite(intent, target_site)
+        # Validate and fix common JSON issues
+        intent = validate_and_fix_json(intent)
+
+        # Enforce TMF921 structure
+        intent = enforce_tmf921_structure(intent, target_site, request.natural_language)
 
         # Validate
         validate_intent(intent)
@@ -193,6 +466,13 @@ async def generate_intent(request: IntentRequest):
         intent_hash = hashlib.sha256(intent_str.encode()).hexdigest()
 
         execution_time = time.time() - start_time
+        success = True
+
+        # Log success with retry info
+        if retry_count > 0:
+            logger.info(f"Intent generated successfully after {retry_count} retries in {execution_time:.2f}s")
+        else:
+            logger.info(f"Intent generated successfully in {execution_time:.2f}s")
 
         return IntentResponse(
             intent=intent,
@@ -201,23 +481,37 @@ async def generate_intent(request: IntentRequest):
         )
 
     except HTTPException:
+        metrics.record_request(False, retry_count)
         raise
     except Exception as e:
-        logger.error(f"Generation failed: {e}")
+        logger.error(f"Generation failed after {retry_count} retries: {e}")
+        metrics.record_request(False, retry_count)
 
-        # Return fallback intent
+        # Return fallback intent with TMF921 structure
+        service_type, sst, qos_defaults = infer_service_and_qos(request.natural_language)
+
         fallback = {
             "intentId": f"intent_{int(time.time() * 1000)}",
             "name": request.natural_language[:50],
             "description": request.natural_language,
+            "service": {
+                "name": f"{service_type} Service",
+                "type": service_type,
+                "characteristics": {}
+            },
             "targetSite": target_site,
-            "parameters": {
-                "type": "fallback",
-                "requirements": {},
-                "configuration": {}
+            "qos": qos_defaults,
+            "slice": {
+                "sst": sst,
+                "sd": None,
+                "plmn": None
             },
             "priority": "medium",
-            "lifecycle": "draft"
+            "lifecycle": "draft",
+            "metadata": {
+                "createdAt": datetime.utcnow().isoformat() + "Z",
+                "version": "1.0.0"
+            }
         }
 
         fallback_hash = hashlib.sha256(
@@ -229,11 +523,57 @@ async def generate_intent(request: IntentRequest):
             execution_time=time.time() - start_time,
             hash=fallback_hash
         )
+    finally:
+        # Record metrics
+        metrics.record_request(success, retry_count)
 
 @app.get("/health")
 async def health():
-    """Health check endpoint"""
-    return {"status": "healthy", "timestamp": time.time()}
+    """Health check endpoint with retry metrics"""
+    stats = metrics.get_stats()
+    return {
+        "status": "healthy",
+        "timestamp": time.time(),
+        "metrics": stats,
+        "retry_config": {
+            "max_retries": retry_config.max_retries,
+            "initial_delay": retry_config.initial_delay,
+            "max_delay": retry_config.max_delay,
+            "exponential_base": retry_config.exponential_base,
+            "jitter": retry_config.jitter
+        }
+    }
+
+@app.get("/metrics")
+async def get_metrics():
+    """Get detailed retry and performance metrics"""
+    stats = metrics.get_stats()
+    return {
+        "metrics": stats,
+        "timestamp": time.time()
+    }
+
+class RetryConfigUpdate(BaseModel):
+    """Request model for updating retry configuration"""
+    max_retries: int = Field(default=3, ge=0, le=10)
+    initial_delay: float = Field(default=1.0, ge=0.1, le=10.0)
+    max_delay: float = Field(default=16.0, ge=1.0, le=60.0)
+    exponential_base: float = Field(default=2.0, ge=1.1, le=4.0)
+    jitter: bool = Field(default=True)
+
+@app.post("/config/retry")
+async def update_retry_config(config_update: RetryConfigUpdate):
+    """Update retry configuration dynamically"""
+    global retry_config
+    retry_config = RetryConfig(
+        max_retries=config_update.max_retries,
+        initial_delay=config_update.initial_delay,
+        max_delay=config_update.max_delay,
+        exponential_base=config_update.exponential_base,
+        jitter=config_update.jitter
+    )
+    logger.info(f"Retry config updated: {retry_config}")
+    return {"status": "updated", "config": retry_config.__dict__}
 
 @app.get("/mock/slo")
 async def mock_slo():
