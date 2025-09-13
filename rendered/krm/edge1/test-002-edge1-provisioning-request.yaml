@@ -9,7 +9,7 @@ metadata:
     target-site: edge1
   annotations:
     generated-by: intent-compiler
-    timestamp: '2025-09-13T14:19:44.339525Z'
+    timestamp: '2025-09-13T14:28:04.179912Z'
     resource-profile: standard
 spec:
   description: Provisioning request for massive-machine-type service at edge1
