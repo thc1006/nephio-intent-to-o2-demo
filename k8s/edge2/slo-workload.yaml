@@ -1,0 +1,266 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: slo-monitoring
+  labels:
+    site: edge2
+    managed-by: gitops
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: slo-exporter-config
+  namespace: slo-monitoring
+  labels:
+    site: edge2
+data:
+  slo-exporter.py: |
+    #!/usr/bin/env python3
+    import json
+    import time
+    import threading
+    import statistics
+    from collections import deque
+    from http.server import HTTPServer, BaseHTTPRequestHandler
+    from datetime import datetime
+    import random
+
+    class SLOMetrics:
+        def __init__(self):
+            self.latencies = deque(maxlen=1000)
+            self.success_count = 0
+            self.total_count = 0
+            self.start_time = time.time()
+            self.lock = threading.Lock()
+            # Initialize with some baseline metrics
+            self._simulate_baseline_traffic()
+
+        def _simulate_baseline_traffic(self):
+            """Simulate some baseline traffic for demonstration"""
+            for _ in range(100):
+                latency = random.uniform(5, 12)  # Good baseline latencies
+                success = random.random() > 0.01  # 99% success rate
+                self.add_request(latency, success)
+
+        def add_request(self, latency_ms, success):
+            with self.lock:
+                self.latencies.append(latency_ms)
+                self.total_count += 1
+                if success:
+                    self.success_count += 1
+
+        def get_metrics(self):
+            with self.lock:
+                # Add some real-time simulation
+                if random.random() < 0.3:  # 30% chance to add new request
+                    latency = random.uniform(8, 15)
+                    success = random.random() > 0.005  # 99.5% success rate
+                    self.add_request(latency, success)
+
+                if not self.latencies:
+                    return {
+                        "slo": {
+                            "latency_p95_ms": 0,
+                            "latency_p99_ms": 0,
+                            "success_rate": 0,
+                            "throughput_p95_mbps": 0,
+                            "total_requests": 0
+                        },
+                        "site": "edge2",
+                        "timestamp": datetime.utcnow().isoformat()
+                    }
+
+                sorted_latencies = sorted(self.latencies)
+                p95_index = int(len(sorted_latencies) * 0.95)
+                p99_index = int(len(sorted_latencies) * 0.99)
+
+                elapsed_time = time.time() - self.start_time
+                throughput = self.total_count / elapsed_time if elapsed_time > 0 else 0
+                success_rate = self.success_count / self.total_count if self.total_count > 0 else 0
+
+                # Simulate throughput in Mbps (assuming avg 1KB per request)
+                throughput_mbps = (throughput * 1024 * 8) / (1024 * 1024)  # Convert to Mbps
+
+                return {
+                    "slo": {
+                        "latency_p95_ms": round(sorted_latencies[p95_index] if p95_index < len(sorted_latencies) else 0, 2),
+                        "latency_p99_ms": round(sorted_latencies[p99_index] if p99_index < len(sorted_latencies) else 0, 2),
+                        "success_rate": round(success_rate, 4),
+                        "throughput_p95_mbps": round(throughput_mbps * 200, 2),  # Scale for demo
+                        "total_requests": self.total_count
+                    },
+                    "site": "edge2",
+                    "timestamp": datetime.utcnow().isoformat()
+                }
+
+    metrics = SLOMetrics()
+
+    class SLOHandler(BaseHTTPRequestHandler):
+        def do_GET(self):
+            if self.path == '/metrics/api/v1/slo':
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                response = metrics.get_metrics()
+                self.wfile.write(json.dumps(response, indent=2).encode())
+            elif self.path == '/health':
+                self.send_response(200)
+                self.send_header('Content-type', 'text/plain')
+                self.end_headers()
+                self.wfile.write(b'OK')
+            elif self.path == '/':
+                self.send_response(200)
+                self.send_header('Content-type', 'text/plain')
+                self.end_headers()
+                self.wfile.write(b'Edge2 SLO Exporter - Ready')
+            else:
+                self.send_response(404)
+                self.end_headers()
+
+        def log_message(self, format, *args):
+            pass  # Suppress logs
+
+    if __name__ == '__main__':
+        server = HTTPServer(('0.0.0.0', 8090), SLOHandler)
+        print('Edge2 SLO Exporter running on port 8090')
+        server.serve_forever()
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: echo-server-edge2
+  namespace: slo-monitoring
+  labels:
+    app: echo-server-edge2
+    site: edge2
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: echo-server-edge2
+  template:
+    metadata:
+      labels:
+        app: echo-server-edge2
+        site: edge2
+    spec:
+      containers:
+      - name: echo
+        image: hashicorp/http-echo:0.2.3
+        args:
+        - "-text=Edge2 SLO Endpoint - VM-4"
+        - "-listen=:8080"
+        ports:
+        - containerPort: 8080
+          name: http
+        resources:
+          requests:
+            cpu: 10m
+            memory: 32Mi
+          limits:
+            cpu: 100m
+            memory: 64Mi
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: echo-service-edge2
+  namespace: slo-monitoring
+  labels:
+    app: echo-server-edge2
+    site: edge2
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8080
+    targetPort: 8080
+    protocol: TCP
+    name: http
+  selector:
+    app: echo-server-edge2
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: slo-exporter-edge2
+  namespace: slo-monitoring
+  labels:
+    app: slo-exporter-edge2
+    site: edge2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: slo-exporter-edge2
+  template:
+    metadata:
+      labels:
+        app: slo-exporter-edge2
+        site: edge2
+    spec:
+      containers:
+      - name: exporter
+        image: python:3.9-slim
+        command: ["python3", "/app/slo-exporter.py"]
+        ports:
+        - containerPort: 8090
+          name: metrics
+        volumeMounts:
+        - name: exporter-script
+          mountPath: /app
+        resources:
+          requests:
+            cpu: 10m
+            memory: 64Mi
+          limits:
+            cpu: 100m
+            memory: 128Mi
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8090
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8090
+          initialDelaySeconds: 10
+          periodSeconds: 30
+      volumes:
+      - name: exporter-script
+        configMap:
+          name: slo-exporter-config
+          defaultMode: 0755
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: slo-exporter-service-edge2
+  namespace: slo-monitoring
+  labels:
+    app: slo-exporter-edge2
+    site: edge2
+spec:
+  type: NodePort
+  ports:
+  - port: 8090
+    targetPort: 8090
+    nodePort: 30090
+    protocol: TCP
+    name: metrics
+  selector:
+    app: slo-exporter-edge2
