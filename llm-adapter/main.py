@@ -1,29 +1,29 @@
 #!/usr/bin/env python3
 """
 LLM Adapter Service for VM-3
-Converts natural language requests to TMF921-compliant JSON intents using Claude
+Converts natural language requests to structured intents
 """
 
-import json
-import subprocess
-import uuid
 from datetime import datetime
 from typing import Dict, Any, Optional
-from pathlib import Path
-import tempfile
-import re
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel, Field, validator
 import uvicorn
 
+# Import the LLM client
+from adapters.llm_client import get_llm_client
+
 
 app = FastAPI(
     title="LLM Intent Adapter",
-    description="Converts natural language to TMF921-compliant JSON intents",
+    description="Converts natural language to structured intents",
     version="1.0.0"
 )
+
+# Initialize LLM client
+llm_client = get_llm_client()
 
 
 class IntentRequest(BaseModel):
@@ -37,374 +37,317 @@ class IntentRequest(BaseModel):
         return v.strip()
 
 
-class TMF921Intent(BaseModel):
-    """TMF921-compliant Intent structure"""
-    intentId: str
-    intentName: str
-    intentType: str
-    scope: str
-    priority: str
-    requestTime: str
-    constraints: Optional[Dict[str, Any]] = None
-    intentParameters: Dict[str, Any]
-    targetEntities: Optional[list] = None
-    expectedOutcome: Optional[str] = None
-    
-    class Config:
-        schema_extra = {
-            "example": {
-                "intentId": "intent-123e4567-e89b",
-                "intentName": "Deploy Network Slice",
-                "intentType": "NetworkSliceDeployment",
-                "scope": "5G-NetworkSlice",
-                "priority": "high",
-                "requestTime": "2025-01-12T10:30:00Z",
-                "constraints": {
-                    "maxLatency": "10ms",
-                    "minBandwidth": "100Mbps"
-                },
-                "intentParameters": {
-                    "sliceType": "eMBB",
-                    "capacity": 1000,
-                    "location": "zone-1"
-                },
-                "targetEntities": ["NetworkFunction1", "NetworkFunction2"],
-                "expectedOutcome": "Network slice deployed and operational"
-            }
-        }
+class QoSParameters(BaseModel):
+    """QoS parameters for the intent"""
+    downlink_mbps: Optional[int] = None
+    uplink_mbps: Optional[int] = None
+    latency_ms: Optional[int] = None
 
 
-def create_claude_prompt(user_request: str) -> str:
-    """Create a structured prompt for Claude"""
-    prompt = f"""You are an expert in 3GPP and TMF921 Intent interpretation. Convert the following user request into a TMF921-compliant Intent in JSON format.
-
-The JSON must include these required fields:
-- intentId: A unique identifier (use UUID format)
-- intentName: A descriptive name for the intent
-- intentType: The type of intent (e.g., NetworkSliceDeployment, ServiceProvisioning, ResourceAllocation)
-- scope: The scope of the intent (e.g., 5G-NetworkSlice, ServiceLevel, Infrastructure)
-- priority: Priority level (high, medium, low)
-- requestTime: Current timestamp in ISO format
-- intentParameters: Object containing specific parameters for the intent
-- constraints: (optional) Any constraints or requirements
-- targetEntities: (optional) List of target entities or resources
-- expectedOutcome: (optional) Expected outcome description
-
-Output ONLY valid JSON with no additional text or explanation.
-
-User request: "{user_request}"
-"""
-    return prompt
+class IntentContent(BaseModel):
+    """The actual intent content"""
+    service: str = Field(..., description="Service type: eMBB, URLLC, or mMTC")
+    location: str = Field(..., description="Location identifier")
+    qos: QoSParameters
 
 
-def call_claude_cli(prompt: str) -> str:
-    """Call Claude CLI to process the prompt"""
+class UnifiedIntentResponse(BaseModel):
+    """Unified response format for all intent endpoints"""
+    intent: IntentContent
+    raw_text: str
+    model: str = "rule-based"
+    version: str = "1.0.0"
+
+
+async def parse_intent(request: IntentRequest) -> UnifiedIntentResponse:
+    """
+    Common handler for intent parsing using pluggable LLM client
+    """
     try:
-        # Use --print flag to get non-interactive output
-        cmd = [
-            'claude',
-            '--print',
-            prompt
-        ]
+        # Use the LLM client to parse text
+        intent_dict = llm_client.parse_text(request.text)
         
-        result = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            timeout=30
-        )
+        # Get model information
+        model_info = llm_client.get_model_info()
         
-        if result.returncode != 0:
-            raise RuntimeError(f"Claude CLI error: {result.stderr}")
-        
-        return result.stdout.strip()
-        
-    except subprocess.TimeoutExpired:
-        raise HTTPException(status_code=504, detail="Claude request timed out")
-    except FileNotFoundError:
-        raise HTTPException(
-            status_code=503, 
-            detail="Claude CLI not found. Please ensure Claude is installed and logged in."
+        # Build response
+        return UnifiedIntentResponse(
+            intent=IntentContent(
+                service=intent_dict["service"],
+                location=intent_dict["location"],
+                qos=QoSParameters(**intent_dict["qos"])
+            ),
+            raw_text=request.text,
+            model=model_info,
+            version="1.0.0"
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error calling Claude: {str(e)}")
-
-
-def extract_json_from_response(response: str) -> Dict[str, Any]:
-    """Extract JSON from Claude's response"""
-    response = response.strip()
-    
-    json_match = re.search(r'\{[\s\S]*\}', response)
-    if json_match:
-        json_str = json_match.group()
-    else:
-        json_str = response
-    
-    try:
-        intent_json = json.loads(json_str)
-        
-        if 'intentId' not in intent_json:
-            intent_json['intentId'] = f"intent-{uuid.uuid4()}"
-        if 'requestTime' not in intent_json:
-            intent_json['requestTime'] = datetime.utcnow().isoformat() + 'Z'
-        
-        return intent_json
-    except json.JSONDecodeError as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to parse Claude's response as JSON: {str(e)}"
-        )
-
-
-def validate_intent_structure(intent_json: Dict[str, Any]) -> Dict[str, Any]:
-    """Validate the intent structure against TMF921 requirements"""
-    required_fields = [
-        'intentId', 'intentName', 'intentType', 
-        'scope', 'priority', 'intentParameters'
-    ]
-    
-    missing_fields = [field for field in required_fields if field not in intent_json]
-    if missing_fields:
-        for field in missing_fields:
-            if field == 'intentId':
-                intent_json['intentId'] = f"intent-{uuid.uuid4()}"
-            elif field == 'requestTime':
-                intent_json['requestTime'] = datetime.utcnow().isoformat() + 'Z'
-            elif field == 'priority':
-                intent_json['priority'] = 'medium'
-            elif field == 'intentParameters':
-                intent_json['intentParameters'] = {}
-    
-    return intent_json
-
-
-@app.post("/generate_intent", response_model=TMF921Intent)
-async def generate_intent(request: IntentRequest):
-    """Generate TMF921-compliant intent from natural language request"""
-    try:
-        prompt = create_claude_prompt(request.text)
-        
-        claude_response = call_claude_cli(prompt)
-        
-        intent_json = extract_json_from_response(claude_response)
-        
-        validated_intent = validate_intent_structure(intent_json)
-        
-        return JSONResponse(content=validated_intent)
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
-
-
-@app.get("/", response_class=HTMLResponse)
-async def serve_ui():
-    """Serve the minimal web UI for testing"""
-    html_content = """
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LLM Intent Adapter</title>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-            background: #f5f5f5;
-        }
-        h1 {
-            color: #333;
-            border-bottom: 2px solid #007bff;
-            padding-bottom: 10px;
-        }
-        .container {
-            background: white;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 600;
-            color: #555;
-        }
-        textarea {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 14px;
-            resize: vertical;
-            min-height: 100px;
-        }
-        button {
-            background: #007bff;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-            margin-top: 10px;
-        }
-        button:hover {
-            background: #0056b3;
-        }
-        button:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-        }
-        #result {
-            margin-top: 20px;
-            white-space: pre-wrap;
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 4px;
-            border: 1px solid #dee2e6;
-            font-family: 'Courier New', monospace;
-            font-size: 13px;
-            max-height: 500px;
-            overflow-y: auto;
-        }
-        .error {
-            color: #dc3545;
-            background: #f8d7da;
-            border-color: #f5c6cb;
-        }
-        .success {
-            color: #155724;
-            background: #d4edda;
-            border-color: #c3e6cb;
-        }
-        .loading {
-            color: #004085;
-            background: #cce5ff;
-            border-color: #b8daff;
-        }
-        .examples {
-            margin-top: 20px;
-            padding: 15px;
-            background: #f0f8ff;
-            border-radius: 4px;
-            border: 1px solid #b0d4ff;
-        }
-        .example-item {
-            margin: 10px 0;
-            padding: 8px;
-            background: white;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        .example-item:hover {
-            background: #e7f3ff;
-        }
-    </style>
-</head>
-<body>
-    <h1>🤖 LLM Intent Adapter - TMF921 Compliant</h1>
-    
-    <div class="container">
-        <label for="request">Natural Language Request:</label>
-        <textarea 
-            id="request" 
-            placeholder="Enter your request in natural language, e.g., 'Deploy a 5G network slice with low latency for IoT devices in zone-1'"
-        ></textarea>
-        <button onclick="generateIntent()" id="submitBtn">Generate Intent JSON</button>
-    </div>
-    
-    <div class="examples">
-        <strong>Example Requests (click to use):</strong>
-        <div class="example-item" onclick="useExample(this)">
-            Deploy a 5G network slice with low latency requirements for IoT devices in zone-1
-        </div>
-        <div class="example-item" onclick="useExample(this)">
-            Provision a new service with 100Mbps bandwidth and 99.9% availability SLA
-        </div>
-        <div class="example-item" onclick="useExample(this)">
-            Allocate compute resources for edge computing with 16 vCPUs and 64GB RAM
-        </div>
-        <div class="example-item" onclick="useExample(this)">
-            Configure network function with auto-scaling enabled and max instances of 10
-        </div>
-    </div>
-    
-    <div class="container">
-        <label>Generated Intent JSON:</label>
-        <div id="result">Result will appear here...</div>
-    </div>
-    
-    <script>
-        function useExample(element) {
-            document.getElementById('request').value = element.textContent.trim();
-        }
-        
-        async function generateIntent() {
-            const requestText = document.getElementById('request').value.trim();
-            const resultDiv = document.getElementById('result');
-            const submitBtn = document.getElementById('submitBtn');
-            
-            if (!requestText) {
-                resultDiv.className = 'error';
-                resultDiv.textContent = 'Please enter a request';
-                return;
-            }
-            
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Generating...';
-            resultDiv.className = 'loading';
-            resultDiv.textContent = 'Processing request with Claude...';
-            
-            try {
-                const response = await fetch('/generate_intent', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ text: requestText })
-                });
-                
-                const data = await response.json();
-                
-                if (response.ok) {
-                    resultDiv.className = 'success';
-                    resultDiv.textContent = JSON.stringify(data, null, 2);
-                } else {
-                    resultDiv.className = 'error';
-                    resultDiv.textContent = `Error: ${data.detail || 'Failed to generate intent'}`;
-                }
-            } catch (error) {
-                resultDiv.className = 'error';
-                resultDiv.textContent = `Error: ${error.message}`;
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Generate Intent JSON';
-            }
-        }
-        
-        document.getElementById('request').addEventListener('keydown', function(e) {
-            if (e.ctrlKey && e.key === 'Enter') {
-                generateIntent();
-            }
-        });
-    </script>
-</body>
-</html>
-"""
-    return html_content
+        raise HTTPException(status_code=500, detail=f"Intent parsing failed: {str(e)}")
 
 
 @app.get("/health")
 async def health_check():
     """Health check endpoint"""
-    return {"status": "healthy", "service": "LLM Intent Adapter", "version": "1.0.0"}
+    return {
+        "status": "healthy",
+        "service": "LLM Intent Adapter",
+        "version": "1.0.0",
+        "llm_mode": llm_client.get_model_info()
+    }
+
+
+@app.post("/generate_intent", response_model=UnifiedIntentResponse)
+async def generate_intent(request: IntentRequest):
+    """
+    Generate intent from natural language text.
+    Legacy endpoint for backward compatibility.
+    """
+    return await parse_intent(request)
+
+
+@app.post("/api/v1/intent/parse", response_model=UnifiedIntentResponse)
+async def parse_intent_v1(request: IntentRequest):
+    """
+    Parse intent from natural language text.
+    Standard API v1 endpoint.
+    """
+    return await parse_intent(request)
+
+
+@app.get("/", response_class=HTMLResponse)
+async def root():
+    """Serve the web UI"""
+    html_content = """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>LLM Intent Adapter</title>
+        <style>
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                max-width: 1200px;
+                margin: 0 auto;
+                padding: 40px 20px;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                min-height: 100vh;
+            }
+            .container {
+                background: white;
+                border-radius: 12px;
+                padding: 30px;
+                box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            }
+            h1 {
+                color: #333;
+                border-bottom: 3px solid #667eea;
+                padding-bottom: 10px;
+                margin-bottom: 30px;
+            }
+            .status-info {
+                background: #f0f4ff;
+                padding: 10px 15px;
+                border-radius: 8px;
+                margin-bottom: 20px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+            .status-badge {
+                background: #667eea;
+                color: white;
+                padding: 4px 12px;
+                border-radius: 20px;
+                font-size: 14px;
+                font-weight: 600;
+            }
+            .input-group {
+                margin-bottom: 20px;
+            }
+            label {
+                display: block;
+                margin-bottom: 8px;
+                color: #555;
+                font-weight: 600;
+            }
+            textarea {
+                width: 100%;
+                padding: 12px;
+                border: 2px solid #e0e0e0;
+                border-radius: 8px;
+                font-size: 16px;
+                resize: vertical;
+                min-height: 120px;
+                transition: border-color 0.3s;
+            }
+            textarea:focus {
+                outline: none;
+                border-color: #667eea;
+            }
+            .button-group {
+                display: flex;
+                gap: 10px;
+                margin-bottom: 20px;
+            }
+            button {
+                flex: 1;
+                padding: 12px 24px;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                border: none;
+                border-radius: 8px;
+                font-size: 16px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: transform 0.2s, box-shadow 0.2s;
+            }
+            button:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+            }
+            .output-section {
+                margin-top: 30px;
+            }
+            .output-box {
+                background: #f8f9fa;
+                border: 2px solid #e0e0e0;
+                border-radius: 8px;
+                padding: 20px;
+                min-height: 200px;
+                font-family: 'Courier New', monospace;
+                white-space: pre-wrap;
+                word-wrap: break-word;
+                max-height: 600px;
+                overflow-y: auto;
+            }
+            .example-section {
+                margin-top: 30px;
+                padding: 20px;
+                background: #f0f4ff;
+                border-radius: 8px;
+            }
+            .example-section h3 {
+                color: #667eea;
+                margin-top: 0;
+            }
+            .example {
+                background: white;
+                padding: 10px;
+                margin: 8px 0;
+                border-radius: 6px;
+                cursor: pointer;
+                transition: background 0.2s;
+            }
+            .example:hover {
+                background: #f8f9fa;
+            }
+            .api-info {
+                margin-top: 30px;
+                padding: 20px;
+                background: #fff9e6;
+                border-radius: 8px;
+                border: 1px solid #ffe082;
+            }
+            .api-info h3 {
+                color: #f57c00;
+                margin-top: 0;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>🚀 LLM Intent Adapter Service</h1>
+            
+            <div class="status-info">
+                <span>Service Status: <strong>Online</strong></span>
+                <span class="status-badge" id="llm-mode">Loading...</span>
+            </div>
+            
+            <div class="input-group">
+                <label for="intentText">Enter Natural Language Request:</label>
+                <textarea id="intentText" placeholder="Example: Deploy eMBB slice in edge1 with 200Mbps DL, 30ms latency"></textarea>
+            </div>
+            
+            <div class="button-group">
+                <button onclick="generateIntent('/generate_intent')">Generate Intent (Legacy)</button>
+                <button onclick="generateIntent('/api/v1/intent/parse')">Parse Intent (API v1)</button>
+            </div>
+            
+            <div class="output-section">
+                <h2>Output:</h2>
+                <div id="output" class="output-box">Response will appear here...</div>
+            </div>
+            
+            <div class="example-section">
+                <h3>📝 Example Requests (Click to use):</h3>
+                <div class="example" onclick="setExample('Deploy eMBB slice in edge1 with 200Mbps DL, 30ms latency')">
+                    Deploy eMBB slice in edge1 with 200Mbps DL, 30ms latency
+                </div>
+                <div class="example" onclick="setExample('Create URLLC service in edge2 with 10ms latency and 100Mbps downlink')">
+                    Create URLLC service in edge2 with 10ms latency and 100Mbps downlink
+                </div>
+                <div class="example" onclick="setExample('Setup mMTC network in zone3 for IoT devices with 50Mbps capacity')">
+                    Setup mMTC network in zone3 for IoT devices with 50Mbps capacity
+                </div>
+            </div>
+            
+            <div class="api-info">
+                <h3>🔌 API Endpoints (Port 8888):</h3>
+                <p><strong>GET /health</strong> - Health check with LLM mode status</p>
+                <p><strong>POST /generate_intent</strong> - Legacy intent generation</p>
+                <p><strong>POST /api/v1/intent/parse</strong> - Standard v1 API</p>
+                <p><strong>GET /docs</strong> - Swagger documentation</p>
+            </div>
+        </div>
+        
+        <script>
+            // Check LLM mode on load
+            fetch('/health')
+                .then(res => res.json())
+                .then(data => {
+                    const badge = document.getElementById('llm-mode');
+                    badge.textContent = 'Mode: ' + (data.llm_mode || 'rule-based');
+                    if (data.llm_mode === 'claude-cli') {
+                        badge.style.background = '#4caf50';
+                    }
+                });
+            
+            function setExample(text) {
+                document.getElementById('intentText').value = text;
+            }
+            
+            async function generateIntent(endpoint) {
+                const text = document.getElementById('intentText').value;
+                const output = document.getElementById('output');
+                
+                if (!text.trim()) {
+                    output.textContent = 'Please enter a request text';
+                    return;
+                }
+                
+                output.textContent = 'Processing...';
+                
+                try {
+                    const response = await fetch(endpoint, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ text: text })
+                    });
+                    
+                    const data = await response.json();
+                    output.textContent = JSON.stringify(data, null, 2);
+                    
+                } catch (error) {
+                    output.textContent = 'Error: ' + error.message;
+                }
+            }
+        </script>
+    </body>
+    </html>
+    """
+    return html_content
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8888)

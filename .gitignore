@@ -75,3 +75,16 @@ go.work.sum
 CLAUDE.md
 CLAUDE.md.bak
 **/CLAUDE.md
+
+# Service logs and runtime files
+**/service.log
+**/*.log
+**/*.pid
+
+# Backup files
+**/*.backup*
+**/*.bak*
+
+# Temporary files
+**/waiting_for_*.txt
+**/*.tmp
