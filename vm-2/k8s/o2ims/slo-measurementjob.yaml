@@ -1,0 +1,15 @@
+apiVersion: o2ims.oran.org/v1alpha1
+kind: MeasurementJob
+metadata:
+  name: slo-metrics-scraper
+  namespace: o2ims-system
+spec:
+  targetEndpoint: "http://slo-collector.slo-monitoring.svc.cluster.local:8090"
+  scrapeInterval: "30s"
+  metricsPath: "/metrics/api/v1/slo"
+  reportTo: "http://o2ims-api.o2ims-system.svc.cluster.local:8080/metrics"
+  parser: "json"
+  selector:
+    service: slo-collector
+    namespace: slo-monitoring
+    port: "8090"
