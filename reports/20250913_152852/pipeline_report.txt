@@ -1,0 +1,26 @@
+
+======================================
+Pipeline Execution Trace Report
+======================================
+Pipeline ID: e2e-1757777332
+Status: completed
+Start Time: 2025-09-13T15:28:52+00:00
+Duration: 1196ms
+
+Stages Summary:
+  Completed: 1
+  Failed: 1
+
+Stage Details:
+-------------------------------------
+intent_generation:
+  Status: success
+  Duration: 8ms
+  Message: 
+
+krm_translation:
+  Status: failed
+  Duration: 0ms
+  Message: Translation failed
+
+======================================

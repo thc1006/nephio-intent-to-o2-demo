@@ -1,0 +1,51 @@
+
+======================================
+Pipeline Execution Trace Report
+======================================
+Pipeline ID: e2e-1757777411
+Status: completed
+Start Time: 2025-09-13T15:30:11+00:00
+Duration: 1597ms
+
+Stages Summary:
+  Completed: 3
+  Failed: 0
+
+Stage Details:
+-------------------------------------
+intent_generation:
+  Status: success
+  Duration: 8ms
+  Message: 
+
+krm_translation:
+  Status: success
+  Duration: 81ms
+  Message: 
+
+kpt_pipeline:
+  Status: skipped
+  Duration: 0ms
+  Message: Dry run mode
+
+git_operations:
+  Status: skipped
+  Duration: 0ms
+  Message: Dry run mode
+
+rootsync_wait:
+  Status: skipped
+  Duration: 0ms
+  Message: Dry run mode
+
+o2ims_poll:
+  Status: skipped
+  Duration: 0ms
+  Message: Dry run mode
+
+onsite_validation:
+  Status: success
+  Duration: 246ms
+  Message: 
+
+======================================

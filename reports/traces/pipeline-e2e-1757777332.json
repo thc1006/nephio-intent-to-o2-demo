@@ -1,0 +1,29 @@
+{
+  "pipeline_id": "e2e-1757777332",
+  "start_time": "2025-09-13T15:28:52+00:00",
+  "status": "completed",
+  "stages": [
+    {
+      "name": "intent_generation",
+      "start_time": "2025-09-13T15:28:52+00:00",
+      "status": "success",
+      "message": "",
+      "end_time": "2025-09-13T15:28:52+00:00",
+      "duration_ms": 8
+    },
+    {
+      "name": "krm_translation",
+      "start_time": "2025-09-13T15:28:52+00:00",
+      "status": "failed",
+      "message": "Translation failed",
+      "end_time": "2025-09-13T15:28:53+00:00",
+      "duration_ms": 0
+    }
+  ],
+  "metrics": {
+    "total_duration_ms": 1196,
+    "stages_completed": 1,
+    "stages_failed": 1
+  },
+  "end_time": "2025-09-13T15:28:53+00:00"
+}

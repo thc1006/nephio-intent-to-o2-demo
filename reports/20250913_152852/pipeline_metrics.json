@@ -1,0 +1,20 @@
+{
+  "pipeline_id": "e2e-1757777332",
+  "metrics": {
+    "total_duration_ms": 1196,
+    "stages_completed": 1,
+    "stages_failed": 1
+  },
+  "stage_metrics": [
+    {
+      "name": "intent_generation",
+      "status": "success",
+      "duration_ms": 8
+    },
+    {
+      "name": "krm_translation",
+      "status": "failed",
+      "duration_ms": 0
+    }
+  ]
+}

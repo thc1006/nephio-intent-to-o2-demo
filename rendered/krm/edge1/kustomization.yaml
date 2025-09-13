@@ -5,10 +5,10 @@ metadata:
   annotations:
     config.kubernetes.io/local-config: 'true'
 resources:
-- test-002-edge1-provisioning-request.yaml
-- intent-test-002-edge1-configmap.yaml
-- slice-test-002-edge1-networkslice.yaml
+- intent-e2e-1757777411-edge1-provisioning-request.yaml
+- intent-intent-e2e-1757777411-edge1-configmap.yaml
+- slice-intent-e2e-1757777411-edge1-networkslice.yaml
 namespace: edge1
 commonLabels:
   target-site: edge1
-  intent-id: test-002
+  intent-id: intent-e2e-1757777411

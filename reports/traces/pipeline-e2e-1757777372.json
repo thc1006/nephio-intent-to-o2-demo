@@ -1,0 +1,69 @@
+{
+  "pipeline_id": "e2e-1757777372",
+  "start_time": "2025-09-13T15:29:32+00:00",
+  "status": "completed",
+  "stages": [
+    {
+      "name": "intent_generation",
+      "start_time": "2025-09-13T15:29:32+00:00",
+      "status": "success",
+      "message": "",
+      "end_time": "2025-09-13T15:29:32+00:00",
+      "duration_ms": 9
+    },
+    {
+      "name": "krm_translation",
+      "start_time": "2025-09-13T15:29:33+00:00",
+      "status": "success",
+      "message": "",
+      "end_time": "2025-09-13T15:29:33+00:00",
+      "duration_ms": 83
+    },
+    {
+      "name": "kpt_pipeline",
+      "start_time": "2025-09-13T15:29:33+00:00",
+      "status": "skipped",
+      "message": "Dry run mode",
+      "end_time": "2025-09-13T15:29:33+00:00",
+      "duration_ms": 0
+    },
+    {
+      "name": "git_operations",
+      "start_time": "2025-09-13T15:29:33+00:00",
+      "status": "skipped",
+      "message": "Dry run mode",
+      "end_time": "2025-09-13T15:29:33+00:00",
+      "duration_ms": 0
+    },
+    {
+      "name": "rootsync_wait",
+      "start_time": "2025-09-13T15:29:33+00:00",
+      "status": "skipped",
+      "message": "Dry run mode",
+      "end_time": "2025-09-13T15:29:33+00:00",
+      "duration_ms": 0
+    },
+    {
+      "name": "o2ims_poll",
+      "start_time": "2025-09-13T15:29:33+00:00",
+      "status": "skipped",
+      "message": "Dry run mode",
+      "end_time": "2025-09-13T15:29:33+00:00",
+      "duration_ms": 0
+    },
+    {
+      "name": "onsite_validation",
+      "start_time": "2025-09-13T15:29:33+00:00",
+      "status": "success",
+      "message": "",
+      "end_time": "2025-09-13T15:29:34+00:00",
+      "duration_ms": 261
+    }
+  ],
+  "metrics": {
+    "total_duration_ms": 2302,
+    "stages_completed": 3,
+    "stages_failed": 0
+  },
+  "end_time": "2025-09-13T15:29:34+00:00"
+}
