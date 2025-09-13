@@ -1,0 +1,120 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: config-sync
+  namespace: config-management-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: config-sync-admin
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+- kind: ServiceAccount
+  name: config-sync
+  namespace: config-management-system
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-sync-config
+  namespace: config-management-system
+data:
+  config.yaml: |
+    apiVersion: v1
+    kind: ConfigSync
+    metadata:
+      name: edge1-sync
+    spec:
+      sourceType: git
+      git:
+        repo: http://147.251.115.143:8888/admin/edge1-config.git
+        branch: main
+        dir: /
+        secretRef:
+          name: gitea-token
+      syncPolicy:
+        interval: 30s
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: config-sync-controller
+  namespace: config-management-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: config-sync-controller
+  template:
+    metadata:
+      labels:
+        app: config-sync-controller
+    spec:
+      serviceAccountName: config-sync
+      containers:
+      - name: git-sync
+        image: registry.k8s.io/git-sync/git-sync:v4.0.0
+        env:
+        - name: GITSYNC_REPO
+          value: "http://147.251.115.143:8888/admin/edge1-config.git"
+        - name: GITSYNC_BRANCH
+          value: "main"
+        - name: GITSYNC_ROOT
+          value: "/tmp/git"
+        - name: GITSYNC_DEST
+          value: "edge1-config"
+        - name: GITSYNC_PERIOD
+          value: "30s"
+        - name: GITSYNC_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: gitea-token
+              key: username
+        - name: GITSYNC_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: gitea-token
+              key: token
+        volumeMounts:
+        - name: git-repo
+          mountPath: /tmp/git
+      - name: kubectl-apply
+        image: bitnami/kubectl:latest
+        command:
+        - /bin/bash
+        - -c
+        - |
+          while true; do
+            echo "Waiting for sync..."
+            sleep 30
+            if [ -d "/tmp/git/edge1-config" ]; then
+              echo "Applying configurations from Gitea..."
+              find /tmp/git/edge1-config -name "*.yaml" -o -name "*.yml" | while read file; do
+                echo "Applying: $file"
+                kubectl apply -f "$file" || true
+              done
+            fi
+          done
+        volumeMounts:
+        - name: git-repo
+          mountPath: /tmp/git
+      volumes:
+      - name: git-repo
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: config-sync-metrics
+  namespace: config-management-system
+spec:
+  selector:
+    app: config-sync-controller
+  ports:
+  - name: metrics
+    port: 8080
+    targetPort: 8080

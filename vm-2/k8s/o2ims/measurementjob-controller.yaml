@@ -1,0 +1,295 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: measurementjob-controller
+  namespace: o2ims-system
+data:
+  controller.py: |
+    #!/usr/bin/env python3
+    import json
+    import time
+    import os
+    import requests
+    from kubernetes import client, config, watch
+    from datetime import datetime
+    import threading
+    import logging
+
+    logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger(__name__)
+
+    class MeasurementJobController:
+        def __init__(self):
+            try:
+                config.load_incluster_config()
+            except:
+                config.load_kube_config()
+
+            self.api = client.CustomObjectsApi()
+            self.v1 = client.CoreV1Api()
+            self.jobs = {}
+
+        def scrape_metrics(self, job):
+            """Scrape metrics from target endpoint"""
+            spec = job.get('spec', {})
+            target = spec.get('targetEndpoint')
+            metrics_path = spec.get('metricsPath', '/metrics/api/v1/slo')
+
+            # Build full URL
+            if not target.startswith('http'):
+                # Assume it's a service reference
+                namespace = spec.get('selector', {}).get('namespace', 'slo-monitoring')
+                service = spec.get('selector', {}).get('service', 'slo-collector')
+                port = spec.get('selector', {}).get('port', '8090')
+                target = f"http://{service}.{namespace}.svc.cluster.local:{port}"
+
+            url = f"{target}{metrics_path}"
+
+            try:
+                logger.info(f"Scraping metrics from {url}")
+                response = requests.get(url, timeout=10)
+                response.raise_for_status()
+
+                if spec.get('parser') == 'json':
+                    metrics = response.json()
+                else:
+                    metrics = response.text
+
+                return True, metrics
+            except Exception as e:
+                logger.error(f"Failed to scrape metrics: {e}")
+                return False, str(e)
+
+        def report_to_o2ims(self, job, metrics):
+            """Report metrics to O2IMS endpoint"""
+            spec = job.get('spec', {})
+            report_to = spec.get('reportTo')
+
+            if not report_to:
+                report_to = "http://o2ims-api.o2ims-system.svc.cluster.local:8080/metrics"
+
+            try:
+                # Prepare O2IMS payload
+                payload = {
+                    "timestamp": datetime.utcnow().isoformat() + "Z",
+                    "source": job['metadata']['name'],
+                    "namespace": job['metadata']['namespace'],
+                    "metrics": metrics,
+                    "type": "slo"
+                }
+
+                logger.info(f"Reporting to O2IMS: {report_to}")
+                response = requests.post(report_to, json=payload, timeout=10)
+
+                # O2IMS might not have metrics endpoint, so we'll log but not fail
+                if response.status_code >= 400:
+                    logger.warning(f"O2IMS returned {response.status_code}: {response.text}")
+
+                return True
+            except Exception as e:
+                logger.warning(f"Failed to report to O2IMS: {e}")
+                # Don't fail the job if O2IMS reporting fails
+                return True
+
+        def update_status(self, job, phase, message="", metrics_count=0):
+            """Update MeasurementJob status"""
+            name = job['metadata']['name']
+            namespace = job['metadata']['namespace']
+
+            status = {
+                "phase": phase,
+                "lastScrapeTime": datetime.utcnow().isoformat() + "Z",
+                "lastScrapeStatus": phase,
+                "message": message,
+                "metricsCount": metrics_count,
+                "conditions": [{
+                    "type": "Ready" if phase == "Ready" else "Progressing",
+                    "status": "True" if phase == "Ready" else "False",
+                    "lastTransitionTime": datetime.utcnow().isoformat() + "Z",
+                    "reason": phase,
+                    "message": message
+                }]
+            }
+
+            try:
+                self.api.patch_namespaced_custom_object_status(
+                    group="o2ims.oran.org",
+                    version="v1alpha1",
+                    namespace=namespace,
+                    plural="measurementjobs",
+                    name=name,
+                    body={"status": status}
+                )
+                logger.info(f"Updated status for {name}: {phase}")
+            except Exception as e:
+                logger.error(f"Failed to update status: {e}")
+
+        def process_job(self, job):
+            """Process a single MeasurementJob"""
+            name = job['metadata']['name']
+            namespace = job['metadata']['namespace']
+
+            logger.info(f"Processing MeasurementJob {namespace}/{name}")
+
+            # Update status to Running
+            self.update_status(job, "Running", "Scraping metrics")
+
+            # Scrape metrics
+            success, metrics = self.scrape_metrics(job)
+
+            if success:
+                # Report to O2IMS
+                self.report_to_o2ims(job, metrics)
+
+                # Update status to Ready
+                metrics_count = len(metrics.get('metrics', {})) if isinstance(metrics, dict) else 1
+                self.update_status(job, "Ready", "Metrics scraped successfully", metrics_count)
+            else:
+                # Update status to Failed
+                self.update_status(job, "Failed", f"Scrape failed: {metrics}")
+
+        def job_worker(self, job):
+            """Worker thread for a MeasurementJob"""
+            name = job['metadata']['name']
+            namespace = job['metadata']['namespace']
+            key = f"{namespace}/{name}"
+
+            spec = job.get('spec', {})
+            interval = spec.get('scrapeInterval', '30s')
+
+            # Parse interval
+            if interval.endswith('s'):
+                interval_seconds = int(interval[:-1])
+            elif interval.endswith('m'):
+                interval_seconds = int(interval[:-1]) * 60
+            else:
+                interval_seconds = 30
+
+            logger.info(f"Starting worker for {key} with interval {interval_seconds}s")
+
+            while key in self.jobs:
+                self.process_job(job)
+                time.sleep(interval_seconds)
+
+        def handle_job(self, job, event_type):
+            """Handle MeasurementJob events"""
+            name = job['metadata']['name']
+            namespace = job['metadata']['namespace']
+            key = f"{namespace}/{name}"
+
+            if event_type in ['ADDED', 'MODIFIED']:
+                if key not in self.jobs:
+                    # Start new worker thread
+                    thread = threading.Thread(target=self.job_worker, args=(job,))
+                    thread.daemon = True
+                    thread.start()
+                    self.jobs[key] = thread
+                    logger.info(f"Started worker for {key}")
+            elif event_type == 'DELETED':
+                if key in self.jobs:
+                    del self.jobs[key]
+                    logger.info(f"Stopped worker for {key}")
+
+        def run(self):
+            """Main controller loop"""
+            logger.info("MeasurementJob Controller starting...")
+
+            # Watch for MeasurementJob changes
+            w = watch.Watch()
+
+            while True:
+                try:
+                    for event in w.stream(
+                        self.api.list_cluster_custom_object,
+                        group="o2ims.oran.org",
+                        version="v1alpha1",
+                        plural="measurementjobs"
+                    ):
+                        event_type = event['type']
+                        job = event['object']
+
+                        self.handle_job(job, event_type)
+
+                except Exception as e:
+                    logger.error(f"Controller error: {e}")
+                    time.sleep(5)
+
+    if __name__ == "__main__":
+        controller = MeasurementJobController()
+        controller.run()
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: measurementjob-controller
+  namespace: o2ims-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: measurementjob-controller
+rules:
+- apiGroups: ["o2ims.oran.org"]
+  resources: ["measurementjobs"]
+  verbs: ["get", "list", "watch", "update", "patch"]
+- apiGroups: ["o2ims.oran.org"]
+  resources: ["measurementjobs/status"]
+  verbs: ["get", "update", "patch"]
+- apiGroups: [""]
+  resources: ["services", "endpoints"]
+  verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: measurementjob-controller
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: measurementjob-controller
+subjects:
+- kind: ServiceAccount
+  name: measurementjob-controller
+  namespace: o2ims-system
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: measurementjob-controller
+  namespace: o2ims-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: measurementjob-controller
+  template:
+    metadata:
+      labels:
+        app: measurementjob-controller
+    spec:
+      serviceAccountName: measurementjob-controller
+      containers:
+      - name: controller
+        image: python:3.9-slim
+        command: ["sh", "-c"]
+        args:
+        - |
+          pip install kubernetes requests
+          python /app/controller.py
+        volumeMounts:
+        - name: controller-script
+          mountPath: /app
+        env:
+        - name: PYTHONUNBUFFERED
+          value: "1"
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 256Mi
+      volumes:
+      - name: controller-script
+        configMap:
+          name: measurementjob-controller

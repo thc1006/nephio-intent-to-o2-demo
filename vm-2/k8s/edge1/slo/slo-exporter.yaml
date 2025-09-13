@@ -1,0 +1,165 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: slo-exporter-config
+  namespace: slo-monitoring
+data:
+  slo-exporter.py: |
+    #!/usr/bin/env python3
+    import json
+    import time
+    import threading
+    import statistics
+    from collections import deque
+    from http.server import HTTPServer, BaseHTTPRequestHandler
+    from datetime import datetime
+
+    class SLOMetrics:
+        def __init__(self):
+            self.latencies = deque(maxlen=1000)
+            self.success_count = 0
+            self.total_count = 0
+            self.start_time = time.time()
+            self.lock = threading.Lock()
+
+        def add_request(self, latency_ms, success):
+            with self.lock:
+                self.latencies.append(latency_ms)
+                self.total_count += 1
+                if success:
+                    self.success_count += 1
+
+        def get_metrics(self):
+            with self.lock:
+                if not self.latencies:
+                    return {
+                        "p95_latency_ms": 0,
+                        "p99_latency_ms": 0,
+                        "success_rate": 0,
+                        "throughput_rps": 0,
+                        "total_requests": 0,
+                        "timestamp": datetime.utcnow().isoformat()
+                    }
+
+                sorted_latencies = sorted(self.latencies)
+                p95_index = int(len(sorted_latencies) * 0.95)
+                p99_index = int(len(sorted_latencies) * 0.99)
+
+                elapsed_time = time.time() - self.start_time
+                throughput = self.total_count / elapsed_time if elapsed_time > 0 else 0
+                success_rate = self.success_count / self.total_count if self.total_count > 0 else 0
+
+                return {
+                    "p95_latency_ms": sorted_latencies[p95_index] if p95_index < len(sorted_latencies) else 0,
+                    "p99_latency_ms": sorted_latencies[p99_index] if p99_index < len(sorted_latencies) else 0,
+                    "success_rate": round(success_rate, 4),
+                    "throughput_rps": round(throughput, 2),
+                    "total_requests": self.total_count,
+                    "timestamp": datetime.utcnow().isoformat()
+                }
+
+    metrics = SLOMetrics()
+
+    class SLOHandler(BaseHTTPRequestHandler):
+        def do_GET(self):
+            if self.path == '/metrics/api/v1/slo':
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps(metrics.get_metrics()).encode())
+            elif self.path == '/health':
+                self.send_response(200)
+                self.send_header('Content-type', 'text/plain')
+                self.end_headers()
+                self.wfile.write(b'OK')
+            elif self.path == '/update':
+                # Simulate metrics update
+                import random
+                latency = random.uniform(10, 200)
+                success = random.random() > 0.05
+                metrics.add_request(latency, success)
+                self.send_response(200)
+                self.send_header('Content-type', 'text/plain')
+                self.end_headers()
+                self.wfile.write(b'Updated')
+            else:
+                self.send_response(404)
+                self.end_headers()
+
+        def log_message(self, format, *args):
+            pass  # Suppress logs
+
+    if __name__ == '__main__':
+        server = HTTPServer(('0.0.0.0', 8090), SLOHandler)
+        print('SLO Exporter running on port 8090')
+        server.serve_forever()
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: slo-exporter
+  namespace: slo-monitoring
+  labels:
+    app: slo-exporter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: slo-exporter
+  template:
+    metadata:
+      labels:
+        app: slo-exporter
+    spec:
+      containers:
+      - name: exporter
+        image: python:3.9-slim
+        command: ["python3", "/app/slo-exporter.py"]
+        ports:
+        - containerPort: 8090
+          name: metrics
+        volumeMounts:
+        - name: exporter-script
+          mountPath: /app
+        resources:
+          requests:
+            cpu: 10m
+            memory: 64Mi
+          limits:
+            cpu: 100m
+            memory: 128Mi
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8090
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8090
+          initialDelaySeconds: 10
+          periodSeconds: 30
+      volumes:
+      - name: exporter-script
+        configMap:
+          name: slo-exporter-config
+          defaultMode: 0755
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: slo-exporter-service
+  namespace: slo-monitoring
+  labels:
+    app: slo-exporter
+spec:
+  type: NodePort
+  ports:
+  - port: 8090
+    targetPort: 8090
+    nodePort: 30090
+    protocol: TCP
+    name: metrics
+  selector:
+    app: slo-exporter
