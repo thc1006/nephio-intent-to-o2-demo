@@ -139,20 +139,29 @@ verify_edge_resources() {
     log "Verifying resources for edge: $edge"
 
     # Check NetworkSlices
-    local slices=$(kubectl get networkslices -n "$ns" -o json 2>/dev/null | jq -r '.items[] | .metadata.name' || true)
-    local slice_count=$(echo "$slices" | grep -c . || echo 0)
+    local slices=$(kubectl get networkslices -n "$ns" -o json 2>/dev/null | jq -r '.items[] | .metadata.name' 2>/dev/null || true)
+    local slice_count=0
+    if [[ -n "$slices" ]]; then
+        slice_count=$(echo "$slices" | wc -l)
+    fi
 
     # Check ConfigMaps
-    local configs=$(kubectl get configmaps -n "$ns" -l "edge=$edge" -o json 2>/dev/null | jq -r '.items[] | .metadata.name' || true)
-    local config_count=$(echo "$configs" | grep -c . || echo 0)
+    local configs=$(kubectl get configmaps -n "$ns" -l "edge=$edge" -o json 2>/dev/null | jq -r '.items[] | .metadata.name' 2>/dev/null || true)
+    local config_count=0
+    if [[ -n "$configs" ]]; then
+        config_count=$(echo "$configs" | wc -l)
+    fi
 
     # Check Services
-    local services=$(kubectl get services -n "$ns" -l "edge=$edge" -o json 2>/dev/null | jq -r '.items[] | .metadata.name' || true)
-    local service_count=$(echo "$services" | grep -c . || echo 0)
+    local services=$(kubectl get services -n "$ns" -l "edge=$edge" -o json 2>/dev/null | jq -r '.items[] | .metadata.name' 2>/dev/null || true)
+    local service_count=0
+    if [[ -n "$services" ]]; then
+        service_count=$(echo "$services" | wc -l)
+    fi
 
     # Probe A/B service endpoints
     local service_status="unknown"
-    if [[ $service_count -gt 0 ]]; then
+    if [[ "$service_count" -gt 0 ]]; then
         for svc in $services; do
             local probe_result=$(probe_service_endpoint "$svc" "$ns" "$edge")
             if [[ "$probe_result" == "reachable" ]]; then
@@ -201,7 +210,7 @@ main() {
     local ready_prs=0
     local pr_statuses='[]'
 
-    if [[ $pr_count -gt 0 ]]; then
+    if [[ "$pr_count" -gt 0 ]]; then
         while IFS= read -r pr_name; do
             if check_pr_ready "$pr_name" "$NAMESPACE" "$CMD"; then
                 ((ready_prs++))
@@ -218,15 +227,19 @@ main() {
     local resource_status=$(verify_edge_resources "$EDGE_SITE" "$NAMESPACE")
 
     # Step 4: Compile results
-    verification_results=$(echo "$verification_results" | jq --argjson prs "$pr_statuses" --argjson resources "$resource_status" '
+    verification_results=$(echo "$verification_results" | jq \
+        --argjson prs "$pr_statuses" \
+        --argjson resources "$resource_status" \
+        --arg pr_count "$pr_count" \
+        --arg ready_prs "$ready_prs" '
         .verification = {
             "provisioningRequests": {
-                "total": '$pr_count',
-                "ready": '$ready_prs',
+                "total": ($pr_count | tonumber),
+                "ready": ($ready_prs | tonumber),
                 "details": $prs
             },
             "resources": $resources,
-            "overallStatus": (if ('$ready_prs' > 0 and $resources.serviceStatus == "healthy") then "SUCCESS" else "PENDING" end)
+            "overallStatus": (if (($ready_prs | tonumber) > 0 and $resources.serviceStatus == "healthy") then "SUCCESS" else "PENDING" end)
         }
     ')
 
@@ -234,7 +247,7 @@ main() {
     local start_time=$(date +%s)
     local elapsed=0
 
-    while [[ $elapsed -lt $TIMEOUT ]]; do
+    while [[ "$elapsed" -lt "$TIMEOUT" ]]; do
         local overall_status=$(echo "$verification_results" | jq -r '.verification.overallStatus')
 
         if [[ "$overall_status" == "SUCCESS" ]]; then
@@ -250,7 +263,7 @@ main() {
         ready_prs=0
 
         # Re-check PRs
-        if [[ $pr_count -gt 0 ]]; then
+        if [[ "$pr_count" -gt 0 ]]; then
             while IFS= read -r pr_name; do
                 if check_pr_ready "$pr_name" "$NAMESPACE" "$CMD"; then
                     ((ready_prs++))
@@ -259,10 +272,12 @@ main() {
         fi
 
         # Update results
-        verification_results=$(echo "$verification_results" | jq --argjson resources "$resource_status" '
+        verification_results=$(echo "$verification_results" | jq \
+            --argjson resources "$resource_status" \
+            --arg ready_prs "$ready_prs" '
             .verification.resources = $resources |
-            .verification.provisioningRequests.ready = '$ready_prs' |
-            .verification.overallStatus = (if ('$ready_prs' > 0 and $resources.serviceStatus == "healthy") then "SUCCESS" else "PENDING" end)
+            .verification.provisioningRequests.ready = ($ready_prs | tonumber) |
+            .verification.overallStatus = (if (($ready_prs | tonumber) > 0 and $resources.serviceStatus == "healthy") then "SUCCESS" else "PENDING" end)
         ')
 
         elapsed=$(($(date +%s) - start_time))
