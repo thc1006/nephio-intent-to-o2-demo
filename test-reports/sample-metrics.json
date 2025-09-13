@@ -1,0 +1,186 @@
+{
+  "timestamp": "2025-09-13T15:45:00Z",
+  "total_runs": 9,
+  "metrics": [
+    {
+      "timestamp": "2025-09-13T15:30:00Z",
+      "pipeline_id": "nightly-edge1-embb-001",
+      "ci_run": "123",
+      "site": "edge1",
+      "service_type": "enhanced-mobile-broadband",
+      "metrics": {
+        "pipeline_success": true,
+        "total_duration_ms": 1250,
+        "intent_generation_ms": 45,
+        "krm_translation_ms": 120,
+        "sync_latency_ms": 35,
+        "pr_ready_time_ms": 850,
+        "stages_total": 7,
+        "stages_completed": 7,
+        "stages_failed": 0,
+        "success_rate": 1.0,
+        "postcheck_pass": true
+      }
+    },
+    {
+      "timestamp": "2025-09-13T15:32:00Z",
+      "pipeline_id": "nightly-edge2-embb-002",
+      "ci_run": "123",
+      "site": "edge2",
+      "service_type": "enhanced-mobile-broadband",
+      "metrics": {
+        "pipeline_success": true,
+        "total_duration_ms": 1180,
+        "intent_generation_ms": 42,
+        "krm_translation_ms": 115,
+        "sync_latency_ms": 28,
+        "pr_ready_time_ms": 780,
+        "stages_total": 7,
+        "stages_completed": 7,
+        "stages_failed": 0,
+        "success_rate": 1.0,
+        "postcheck_pass": true
+      }
+    },
+    {
+      "timestamp": "2025-09-13T15:34:00Z",
+      "pipeline_id": "nightly-both-embb-003",
+      "ci_run": "123",
+      "site": "both",
+      "service_type": "enhanced-mobile-broadband",
+      "metrics": {
+        "pipeline_success": true,
+        "total_duration_ms": 2100,
+        "intent_generation_ms": 48,
+        "krm_translation_ms": 180,
+        "sync_latency_ms": 45,
+        "pr_ready_time_ms": 1650,
+        "stages_total": 7,
+        "stages_completed": 7,
+        "stages_failed": 0,
+        "success_rate": 1.0,
+        "postcheck_pass": true
+      }
+    },
+    {
+      "timestamp": "2025-09-13T15:36:00Z",
+      "pipeline_id": "nightly-edge1-urllc-004",
+      "ci_run": "123",
+      "site": "edge1",
+      "service_type": "ultra-reliable-low-latency",
+      "metrics": {
+        "pipeline_success": true,
+        "total_duration_ms": 1350,
+        "intent_generation_ms": 50,
+        "krm_translation_ms": 140,
+        "sync_latency_ms": 22,
+        "pr_ready_time_ms": 920,
+        "stages_total": 7,
+        "stages_completed": 7,
+        "stages_failed": 0,
+        "success_rate": 1.0,
+        "postcheck_pass": true
+      }
+    },
+    {
+      "timestamp": "2025-09-13T15:38:00Z",
+      "pipeline_id": "nightly-edge2-urllc-005",
+      "ci_run": "123",
+      "site": "edge2",
+      "service_type": "ultra-reliable-low-latency",
+      "metrics": {
+        "pipeline_success": false,
+        "total_duration_ms": 950,
+        "intent_generation_ms": 55,
+        "krm_translation_ms": 125,
+        "sync_latency_ms": 65,
+        "pr_ready_time_ms": 0,
+        "stages_total": 7,
+        "stages_completed": 3,
+        "stages_failed": 1,
+        "success_rate": 0.42,
+        "postcheck_pass": false
+      }
+    },
+    {
+      "timestamp": "2025-09-13T15:40:00Z",
+      "pipeline_id": "nightly-both-urllc-006",
+      "ci_run": "123",
+      "site": "both",
+      "service_type": "ultra-reliable-low-latency",
+      "metrics": {
+        "pipeline_success": true,
+        "total_duration_ms": 2250,
+        "intent_generation_ms": 52,
+        "krm_translation_ms": 190,
+        "sync_latency_ms": 38,
+        "pr_ready_time_ms": 1750,
+        "stages_total": 7,
+        "stages_completed": 7,
+        "stages_failed": 0,
+        "success_rate": 1.0,
+        "postcheck_pass": true
+      }
+    },
+    {
+      "timestamp": "2025-09-13T15:42:00Z",
+      "pipeline_id": "nightly-edge1-mmtc-007",
+      "ci_run": "123",
+      "site": "edge1",
+      "service_type": "massive-machine-type",
+      "metrics": {
+        "pipeline_success": true,
+        "total_duration_ms": 1100,
+        "intent_generation_ms": 40,
+        "krm_translation_ms": 95,
+        "sync_latency_ms": 30,
+        "pr_ready_time_ms": 750,
+        "stages_total": 7,
+        "stages_completed": 7,
+        "stages_failed": 0,
+        "success_rate": 1.0,
+        "postcheck_pass": true
+      }
+    },
+    {
+      "timestamp": "2025-09-13T15:44:00Z",
+      "pipeline_id": "nightly-edge2-mmtc-008",
+      "ci_run": "123",
+      "site": "edge2",
+      "service_type": "massive-machine-type",
+      "metrics": {
+        "pipeline_success": true,
+        "total_duration_ms": 1050,
+        "intent_generation_ms": 38,
+        "krm_translation_ms": 90,
+        "sync_latency_ms": 25,
+        "pr_ready_time_ms": 720,
+        "stages_total": 7,
+        "stages_completed": 7,
+        "stages_failed": 0,
+        "success_rate": 1.0,
+        "postcheck_pass": true
+      }
+    },
+    {
+      "timestamp": "2025-09-13T15:46:00Z",
+      "pipeline_id": "nightly-both-mmtc-009",
+      "ci_run": "123",
+      "site": "both",
+      "service_type": "massive-machine-type",
+      "metrics": {
+        "pipeline_success": true,
+        "total_duration_ms": 1950,
+        "intent_generation_ms": 45,
+        "krm_translation_ms": 165,
+        "sync_latency_ms": 42,
+        "pr_ready_time_ms": 1500,
+        "stages_total": 7,
+        "stages_completed": 7,
+        "stages_failed": 0,
+        "success_rate": 1.0,
+        "postcheck_pass": true
+      }
+    }
+  ]
+}

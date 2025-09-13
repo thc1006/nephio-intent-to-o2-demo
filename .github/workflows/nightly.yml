@@ -1,20 +1,26 @@
-name: Nightly KPI Collection
+name: Nightly Regression - Intent to O2IMS Pipeline
 
 on:
   schedule:
-    # Run at 2 AM UTC every day
+    # Run daily at 2 AM UTC (adjust for your timezone)
     - cron: '0 2 * * *'
-  workflow_dispatch:
+  workflow_dispatch: # Allow manual trigger
     inputs:
-      target_site:
-        description: 'Target site for demo (edge1/edge2/both)'
+      target_sites:
+        description: 'Target sites to test'
         required: false
-        default: 'both'
+        default: 'edge1,edge2,both'
         type: choice
         options:
-          - edge1
-          - edge2
-          - both
+          - 'edge1,edge2,both'
+          - 'edge1'
+          - 'edge2'
+          - 'both'
+      service_types:
+        description: 'Service types to test'
+        required: false
+        default: 'enhanced-mobile-broadband,ultra-reliable-low-latency,massive-machine-type'
+        type: string
 
 env:
   MOCK_ADAPTER_ENDPOINT: 'http://localhost:8888'

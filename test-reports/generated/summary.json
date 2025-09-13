@@ -1,0 +1,31 @@
+{
+  "timestamp": "2025-09-13T15:40:03.944139",
+  "report_title": "Nightly Regression Test Report - Phase 20-A",
+  "overview": {
+    "total_runs": 9,
+    "successful_runs": 8,
+    "success_rate": 0.8888888888888888,
+    "sites_tested": [
+      "edge1",
+      "edge2",
+      "both"
+    ],
+    "services_tested": [
+      "enhanced-mobile-broadband",
+      "ultra-reliable-low-latency",
+      "massive-machine-type"
+    ]
+  },
+  "performance": {
+    "avg_duration_ms": 1464.4444444444443,
+    "avg_sync_latency_ms": 36.666666666666664,
+    "avg_pr_ready_time_ms": 991.1111111111111,
+    "avg_intent_generation_ms": 46.111111111111114,
+    "avg_krm_translation_ms": 135.55555555555554
+  },
+  "status": {
+    "overall": "FAIL",
+    "sla_compliance": true
+  },
+  "raw_data_count": 9
+}
