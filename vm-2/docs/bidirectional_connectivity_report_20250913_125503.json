@@ -1,0 +1,20 @@
+{
+  "timestamp": "2025-09-13T12:55:03+00:00",
+  "test_execution_location": "VM4",
+  "summary": {
+    "total_tests": 5,
+    "passed_tests": 3,
+    "failed_tests": 2,
+    "success_rate": "60.0%"
+  },
+  "test_results": [
+"✅ PING: VM-4 (Edge2) → VM-1 (SMO) (172.16.0.78)","✅ SSH端口: VM-4 (Edge2) → VM-1 (SMO):22","❌ SLO健康檢查: VM-4 (Edge2) → VM-1 (SMO):30090","✅ SLO數據獲取: VM-4 (Edge2) → VM-1 (SMO) ()","❌ O2IMS端口: VM-4 (Edge2) → VM-1 (SMO):31280"
+  ],
+  "network_configuration": {
+    "vm1_ip": "172.16.0.78",
+    "vm4_ip": "172.16.0.89",
+    "slo_port": 30090,
+    "o2ims_port": 31280,
+    "kubernetes_api_port": 6443
+  }
+}
