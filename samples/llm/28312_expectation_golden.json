@@ -1,0 +1,31 @@
+{
+  "expectationList": [
+    {
+      "expectationId": "exp-test-001",
+      "expectationName": "5G eMBB Service Expectation",
+      "expectationType": "ServiceSupportExpectation",
+      "expectationTargets": [
+        {
+          "targetId": "edge1-ran",
+          "targetType": "RANNetworkFunction"
+        }
+      ],
+      "expectationObjects": [
+        {
+          "objectType": "NetworkSlice",
+          "objectInstances": [
+            {
+              "objectInstanceId": "slice-001",
+              "performanceRequirements": {
+                "maxBandwidth": "1000Mbps",
+                "minBandwidth": "100Mbps",
+                "maxLatency": "10ms",
+                "availability": "99.9%"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
