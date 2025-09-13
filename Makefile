@@ -49,6 +49,27 @@ test: ## Run unit tests
 	@./tests/test_krm_rendering.sh || exit 1
 	@echo "Tests complete"
 
+contract-test: ## Run contract tests for Intent to KRM translator
+	@echo "================================================="
+	@echo "Running Contract Tests for Intent to KRM"
+	@echo "================================================="
+	@echo "Testing exact field mappings and deterministic outputs..."
+	@python$(PYTHON_VERSION) tests/contract/test_contract.py || exit 1
+	@echo ""
+	@echo "Testing current implementation features..."
+	@python$(PYTHON_VERSION) tests/contract/test_contract_current.py || exit 1
+	@echo ""
+	@echo "Contract tests complete!"
+
+contract-test-full: ## Run all contract tests including future features
+	@echo "================================================="
+	@echo "Running Full Contract Test Suite"
+	@echo "================================================="
+	@python$(PYTHON_VERSION) tests/contract/test_contract.py || exit 1
+	@python$(PYTHON_VERSION) tests/contract/test_contract_current.py || exit 1
+	@python$(PYTHON_VERSION) tests/contract/test_enhanced_contract.py || true
+	@echo "Full test suite complete!"
+
 build: ## Build all components
 	@echo "Building Python components..."
 	@cd tools/intent-gateway && python$(PYTHON_VERSION) -m py_compile *.py 2>/dev/null || true

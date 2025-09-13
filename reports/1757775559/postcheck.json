@@ -1,0 +1,20 @@
+{
+  "timestamp": "2025-09-13T14:59:19+00:00",
+  "sites": ["edge1"],
+  "status": "PASS",
+  "checks": {
+    "edge1": {
+      "rootsync": {"status": "PASS", "message": "GitOps directory exists"},
+      "provisioning_request": {"status": "PASS", "message": "ProvisioningRequest YAML files exist"},
+      "network_slice": {"status": "SKIP", "message": "No NetworkSlice files found"},
+      "connectivity": {"status": "SKIP", "message": "Test mode - connectivity not checked"}
+    }
+  },
+  "summary": {
+    "total_checks": 4,
+    "passed": 2,
+    "failed": 0,
+    "warnings": 0,
+    "skipped": 2
+  }
+}

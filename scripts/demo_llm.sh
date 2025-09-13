@@ -1,11 +1,9 @@
-#!/bin/bash
-#
-# Demo LLM - Multi-Site Intent-to-O2 Pipeline with LLM Integration
-# Supports intent generation with target site routing for edge1, edge2, or both
+#!/usr/bin/env bash
+# Phase 19-A: Automated Intent→GitOps→O2IMS Pipeline Orchestrator
+# Wire adapter→compiler→kpt→git push→wait RootSync→poll O2IMS PR status
 #
 # Environment: Nephio R5, O-RAN O2 IMS integration, Multi-site deployment
 # Network: Assumes 172.16/16 subnet with VM-1 (orchestrator), VM-2 (edge1), VM-3 (llm), VM-4 (edge2)
-#
 
 set -euo pipefail
 

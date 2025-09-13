@@ -1,0 +1,29 @@
+apiVersion: o2ims.provisioning.oran.org/v1alpha1
+kind: ProvisioningRequest
+metadata:
+  annotations:
+    generated-by: intent-compiler
+    resource-profile: premium
+    timestamp: '2025-01-01T00:00:00.000000Z'
+  labels:
+    intent-id: urllc-001
+    service-type: ultra-reliable-low-latency
+    target-site: edge2
+  name: urllc-001-edge2
+  namespace: edge2
+spec:
+  description: Provisioning request for ultra-reliable-low-latency service at edge2
+  networkConfig:
+    gnbId: '00002'
+    plmnId: '00102'
+    sliceType: URLLC
+    tac: '0002'
+  resourceRequirements:
+    cpu: '16'
+    memory: 32Gi
+    storage: 200Gi
+  slaRequirements:
+    availability: 99.999%
+    maxLatency: 1ms
+    minThroughput: 5000Mbps
+  targetCluster: edge-cluster-02
