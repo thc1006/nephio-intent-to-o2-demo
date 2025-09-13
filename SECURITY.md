@@ -10,6 +10,15 @@ This document outlines comprehensive security measures, access controls, and com
 
 ### 1.1 LLM Adapter IP Whitelist Configuration
 
+**Critical Ports Security Matrix:**
+| Port | Service | Protocol | Security Level | Access Control |
+|------|---------|----------|----------------|----------------|
+| 6443 | K8s API | HTTPS | Critical | mTLS + RBAC |
+| 31080 | HTTP Service | HTTP | Medium | IP Whitelist |
+| 31443 | HTTPS Service | HTTPS | High | TLS 1.3 + IP Whitelist |
+| 31280 | O2IMS API | HTTP | High | OAuth2 + IP Whitelist |
+| 8888 | LLM Adapter | HTTP | Critical | Strict IP Whitelist |
+
 **Whitelist Implementation:**
 ```bash
 # /etc/security/llm-adapter-whitelist.conf
@@ -18,7 +27,7 @@ This document outlines comprehensive security measures, access controls, and com
 # VM-2 Edge1 Cluster
 172.16.4.45/32
 # VM-4 Edge2 Cluster
-<VM4_IP>/32
+172.16.0.89/32
 # Internal cluster networks
 10.244.0.0/16
 # Service mesh networks
@@ -28,11 +37,21 @@ This document outlines comprehensive security measures, access controls, and com
 **iptables Rules for LLM Adapter (VM-3):**
 ```bash
 #!/bin/bash
-# Apply LLM adapter security rules
+# Apply LLM adapter security rules for port 8888
 iptables -A INPUT -p tcp --dport 8888 -s 172.16.4.44 -j ACCEPT  # VM-1
 iptables -A INPUT -p tcp --dport 8888 -s 172.16.4.45 -j ACCEPT  # VM-2
-iptables -A INPUT -p tcp --dport 8888 -s <VM4_IP> -j ACCEPT     # VM-4
+iptables -A INPUT -p tcp --dport 8888 -s 172.16.0.89 -j ACCEPT  # VM-4
 iptables -A INPUT -p tcp --dport 8888 -j DROP  # Deny all others
+
+# Secure O2IMS endpoint (port 31280)
+iptables -A INPUT -p tcp --dport 31280 -s 172.16.0.0/16 -j ACCEPT
+iptables -A INPUT -p tcp --dport 31280 -j DROP
+
+# Secure NodePort services (31080/31443)
+iptables -A INPUT -p tcp --dport 31080 -s 172.16.0.0/16 -j ACCEPT
+iptables -A INPUT -p tcp --dport 31443 -s 172.16.0.0/16 -j ACCEPT
+iptables -A INPUT -p tcp --dport 31080 -j DROP
+iptables -A INPUT -p tcp --dport 31443 -j DROP
 
 # Allow internal cluster communication
 iptables -A INPUT -s 10.244.0.0/16 -j ACCEPT
@@ -2038,6 +2057,96 @@ done
 
 ---
 
-*Last Updated: $(date -Iseconds)*
-*Document Version: 1.1*
+## Common Security Failures and 5-Minute Fixes
+
+### Security Incident Response Playbook
+
+#### 1. Unauthorized Access Attempt (Port 6443/8888)
+**Symptoms**: Failed authentication logs, suspicious IPs in audit logs
+```bash
+# Quick Fix (< 5 min)
+# Block suspicious IP immediately
+iptables -I INPUT -s <SUSPICIOUS_IP> -j DROP
+# Review authentication logs
+kubectl logs -n kube-system kube-apiserver-* | grep "Unauthorized"
+# Rotate service account tokens if compromised
+kubectl delete secret -A -l kubernetes.io/service-account-token
+```
+
+#### 2. Certificate Expiry (Ports 6443/31443)
+**Symptoms**: TLS handshake failures, "certificate expired" errors
+```bash
+# Quick Fix (< 5 min)
+# Check certificate expiry
+kubeadm certs check-expiration
+# Renew certificates
+kubeadm certs renew all
+# Restart API server
+systemctl restart kubelet
+```
+
+#### 3. O2IMS Authentication Failure (Port 31280)
+**Symptoms**: 401/403 errors on O2IMS API calls
+```bash
+# Quick Fix (< 5 min)
+# Regenerate O2IMS tokens
+kubectl delete secret o2ims-auth -n o2ims-system
+kubectl create secret generic o2ims-auth --from-literal=token=$(openssl rand -hex 32) -n o2ims-system
+kubectl rollout restart deployment o2ims-controller -n o2ims-system
+```
+
+#### 4. Firewall Rule Corruption (Ports 31080/31443/31280)
+**Symptoms**: Services suddenly unreachable, iptables rules missing
+```bash
+# Quick Fix (< 5 min)
+# Restore default security rules
+iptables-restore < /etc/iptables/rules.v4.backup
+# Verify critical ports are open
+for port in 6443 31080 31443 31280 8888; do
+  nc -zv 172.16.4.45 $port
+done
+```
+
+#### 5. RBAC Policy Violation
+**Symptoms**: Permission denied errors, service account issues
+```bash
+# Quick Fix (< 5 min)
+# Review RBAC bindings
+kubectl get rolebindings,clusterrolebindings -A | grep -i admin
+# Apply emergency RBAC fix
+kubectl apply -f security/emergency-rbac.yaml
+# Audit recent RBAC changes
+kubectl get events -A | grep -i rbac
+```
+
+### Common Security Failure Patterns
+
+| Incident Type | Port | Detection Method | MTTR | Automation |
+|---------------|------|------------------|------|------------|
+| Brute Force | 6443 | Fail2ban alerts | 2 min | Auto-block |
+| Cert Expiry | 6443/31443 | X.509 monitoring | 3 min | Auto-renew |
+| Token Leak | 31280 | Audit logs | 4 min | Auto-rotate |
+| DDoS Attack | 31080/8888 | Rate limit alerts | 2 min | Auto-scale |
+| Privilege Escalation | All | RBAC audit | 5 min | Alert only |
+
+### Security Preventive Measures
+
+1. **Automated Security Scanning**: Every 4 hours on all exposed ports
+2. **Certificate Rotation**: Auto-renew 30 days before expiry
+3. **Token Rotation**: Weekly rotation of all service tokens
+4. **Audit Log Analysis**: Real-time anomaly detection
+5. **Network Segmentation**: Strict firewall rules per port
+6. **Rate Limiting**: Automatic rate limits on ports 8888, 31080, 31280
+
+### Emergency Security Contacts
+
+- **Security Team Lead**: security-lead@company.com
+- **On-Call Security**: PagerDuty #security-critical
+- **Incident Response**: #security-incidents (Slack)
+- **24/7 SOC**: +1-555-SEC-RITY
+
+---
+
+*Last Updated: 2025-09-13*
+*Document Version: 1.2*
 *Classification: Internal Use Only*

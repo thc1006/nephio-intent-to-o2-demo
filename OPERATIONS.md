@@ -8,7 +8,14 @@ This operations manual provides comprehensive procedures for managing the Nephio
 - VM-1 (SMO): Orchestrator with Gitea at port 8888
 - VM-2 (Edge1): API `https://172.16.4.45:6443`, NodePorts `31080/31443`, O2IMS `http://172.16.4.45:31280`
 - VM-3 (LLM): Adapter at `http://<VM3_IP>:8888` (default: 172.16.2.10)
-- VM-4 (Edge2): API `https://172.16.4.55:6443`, O2IMS `http://172.16.4.55:31280`
+- VM-4 (Edge2): API `https://172.16.4.55:6443`, NodePorts `31080/31443`, O2IMS `http://172.16.4.55:31280`
+
+**Critical Ports Reference:**
+- **6443**: Kubernetes API Server (HTTPS)
+- **31080**: HTTP service endpoint (NodePort)
+- **31443**: HTTPS service endpoint (NodePort)
+- **31280**: O2IMS API endpoint (NodePort)
+- **8888**: LLM Adapter / Gitea services
 
 ---
 
@@ -662,6 +669,73 @@ export INTENT_PROCESSOR_CPU="2000m"
 
 ---
 
-*Document Version: 1.0.0*
+## Common Failures and Resolution
+
+### 5-Minute Fix Playbook
+
+#### 1. LLM Adapter Timeout (Port 8888)
+**Symptoms**: Intent generation fails with timeout error
+```bash
+# Quick Fix (< 5 min)
+systemctl restart llm-adapter
+curl -X GET http://172.16.2.10:8888/health
+```
+
+#### 2. O2IMS Connection Failure (Port 31280)
+**Symptoms**: ProvisioningRequest not reaching O2IMS
+```bash
+# Quick Fix (< 5 min)
+kubectl rollout restart deployment o2ims-controller -n o2ims-system
+kubectl wait --for=condition=ready pod -l app=o2ims -n o2ims-system --timeout=300s
+curl http://172.16.4.45:31280/o2ims/v1/health
+```
+
+#### 3. API Server Unreachable (Port 6443)
+**Symptoms**: kubectl commands fail with connection refused
+```bash
+# Quick Fix (< 5 min)
+systemctl restart kubelet
+systemctl restart containerd
+kubectl get nodes --request-timeout=10s
+```
+
+#### 4. NodePort Services Down (Ports 31080/31443)
+**Symptoms**: Services unreachable from external clients
+```bash
+# Quick Fix (< 5 min)
+kubectl get svc -A | grep NodePort
+kubectl rollout restart deployment ingress-nginx-controller -n ingress-nginx
+curl -k https://172.16.4.45:31443/health
+```
+
+#### 5. GitOps Sync Failure
+**Symptoms**: RootSync stuck, resources not deploying
+```bash
+# Quick Fix (< 5 min)
+kubectl delete rootsync intent-to-o2-rootsync -n config-management-system
+kubectl apply -f gitops/rootsync.yaml
+kubectl wait --for=condition=ready rootsync intent-to-o2-rootsync -n config-management-system --timeout=300s
+```
+
+### Common Failure Patterns
+
+| Failure Type | Port | Root Cause | Resolution Time | Automation Available |
+|--------------|------|------------|-----------------|---------------------|
+| LLM Timeout | 8888 | Memory leak | 2-3 min | Yes - restart script |
+| O2IMS Down | 31280 | Pod crash | 3-4 min | Yes - health check |
+| API Unreachable | 6443 | Certificate expiry | 4-5 min | Yes - cert rotation |
+| NodePort Block | 31080/31443 | Firewall rules | 2-3 min | Yes - iptables reset |
+| Sync Stuck | N/A | Git conflict | 3-5 min | Yes - force sync |
+
+### Preventive Measures
+1. **Automated Health Checks**: Run every 5 minutes on all critical ports
+2. **Certificate Monitoring**: Alert 30 days before expiry
+3. **Resource Monitoring**: Alert at 80% CPU/Memory usage
+4. **Log Aggregation**: Centralized logging for pattern detection
+5. **Automated Remediation**: Self-healing scripts for common failures
+
+---
+
+*Document Version: 1.1.0*
 *Last Updated: 2025-09-13*
 *Next Review: 2025-10-13*
