@@ -140,7 +140,7 @@ Request: {text}"""
         """Get current model being used"""
         return "claude-cli" if (self.use_claude and self.claude_available) else "rule-based"
     
-    def convert_to_tmf921(self, intent_dict: Dict[str, Any], original_text: str) -> Dict[str, Any]:
+    def convert_to_tmf921(self, intent_dict: Dict[str, Any], original_text: str, override_target_site: Optional[str] = None) -> Dict[str, Any]:
         """Convert internal format to TMF921-compliant Intent"""
         from datetime import datetime
         import uuid
@@ -151,7 +151,7 @@ Request: {text}"""
         # Map service types to TMF921 format
         service_type = intent_dict.get("service", "eMBB")
         location = intent_dict.get("location", "edge1")
-        target_site = intent_dict.get("targetSite", "edge1")
+        target_site = override_target_site or intent_dict.get("targetSite", "edge1")
         qos = intent_dict.get("qos", {})
         
         # Build TMF921 structure

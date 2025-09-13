@@ -28,13 +28,24 @@ llm_client = get_llm_client()
 
 class IntentRequest(BaseModel):
     """Request model for intent generation"""
-    text: str = Field(..., description="Natural language request text")
-    
-    @validator('text')
+    text: Optional[str] = Field(None, description="Natural language request text (legacy)")
+    natural_language: Optional[str] = Field(None, description="Natural language request text (ACC-12 format)")
+    target_site: Optional[str] = Field(None, description="Target deployment site (edge1, edge2, both)")
+
+    @validator('text', 'natural_language')
     def text_not_empty(cls, v):
-        if not v or not v.strip():
+        if v is not None and (not v or not v.strip()):
             raise ValueError('Request text cannot be empty')
-        return v.strip()
+        return v.strip() if v else None
+
+    def get_text(self) -> str:
+        """Get the actual text content from either field"""
+        if self.natural_language:
+            return self.natural_language
+        elif self.text:
+            return self.text
+        else:
+            raise ValueError('Either text or natural_language field is required')
 
 
 class QoSParameters(BaseModel):
@@ -78,12 +89,13 @@ async def parse_intent(request: IntentRequest) -> UnifiedIntentResponse:
     Common handler for intent parsing using pluggable LLM client
     """
     try:
+        text = request.get_text()
         # Use the LLM client to parse text
-        intent_dict = llm_client.parse_text(request.text)
-        
+        intent_dict = llm_client.parse_text(text)
+
         # Get model information
         model_info = llm_client.get_model_info()
-        
+
         # Build response
         return UnifiedIntentResponse(
             intent=IntentContent(
@@ -91,7 +103,7 @@ async def parse_intent(request: IntentRequest) -> UnifiedIntentResponse:
                 location=intent_dict["location"],
                 qos=QoSParameters(**intent_dict["qos"])
             ),
-            raw_text=request.text,
+            raw_text=text,
             model=model_info,
             version="1.0.0"
         )
@@ -104,11 +116,12 @@ async def generate_tmf921_intent(request: IntentRequest) -> TMF921Intent:
     Generate TMF921-compliant Intent from natural language text
     """
     try:
+        text = request.get_text()
         # Use the LLM client to parse text
-        intent_dict = llm_client.parse_text(request.text)
-        
+        intent_dict = llm_client.parse_text(text)
+
         # Convert to TMF921 format
-        return llm_client.convert_to_tmf921(intent_dict, request.text)
+        return llm_client.convert_to_tmf921(intent_dict, text, request.target_site)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"TMF921 intent generation failed: {str(e)}")
 
