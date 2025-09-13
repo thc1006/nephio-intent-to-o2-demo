@@ -1,0 +1,66 @@
+{
+  "test_id": "ACC-12",
+  "test_name": "RootSync Health Verification",
+  "timestamp": "2025-09-13T10:31:15Z",
+  "cluster": "edge1",
+  "status": "HEALTHY",
+  "rootsync": {
+    "implementation": "git-sync + reconciler",
+    "namespace": "config-management-system",
+    "deployment_status": "Ready",
+    "replicas": {
+      "desired": 1,
+      "current": 1,
+      "ready": 1
+    },
+    "pod_status": "Running",
+    "containers": {
+      "git-sync": "Running",
+      "reconciler": "Running"
+    },
+    "restarts": 0,
+    "age": "10h"
+  },
+  "sync_status": {
+    "status": "SYNCED",
+    "repo": "http://172.16.0.78:30000/admin1/edge1-config.git",
+    "branch": "HEAD",
+    "last_sync_commit": "42949f4c9116d5a45c4bd7a66f946ad84565c26b",
+    "local_commit": "42949f4c9116d5a45c4bd7a66f946ad84565c26b",
+    "sync_count": 2,
+    "sync_period": "30s",
+    "last_update": "2025-09-12T23:37:22Z"
+  },
+  "reconciler_activity": {
+    "last_apply": "2025-09-13T10:30:43Z",
+    "resources_applied": [
+      "customresourcedefinition.apiextensions.k8s.io/ranbundles.ran.nephio.org",
+      "customresourcedefinition.apiextensions.k8s.io/tnbundles.tn.nephio.org",
+      "namespace/edge1",
+      "configmap/expectation-ran-perf-001"
+    ],
+    "status": "unchanged"
+  },
+  "health_indicators": {
+    "deployment_ready": true,
+    "pods_running": true,
+    "git_sync_active": true,
+    "reconciler_active": true,
+    "commits_synced": true,
+    "resources_applied": true
+  },
+  "validation": {
+    "passed": [
+      "Deployment root-reconciler is ready (1/1)",
+      "Pod root-reconciler is running with 0 restarts",
+      "Git-sync container successfully pulling from repository",
+      "Reconciler container actively applying configurations",
+      "Latest commit (42949f4c) synced successfully",
+      "Namespace and ConfigMap resources applied"
+    ],
+    "warnings": [],
+    "errors": []
+  },
+  "overall_status": "PASS",
+  "message": "RootSync is healthy and actively syncing from Gitea repository"
+}
