@@ -70,3 +70,8 @@ go.work.sum
 
 # Keep Claude subagents local only
 .claude/agents/
+
+# Claude project instructions (contains sensitive development context)
+CLAUDE.md
+CLAUDE.md.bak
+**/CLAUDE.md
