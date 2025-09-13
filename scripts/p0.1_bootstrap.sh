@@ -5,7 +5,7 @@
 set -euo pipefail
 
 CLUSTER_NAME="${KIND_CLUSTER_NAME:-nephio-demo}"
-K8S_VERSION="${K8S_VERSION:-v1.29.0}"
+K8S_VERSION="${K8S_VERSION:-v1.34.0}"
 GITEA_NAMESPACE="${GITEA_NAMESPACE:-gitea-system}"
 PORCH_NAMESPACE="${PORCH_NAMESPACE:-porch-system}"
 DEMO_NAMESPACE="${DEMO_NAMESPACE:-porch-demo}"
@@ -101,7 +101,7 @@ EOF
 install_metallb() {
     log "Installing MetalLB..."
     
-    kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.13.12/config/manifests/metallb-native.yaml
+    kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.15.2/config/manifests/metallb-native.yaml
     
     # Wait for MetalLB pods
     kubectl wait --namespace metallb-system \
@@ -166,7 +166,7 @@ spec:
     spec:
       containers:
       - name: gitea
-        image: gitea/gitea:1.21
+        image: gitea/gitea:1.24.6
         ports:
         - containerPort: 3000
         - containerPort: 22

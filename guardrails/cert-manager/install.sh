@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-CERT_MANAGER_VERSION="v1.15.0"
+CERT_MANAGER_VERSION="v1.18.2"
 NAMESPACE="cert-manager"
 
 echo "Installing cert-manager ${CERT_MANAGER_VERSION}..."

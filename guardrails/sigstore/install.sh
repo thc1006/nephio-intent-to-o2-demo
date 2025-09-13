@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-POLICY_CONTROLLER_VERSION="v0.10.0"
+POLICY_CONTROLLER_VERSION="v0.10.2"
 NAMESPACE="cosign-system"
 
 echo "Installing Sigstore Policy Controller ${POLICY_CONTROLLER_VERSION}..."

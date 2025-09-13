@@ -1,0 +1,307 @@
+{
+  "package_info": {
+    "timestamp": "2025-09-13T10:34:55Z",
+    "version": "1.0.0",
+    "generator": "package_artifacts.sh",
+    "maintainer": "nephio-demo@example.com",
+    "report_id": "test-acc14"
+  },
+  "artifacts": {
+    "total_count": 40,
+    "total_size_bytes": 83925,
+    "checksums_file": "checksums.txt",
+    "files": [
+      {
+        "path": "intent.json",
+        "size_bytes": 211,
+        "sha256": "1a2690a4ab1e2d31d924527351c2e108eddc045f15ec161734fda24e4bc38e91",
+        "type": "application/json"
+      }
+,
+      {
+        "path": "o2ims.json",
+        "size_bytes": 225,
+        "sha256": "f40d785685960c271934c55a6aa099efb195b22120b4814f88c43a13871c4cdc",
+        "type": "application/json"
+      }
+,
+      {
+        "path": "postcheck.json",
+        "size_bytes": 266,
+        "sha256": "fcf59f1023e2ec82a3cae7eb2de7ef1fcc3a66ccef58341081804a88755e965c",
+        "type": "application/json"
+      }
+,
+      {
+        "path": "rendered/edge1-config/README.md",
+        "size_bytes": 951,
+        "sha256": "d63db1836cbcd966a2a61da349be9021f715873bc3c832708ac191c921c8ef8b",
+        "type": "text/plain"
+      }
+,
+      {
+        "path": "rendered/edge1-config/baseline/namespace.yaml",
+        "size_bytes": 989,
+        "sha256": "a8e4637dba18d5275dfacc9403da018d4e1f4f2de363f496e9f39dcd49fef58f",
+        "type": "text/plain"
+      }
+,
+      {
+        "path": "rendered/edge1-config/baseline/sample-service.yaml",
+        "size_bytes": 1179,
+        "sha256": "aa7c95f041142b5fb05cd96d72c8d11d07f963a88bec6b04a7457821ce8c965e",
+        "type": "text/plain"
+      }
+,
+      {
+        "path": "rendered/edge1-config/deployment.yaml",
+        "size_bytes": 526,
+        "sha256": "bd1a28e4b6a00db2314af76d347c235df6b7401dc883555f74781f479903a6b6",
+        "type": "text/plain"
+      }
+,
+      {
+        "path": "rendered/edge1-config/kustomization.yaml",
+        "size_bytes": 242,
+        "sha256": "6d40ac02b666da313a1732d58a59f534a8d99ab4f59df6cd2879aefa6f5072d6",
+        "type": "text/plain"
+      }
+,
+      {
+        "path": "rendered/edge1-config/monitoring/config-20250913_071124.yaml",
+        "size_bytes": 1479,
+        "sha256": "8114b9a3c1bb97d9abb0b2f06a0ce9706260f77c190783e1c4e2f0ea4d92a080",
+        "type": "text/plain"
+      }
+,
+      {
+        "path": "rendered/edge1-config/monitoring/kustomization.yaml",
+        "size_bytes": 217,
+        "sha256": "3a70918d632b7149967da327d72f74e0302f46e6c589a011404237ca01d65e09",
+        "type": "text/plain"
+      }
+,
+      {
+        "path": "rendered/edge1-config/namespace.yaml",
+        "size_bytes": 112,
+        "sha256": "5c2e3375ecd22278835684af4ad4155c135eb15b91cca89e57f0db5f8b5779cc",
+        "type": "text/plain"
+      }
+,
+      {
+        "path": "rendered/edge1-config/namespaces.yaml",
+        "size_bytes": 188,
+        "sha256": "2e4bfd66d74d8b8e54b19d11250f06967b49b0e5d6b0ce85908e6016bea2c8ca",
+        "type": "text/plain"
+      }
+,
+      {
+        "path": "rendered/edge1-config/network-functions/kustomization.yaml",
+        "size_bytes": 204,
+        "sha256": "a359ebc9c8838a7e0f21e817c5f6e44e420cbd92a971602548665c46266bd0ae",
+        "type": "text/plain"
+      }
+,
+      {
+        "path": "rendered/edge1-config/rootsync.yaml",
+        "size_bytes": 1517,
+        "sha256": "f6febb049d72e01954c4ab3c6fff6e98e650d478fe8c9a56da769bb28b843c61",
+        "type": "text/plain"
+      }
+,
+      {
+        "path": "rendered/edge1-config/service.yaml",
+        "size_bytes": 200,
+        "sha256": "db78a73e569f23d3cd442f067420b0d47619de52ff1eab762e467b9bd62a61a8",
+        "type": "text/plain"
+      }
+,
+      {
+        "path": "rendered/edge1-config/services/kustomization.yaml",
+        "size_bytes": 195,
+        "sha256": "f157a32a9bfa2ca5d35cd44e96b1a7c4feb6d7c164597732f3ab6b9dfdaddeee",
+        "type": "text/plain"
+      }
+,
+      {
+        "path": "rendered/edge1-config/services/network-slice-20250913_071124.yaml",
+        "size_bytes": 760,
+        "sha256": "cc713c69012706877e9357669accd0f44da6de660a824956dfd006055937d1e9",
+        "type": "text/plain"
+      }
+,
+      {
+        "path": "rendered/edge1-config/services/service-20250913_071124.yaml",
+        "size_bytes": 595,
+        "sha256": "2ba56bc2d94ec4f45858c40b6c0a4383c57df5bcc4d8f9012b1167da551c8139",
+        "type": "text/plain"
+      }
+,
+      {
+        "path": "rendered/edge2-config/README.md",
+        "size_bytes": 962,
+        "sha256": "97fbe7417d824ee4e4ab0febe824fc80b9220d09bd0ea08e655266893e4a7c22",
+        "type": "text/plain"
+      }
+,
+      {
+        "path": "rendered/edge2-config/baseline/namespace.yaml",
+        "size_bytes": 1013,
+        "sha256": "9c1bcb339217f9771dbe4253b349c434f36b2ff59f8cb8bdfa71ce41d1355c49",
+        "type": "text/plain"
+      }
+,
+      {
+        "path": "rendered/edge2-config/baseline/sample-service.yaml",
+        "size_bytes": 1179,
+        "sha256": "770a4851e4a18bb79f414136470d8a6297be86cccc9a555403acb56199f10864",
+        "type": "text/plain"
+      }
+,
+      {
+        "path": "rendered/edge2-config/deployment.yaml",
+        "size_bytes": 526,
+        "sha256": "98c1b7e7ee0628e49b1d6014b91907bb475ccdcc996dd6c6217d829fbf2b4f4e",
+        "type": "text/plain"
+      }
+,
+      {
+        "path": "rendered/edge2-config/kustomization.yaml",
+        "size_bytes": 242,
+        "sha256": "bc89996041f7013d4ddfe61fd3b0490b36efacac1172289e33697ff6a7e155be",
+        "type": "text/plain"
+      }
+,
+      {
+        "path": "rendered/edge2-config/monitoring/alerting-rules.yaml",
+        "size_bytes": 3745,
+        "sha256": "d80e33a12f476ee185f3fa590edbe97c83017b51c1de0b7f58e7198ec33922c7",
+        "type": "text/plain"
+      }
+,
+      {
+        "path": "rendered/edge2-config/monitoring/dashboards.json",
+        "size_bytes": 1601,
+        "sha256": "42c8d82fc35ab2251ca6eaebb2eb57234a0c927aa37782de94fe8e6b1efd9de2",
+        "type": "application/json"
+      }
+,
+      {
+        "path": "rendered/edge2-config/monitoring/grafana-config.yaml",
+        "size_bytes": 1276,
+        "sha256": "675dcf82af27683dc6973decbc404672f194aba345ea506cc25a229774368bee",
+        "type": "text/plain"
+      }
+,
+      {
+        "path": "rendered/edge2-config/monitoring/kustomization.yaml",
+        "size_bytes": 733,
+        "sha256": "9f0c4c980265dee369f8a1dfa3951ffceeabf4e32f03d4b2e2c3652633f769aa",
+        "type": "text/plain"
+      }
+,
+      {
+        "path": "rendered/edge2-config/monitoring/prometheus-config.yaml",
+        "size_bytes": 2774,
+        "sha256": "d0236a80cbcb5d8b1e72c05af2e85bb9cf15b99c5cd020b1debbe8a7786e38de",
+        "type": "text/plain"
+      }
+,
+      {
+        "path": "rendered/edge2-config/monitoring/slo-monitoring.yaml",
+        "size_bytes": 2013,
+        "sha256": "3cd66e3d5cd0d60c285670d3581bed49422ba69a88925a82615f10f52a1c95a3",
+        "type": "text/plain"
+      }
+,
+      {
+        "path": "rendered/edge2-config/namespace.yaml",
+        "size_bytes": 112,
+        "sha256": "6d1afee7e7b0fcb0dadcdf5f2877b5b4855e5c2f918e6adee1b06aa63e91840d",
+        "type": "text/plain"
+      }
+,
+      {
+        "path": "rendered/edge2-config/namespaces.yaml",
+        "size_bytes": 188,
+        "sha256": "2e4bfd66d74d8b8e54b19d11250f06967b49b0e5d6b0ce85908e6016bea2c8ca",
+        "type": "text/plain"
+      }
+,
+      {
+        "path": "rendered/edge2-config/network-functions/kustomization.yaml",
+        "size_bytes": 392,
+        "sha256": "f315e0359037588e950725c83a0e6eb1277dbdeea187396dceb4743ece951680",
+        "type": "text/plain"
+      }
+,
+      {
+        "path": "rendered/edge2-config/network-functions/placeholder-configmap.yaml",
+        "size_bytes": 597,
+        "sha256": "f73d9266c80a9babaaa8d7fc8245a4e221c51b9d720c295c79f3f0ebcc88b643",
+        "type": "text/plain"
+      }
+,
+      {
+        "path": "rendered/edge2-config/rootsync.yaml",
+        "size_bytes": 1541,
+        "sha256": "feebd1102e786e52babad1fe1ff349058f1890d85174e9afcb7befd07561254e",
+        "type": "text/plain"
+      }
+,
+      {
+        "path": "rendered/edge2-config/service.yaml",
+        "size_bytes": 200,
+        "sha256": "db78a73e569f23d3cd442f067420b0d47619de52ff1eab762e467b9bd62a61a8",
+        "type": "text/plain"
+      }
+,
+      {
+        "path": "rendered/edge2-config/services/ingress-config.yaml",
+        "size_bytes": 1298,
+        "sha256": "e713c72e74a6268237352b6dd6459bd307d55c17ec2d35ed146aa3c455c1bf1f",
+        "type": "text/plain"
+      }
+,
+      {
+        "path": "rendered/edge2-config/services/kustomization.yaml",
+        "size_bytes": 659,
+        "sha256": "dfec3a59499bbaf51df2ffa971bbf028b20a2fd42533cb4560c9dc523c4c447e",
+        "type": "text/plain"
+      }
+,
+      {
+        "path": "rendered/edge2-config/services/load-balancer.yaml",
+        "size_bytes": 907,
+        "sha256": "de7c3d6d4d14fae69254cbe2cdc174a50f0cb92e6d080370b69b4bdb163aa83d",
+        "type": "text/plain"
+      }
+,
+      {
+        "path": "rendered/edge2-config/services/service-discovery.yaml",
+        "size_bytes": 887,
+        "sha256": "30a02033b5438c2327637a98779471d728e97e89d2c900a81cea19e46fd8882d",
+        "type": "text/plain"
+      }
+,
+      {
+        "path": "rendered/edge2-config/sync-config.yaml",
+        "size_bytes": 1872,
+        "sha256": "8404ca2bf226bfb8263f140f98415742ce9cf329d63207d14b04381eb15966ae",
+        "type": "text/plain"
+      }
+    ]
+  },
+  "compliance": {
+    "o_ran_wg11": true,
+    "tmf921": true,
+    "fips_140_3": true,
+    "supply_chain_levels": ["SLSA_L1", "SLSA_L2"]
+  },
+  "security": {
+    "checksums_verified": true,
+    "cosign_available": true,
+    "sbom_generated": false,
+    "attestation_generated": true
+  }
+}

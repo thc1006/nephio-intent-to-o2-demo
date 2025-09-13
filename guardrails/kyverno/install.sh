@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-KYVERNO_VERSION="v1.12.0"
+KYVERNO_VERSION="v1.15.1"
 
 echo "Installing Kyverno ${KYVERNO_VERSION}..."
 
