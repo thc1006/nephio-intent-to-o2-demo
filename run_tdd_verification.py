@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-TDD Verification Runner for VM-4 (edge2) - 2025 Implementation
+TDD Verification Runner for VM-2 (edge1) - 2025 Implementation
 Executes all ACC verification phases following Test-Driven Development principles
 
 This script implements the complete TDD workflow for:
@@ -25,9 +25,9 @@ import argparse
 
 
 class TDDVerificationRunner:
-    """TDD-based verification runner for edge2 cluster validation"""
+    """TDD-based verification runner for edge1 cluster validation"""
 
-    def __init__(self, context="edge2", artifacts_dir="artifacts/edge2"):
+    def __init__(self, context="edge1", artifacts_dir="artifacts/edge1"):
         self.context = context
         self.artifacts_dir = Path(artifacts_dir)
         self.artifacts_dir.mkdir(parents=True, exist_ok=True)
@@ -93,7 +93,7 @@ class TDDVerificationRunner:
 
     def run_all_phases(self):
         """Execute all ACC verification phases in sequence"""
-        print("🚀 Starting TDD-based VM-4 (edge2) Verification")
+        print("🚀 Starting TDD-based VM-2 (edge1) Verification")
         print("Following Test-Driven Development principles for 2025")
         print(f"Target context: {self.context}")
         print(f"Artifacts directory: {self.artifacts_dir}")
@@ -174,20 +174,20 @@ class TDDVerificationRunner:
 def main():
     """Main entry point for TDD verification runner"""
     parser = argparse.ArgumentParser(
-        description="TDD-based verification runner for VM-4 (edge2)",
+        description="TDD-based verification runner for VM-2 (edge1)",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
   python run_tdd_verification.py                    # Run all phases
-  python run_tdd_verification.py --context edge2    # Specify context
+  python run_tdd_verification.py --context edge1    # Specify context
   python run_tdd_verification.py --phase ACC-12     # Run single phase
         """
     )
 
     parser.add_argument(
         "--context",
-        default="edge2",
-        help="Kubernetes context to verify (default: edge2)"
+        default="edge1",
+        help="Kubernetes context to verify (default: edge1)"
     )
 
     parser.add_argument(
@@ -198,8 +198,8 @@ Examples:
 
     parser.add_argument(
         "--artifacts-dir",
-        default="artifacts/edge2",
-        help="Directory for artifact output (default: artifacts/edge2)"
+        default="artifacts/edge1",
+        help="Directory for artifact output (default: artifacts/edge1)"
     )
 
     args = parser.parse_args()

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 TDD Tests for ACC-12: Bring-up & RootSync Verification
-Test-Driven Development approach for edge2 cluster verification
+Test-Driven Development approach for edge1 cluster verification
 
 Following TDD principles:
 1. Red: Write failing tests first
@@ -22,9 +22,9 @@ class TestACC12RootSyncVerification(unittest.TestCase):
 
     def setUp(self):
         """Set up test environment before each test"""
-        self.context = "edge2"
+        self.context = "edge1"
         self.namespace = "config-management-system"
-        self.artifacts_dir = Path("artifacts/edge2")
+        self.artifacts_dir = Path("artifacts/edge1")
         self.artifacts_dir.mkdir(parents=True, exist_ok=True)
 
     def tearDown(self):
@@ -32,15 +32,15 @@ class TestACC12RootSyncVerification(unittest.TestCase):
         pass
 
     def test_kubectl_context_exists(self):
-        """Test: kubectl context 'edge2' should exist"""
+        """Test: kubectl context 'edge1' should exist"""
         result = subprocess.run(
             ["kubectl", "config", "get-contexts", "-o", "name"],
             capture_output=True, text=True
         )
-        self.assertIn("edge2", result.stdout, "edge2 context should exist in kubectl config")
+        self.assertIn("edge1", result.stdout, "edge1 context should exist in kubectl config")
 
     def test_config_management_namespace_exists(self):
-        """Test: config-management-system namespace should exist in edge2"""
+        """Test: config-management-system namespace should exist in edge1"""
         result = subprocess.run(
             ["kubectl", "--context", self.context, "get", "namespace", self.namespace],
             capture_output=True, text=True
@@ -84,8 +84,8 @@ class TestACC12RootSyncVerification(unittest.TestCase):
                     self.assertEqual(sync_status, "SYNCED",
                                    f"RootSync {item.get('metadata', {}).get('name', 'unknown')} should be SYNCED")
 
-    def test_rootsync_points_to_gitops_edge2_config(self):
-        """Test: RootSync should point to gitops/edge2-config/ directory"""
+    def test_rootsync_points_to_gitops_edge1_config(self):
+        """Test: RootSync should point to gitops/edge1-config/ directory"""
         result = subprocess.run(
             ["kubectl", "--context", self.context, "get", "rootsync",
              "-n", self.namespace, "-o", "yaml"],
@@ -101,15 +101,15 @@ class TestACC12RootSyncVerification(unittest.TestCase):
                 if "spec" in item and "git" in item["spec"]:
                     git_spec = item["spec"]["git"]
                     dir_path = git_spec.get("dir", "")
-                    self.assertIn("edge2-config", dir_path,
-                                "RootSync should point to edge2-config directory")
+                    self.assertIn("edge1-config", dir_path,
+                                "RootSync should point to edge1-config directory")
 
     def test_artifacts_directory_exists(self):
-        """Test: artifacts/edge2 directory should exist for output"""
+        """Test: artifacts/edge1 directory should exist for output"""
         self.assertTrue(self.artifacts_dir.exists(),
-                       "artifacts/edge2 directory should exist")
+                       "artifacts/edge1 directory should exist")
         self.assertTrue(self.artifacts_dir.is_dir(),
-                       "artifacts/edge2 should be a directory")
+                       "artifacts/edge1 should be a directory")
 
     def test_generate_acc12_artifacts(self):
         """Test: Should be able to generate acc12_rootsync.json artifact"""

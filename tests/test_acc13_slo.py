@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 TDD Tests for ACC-13: SLO Endpoints Verification
-Test-Driven Development approach for SLO endpoint verification on edge2
+Test-Driven Development approach for SLO endpoint verification on edge1
 
 Following TDD principles:
 1. Red: Write failing tests first
@@ -24,8 +24,8 @@ class TestACC13SLOEndpoints(unittest.TestCase):
 
     def setUp(self):
         """Set up test environment before each test"""
-        self.context = "edge2"
-        self.artifacts_dir = Path("artifacts/edge2")
+        self.context = "edge1"
+        self.artifacts_dir = Path("artifacts/edge1")
         self.artifacts_dir.mkdir(parents=True, exist_ok=True)
         self.slo_endpoints = []  # Will be discovered during tests
         self.load_test_duration = 30  # seconds
@@ -36,13 +36,13 @@ class TestACC13SLOEndpoints(unittest.TestCase):
         pass
 
     def test_discover_slo_services(self):
-        """Test: Should be able to discover SLO-related services in edge2 cluster"""
+        """Test: Should be able to discover SLO-related services in edge1 cluster"""
         # Look for services that might contain SLO endpoints
         result = subprocess.run(
             ["kubectl", "--context", self.context, "get", "services", "-A", "-o", "json"],
             capture_output=True, text=True
         )
-        self.assertEqual(result.returncode, 0, "Should be able to get services from edge2")
+        self.assertEqual(result.returncode, 0, "Should be able to get services from edge1")
 
         services_data = json.loads(result.stdout)
         slo_services = []

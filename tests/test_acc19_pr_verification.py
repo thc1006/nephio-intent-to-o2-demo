@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 TDD Tests for ACC-19: O2IMS PR Verification
-Test-Driven Development approach for O2IMS ProvisioningRequest verification on edge2
+Test-Driven Development approach for O2IMS ProvisioningRequest verification on edge1
 
 Following 2025 TDD principles:
 1. Red: Write failing tests first that define expected behavior
@@ -31,8 +31,8 @@ class TestACC19O2IMSProvisioningRequest(unittest.TestCase):
 
     def setUp(self):
         """Setup: Prepare test environment before each test execution"""
-        self.context = "edge2"
-        self.artifacts_dir = Path("artifacts/edge2")
+        self.context = "edge1"
+        self.artifacts_dir = Path("artifacts/edge1")
         self.artifacts_dir.mkdir(parents=True, exist_ok=True)
         self.pr_crds = []  # Will be discovered during tests
         self.required_pr_states = ["READY", "AVAILABLE", "PROVISIONED"]
@@ -392,7 +392,7 @@ class TestACC19Integration(unittest.TestCase):
         Test: All required verification artifacts should be generated
         Validates that the verification process produces complete output
         """
-        artifacts_dir = Path("artifacts/edge2")
+        artifacts_dir = Path("artifacts/edge1")
         required_artifacts = ["acc19_ready.json"]
 
         # Check if artifacts exist and have valid content
