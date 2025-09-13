@@ -59,6 +59,20 @@ class UnifiedIntentResponse(BaseModel):
     version: str = "1.0.0"
 
 
+class TMF921Intent(BaseModel):
+    """TMF921-compliant Intent structure (pure JSON format)"""
+    intentId: str
+    intentName: str
+    intentType: str
+    scope: str
+    priority: str
+    requestTime: str
+    intentParameters: Dict[str, Any]
+    constraints: Optional[Dict[str, Any]] = None
+    targetEntities: Optional[list] = None
+    expectedOutcome: Optional[str] = None
+
+
 async def parse_intent(request: IntentRequest) -> UnifiedIntentResponse:
     """
     Common handler for intent parsing using pluggable LLM client
@@ -85,6 +99,20 @@ async def parse_intent(request: IntentRequest) -> UnifiedIntentResponse:
         raise HTTPException(status_code=500, detail=f"Intent parsing failed: {str(e)}")
 
 
+async def generate_tmf921_intent(request: IntentRequest) -> TMF921Intent:
+    """
+    Generate TMF921-compliant Intent from natural language text
+    """
+    try:
+        # Use the LLM client to parse text
+        intent_dict = llm_client.parse_text(request.text)
+        
+        # Convert to TMF921 format
+        return llm_client.convert_to_tmf921(intent_dict, request.text)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"TMF921 intent generation failed: {str(e)}")
+
+
 @app.get("/health")
 async def health_check():
     """Health check endpoint"""
@@ -96,13 +124,13 @@ async def health_check():
     }
 
 
-@app.post("/generate_intent", response_model=UnifiedIntentResponse)
+@app.post("/generate_intent", response_model=TMF921Intent)
 async def generate_intent(request: IntentRequest):
     """
-    Generate intent from natural language text.
-    Legacy endpoint for backward compatibility.
+    Generate TMF921-compliant Intent from natural language text.
+    Returns pure JSON TMF921/3GPP Intent format.
     """
-    return await parse_intent(request)
+    return await generate_tmf921_intent(request)
 
 
 @app.post("/api/v1/intent/parse", response_model=UnifiedIntentResponse)

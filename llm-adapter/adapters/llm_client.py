@@ -112,6 +112,54 @@ Request: {text}"""
     def get_model_info(self) -> str:
         """Get current model being used"""
         return "claude-cli" if (self.use_claude and self.claude_available) else "rule-based"
+    
+    def convert_to_tmf921(self, intent_dict: Dict[str, Any], original_text: str) -> Dict[str, Any]:
+        """Convert internal format to TMF921-compliant Intent"""
+        from datetime import datetime
+        import uuid
+        
+        # Generate unique ID
+        intent_id = str(uuid.uuid4())
+        
+        # Map service types to TMF921 format
+        service_type = intent_dict.get("service", "eMBB")
+        location = intent_dict.get("location", "edge1")
+        qos = intent_dict.get("qos", {})
+        
+        # Build TMF921 structure
+        tmf921_intent = {
+            "intentId": intent_id,
+            "intentName": f"{service_type} Service at {location}",
+            "intentType": "5G_NETWORK_SLICE",
+            "scope": "NETWORK_SLICE",
+            "priority": "HIGH" if service_type == "URLLC" else "MEDIUM",
+            "requestTime": datetime.utcnow().isoformat() + "Z",
+            "intentParameters": {
+                "serviceType": service_type,
+                "location": location,
+                "qosParameters": {
+                    "downlinkMbps": qos.get("downlink_mbps"),
+                    "uplinkMbps": qos.get("uplink_mbps"),
+                    "latencyMs": qos.get("latency_ms")
+                },
+                "originalRequest": original_text
+            },
+            "constraints": {
+                "resourceConstraints": {
+                    "maxLatency": qos.get("latency_ms"),
+                    "minBandwidth": qos.get("downlink_mbps")
+                }
+            },
+            "targetEntities": [
+                {
+                    "entityType": "NETWORK_SLICE",
+                    "entityId": f"slice_{service_type.lower()}_{location}"
+                }
+            ],
+            "expectedOutcome": f"Deploy {service_type} network slice at {location} with specified QoS parameters"
+        }
+        
+        return tmf921_intent
 
 
 # Singleton
