@@ -1,0 +1,64 @@
+{
+  "test_run_id": "acc19-dryrun-1757789844",
+  "start_time": "2025-09-13T18:57:24Z",
+  "stages": [
+    {
+      "name": "intent_generation",
+      "status": "success",
+      "duration_ms": 9,
+      "message": "Intent created",
+      "timestamp": "2025-09-13T18:57:24Z"
+    },
+    {
+      "name": "krm_translation",
+      "status": "success",
+      "duration_ms": 103,
+      "message": "8 KRM files",
+      "timestamp": "2025-09-13T18:57:24Z"
+    },
+    {
+      "name": "kpt_pipeline",
+      "status": "success",
+      "duration_ms": 507,
+      "message": "Dry-run simulation",
+      "timestamp": "2025-09-13T18:57:24Z"
+    },
+    {
+      "name": "git_operations",
+      "status": "success",
+      "duration_ms": 21,
+      "message": "Dry-run mode",
+      "timestamp": "2025-09-13T18:57:24Z"
+    },
+    {
+      "name": "rootsync_wait",
+      "status": "success",
+      "duration_ms": 335,
+      "message": "Exponential backoff tested",
+      "timestamp": "2025-09-13T18:57:25Z"
+    },
+    {
+      "name": "o2ims_polling",
+      "status": "success",
+      "duration_ms": 665,
+      "message": "All sites ready",
+      "timestamp": "2025-09-13T18:57:26Z"
+    },
+    {
+      "name": "postcheck",
+      "status": "success",
+      "duration_ms": 21,
+      "message": "SLO PASS",
+      "timestamp": "2025-09-13T18:57:26Z"
+    },
+    {
+      "name": "rollback_test",
+      "status": "skipped",
+      "duration_ms": 0,
+      "message": "Script not found",
+      "timestamp": "2025-09-13T18:57:26Z"
+    }
+  ],
+  "verdict": "PASS",
+  "end_time": "2025-09-13T18:57:26Z"
+}

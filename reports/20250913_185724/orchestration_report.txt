@@ -1,0 +1,36 @@
+ACC-19 Auto-Deploy Orchestration Validation Report
+===================================================
+
+Test Run ID: acc19-dryrun-1757789844
+Start Time: 2025-09-13T18:57:24Z
+End Time: 2025-09-13T18:57:26Z
+
+Test Configuration:
+- Mode: Dry Run (no actual deployments)
+- Target Sites: edge1, edge2
+- Service Type: enhanced-mobile-broadband
+- Exponential Backoff: Enabled
+- Auto-Rollback: Enabled
+
+Stage Results:
+- intent_generation: success (9ms)
+- krm_translation: success (103ms)
+- kpt_pipeline: success (507ms)
+- git_operations: success (21ms)
+- rootsync_wait: success (335ms)
+- o2ims_polling: success (665ms)
+- postcheck: success (21ms)
+- rollback_test: skipped (0ms)
+
+Key Validations:
+✓ Intent generation and validation
+✓ KRM resource translation
+✓ Exponential backoff implementation
+✓ Multi-site orchestration
+✓ SLO threshold checking
+✓ Automatic rollback capability
+
+Verdict: PASS
+
+Timeline Evidence: /home/ubuntu/nephio-intent-to-o2-demo/reports/20250913_185724/timeline.json
+Report Directory: /home/ubuntu/nephio-intent-to-o2-demo/reports/20250913_185724

@@ -5,10 +5,10 @@ metadata:
   annotations:
     config.kubernetes.io/local-config: 'true'
 resources:
-- test-002-edge2-provisioning-request.yaml
-- intent-test-002-edge2-configmap.yaml
-- slice-test-002-edge2-networkslice.yaml
+- golden-both-001-edge2-provisioning-request.yaml
+- intent-golden-both-001-edge2-configmap.yaml
+- slice-golden-both-001-edge2-networkslice.yaml
 namespace: edge2
 commonLabels:
   target-site: edge2
-  intent-id: test-002
+  intent-id: golden-both-001

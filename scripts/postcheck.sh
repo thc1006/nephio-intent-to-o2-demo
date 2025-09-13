@@ -85,10 +85,12 @@ wait_for_rootsync_reconciliation() {
     local start_time=$(date +%s)
     local timeout_time=$((start_time + ROOTSYNC_TIMEOUT_SECONDS))
 
+    local stalled_status="unknown"
+
     while [[ $(date +%s) -lt $timeout_time ]]; do
         if kubectl get resourcegroup.kpt.dev "$ROOTSYNC_NAME" -n "$ROOTSYNC_NAMESPACE" &> /dev/null; then
-            local stalled_status=$(kubectl get resourcegroup.kpt.dev "$ROOTSYNC_NAME" -n "$ROOTSYNC_NAMESPACE" \
-                -o jsonpath='{.status.conditions[?(@.type=="Stalled")].status}' 2>/dev/null || echo "")
+            stalled_status=$(kubectl get resourcegroup.kpt.dev "$ROOTSYNC_NAME" -n "$ROOTSYNC_NAMESPACE" \
+                -o jsonpath='{.status.conditions[?(@.type=="Stalled")].status}' 2>/dev/null || echo "unknown")
 
             local observed_gen=$(kubectl get resourcegroup.kpt.dev "$ROOTSYNC_NAME" -n "$ROOTSYNC_NAMESPACE" \
                 -o jsonpath='{.status.observedGeneration}' 2>/dev/null || echo "")
@@ -99,6 +101,8 @@ wait_for_rootsync_reconciliation() {
                 log_info "RootSync reconciliation completed successfully"
                 return 0
             fi
+        else
+            stalled_status="not_found"
         fi
 
         log_info "RootSync still reconciling... (stalled: $stalled_status)"

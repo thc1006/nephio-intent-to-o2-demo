@@ -1,0 +1,18 @@
+{
+  "pipeline_id": "acc19-1757789735",
+  "start_time": "2025-09-13T18:55:36+00:00",
+  "status": "running",
+  "stages": [
+    {
+      "name": "green_phase",
+      "start_time": "2025-09-13T18:55:36+00:00",
+      "status": "running",
+      "message": ""
+    }
+  ],
+  "metrics": {
+    "total_duration_ms": 0,
+    "stages_completed": 0,
+    "stages_failed": 0
+  }
+}

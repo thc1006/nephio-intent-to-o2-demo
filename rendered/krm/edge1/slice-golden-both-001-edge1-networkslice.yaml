@@ -1,0 +1,17 @@
+apiVersion: workload.nephio.org/v1alpha1
+kind: NetworkSlice
+metadata:
+  name: slice-golden-both-001-edge1
+  namespace: edge1
+  labels:
+    intent-id: golden-both-001
+    service-type: massive-machine-type
+    target-site: edge1
+spec:
+  sliceType: mMTC
+  plmn:
+    mcc: '001'
+    mnc: '01'
+  qos:
+    5qi: 9
+    gfbr: 100Mbps
