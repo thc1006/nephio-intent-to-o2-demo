@@ -31,7 +31,7 @@ This project demonstrates an end-to-end pipeline from natural language intent to
 ### Verify Connectivity
 ```bash
 # Test all connections
-./test-connectivity.sh
+./scripts/setup/test-connectivity.sh
 
 # Check GitOps service
 docker ps | grep gitea

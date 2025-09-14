@@ -46,7 +46,7 @@ if curl -s http://localhost:8888 | grep -q "Gitea"; then
     echo -e "${GREEN}✓ Gitea 運行中${NC}"
 else
     echo -e "${YELLOW}! 啟動 Gitea...${NC}"
-    ./start-gitea.sh || true
+    ./scripts/setup/start-gitea.sh || true
     sleep 10
 fi
 

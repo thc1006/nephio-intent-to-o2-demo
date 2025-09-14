@@ -242,7 +242,7 @@ kubectl -n config-management-system logs -l app=root-reconciler --tail=10
    ```bash
    docker ps | grep gitea
    # 如未運行，執行：
-   ./start-gitea.sh
+   ./scripts/setup/start-gitea.sh
    ```
 
 2. **檢查 OpenStack Security Groups**
