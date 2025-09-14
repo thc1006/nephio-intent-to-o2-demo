@@ -1,0 +1,126 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: o2ims-controller
+  namespace: o2ims-system
+  labels:
+    app: o2ims
+    component: controller
+    site: edge2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: o2ims
+      component: controller
+  template:
+    metadata:
+      labels:
+        app: o2ims
+        component: controller
+        site: edge2
+    spec:
+      containers:
+      - name: o2ims-controller
+        image: o2ims/controller:v1.0.0
+        imagePullPolicy: IfNotPresent
+        ports:
+        - name: http
+          containerPort: 8080
+          protocol: TCP
+        - name: metrics
+          containerPort: 8081
+          protocol: TCP
+        - name: health
+          containerPort: 8082
+          protocol: TCP
+        env:
+        - name: SITE_NAME
+          value: "edge2"
+        - name: CLUSTER_NAME
+          value: "edge2-cluster"
+        - name: O2IMS_MODE
+          value: "edge"
+        - name: LOG_LEVEL
+          value: "info"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: health
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: health
+          initialDelaySeconds: 10
+          periodSeconds: 10
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: o2ims-api
+  namespace: o2ims-system
+  labels:
+    app: o2ims
+    component: api
+    site: edge2
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: o2ims
+      component: api
+  template:
+    metadata:
+      labels:
+        app: o2ims
+        component: api
+        site: edge2
+    spec:
+      containers:
+      - name: o2ims-api
+        image: o2ims/api-server:v1.0.0
+        imagePullPolicy: IfNotPresent
+        ports:
+        - name: http
+          containerPort: 8080
+          protocol: TCP
+        - name: grpc
+          containerPort: 9090
+          protocol: TCP
+        env:
+        - name: SERVER_PORT
+          value: "8080"
+        - name: GRPC_PORT
+          value: "9090"
+        - name: SITE_ID
+          value: "edge2"
+        - name: API_VERSION
+          value: "v1"
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 10
+          periodSeconds: 15
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: http
+          initialDelaySeconds: 5
+          periodSeconds: 10
