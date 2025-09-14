@@ -1,0 +1,12 @@
+{
+  "configuration_test": {
+    "timestamp": "2025-09-14T10:06:40.943Z",
+    "config_tests": [
+  "slo_config_exists",
+  "slo_config_valid",
+  "rollback_config_exists",
+  "rollback_config_loadable"
+],
+    "tests_passed": 4
+  }
+}

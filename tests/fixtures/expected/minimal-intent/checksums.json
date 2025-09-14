@@ -1,0 +1,8 @@
+{
+  "edge1/ConfigMap/intent-minimal-001-edge1": "f9a6336d00ed271836d8daf1dc777b3b35404ed127db2579005b1e962109512d",
+  "edge1/Kustomization/kustomization-edge1": "e12422fd45514d8a271dcf66d0ddaced99ee6dcab4b6abcabb2fc418185647c4",
+  "edge1/ProvisioningRequest/minimal-001-edge1": "79f7c4409bf4320fe2e9ff176147ca3a3293b8a4b271fb7c6c4da9a7ca46f223",
+  "edge2/ConfigMap/intent-minimal-001-edge2": "97bd0c7e3150a71b4dd85519e573d6cad47b60c71742a27ad4e644bd5941133a",
+  "edge2/Kustomization/kustomization-edge2": "97d1a29d1afb6ee74a48eafd23529ef7b3e472d227a400b4075503a581d4016a",
+  "edge2/ProvisioningRequest/minimal-001-edge2": "65bbd9b7311cd5fefbcad32d070356da0b86969f5a1d4eb69c0f4dd6e4a90517"
+}

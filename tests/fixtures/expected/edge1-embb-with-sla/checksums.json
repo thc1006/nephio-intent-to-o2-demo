@@ -1,0 +1,6 @@
+{
+  "edge1/ConfigMap/intent-edge1-embb-001-edge1": "0e84a33ab1ed34977e2ad9cfbedb5764765c8149e3b2d30938b03e02bc95cfb9",
+  "edge1/Kustomization/kustomization-edge1": "c70b219dd05ce341c2c7c7420a739432dfc42fe3ada36032c81158f20f7dd4d4",
+  "edge1/NetworkSlice/slice-edge1-embb-001-edge1": "f7a370aff3aaf129b9971059c2e1856d923da30e34d066c30b915cae43b49843",
+  "edge1/ProvisioningRequest/edge1-embb-001-edge1": "6dffd5c3695dae9869bc9b070e803ffdffccbfce661dd34e746e568f12061d8e"
+}

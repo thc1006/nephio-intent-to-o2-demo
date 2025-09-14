@@ -1,0 +1,23 @@
+{
+  "execution": {
+    "id": "20250914_101146_659660",
+    "timestamp": "2025-09-14T10:11:46.781Z",
+    "script_version": "2.0.0",
+    "target_site": "edge1"
+  },
+  "configuration": {
+    "rootsync_name": "intent-to-o2-rootsync",
+    "rootsync_namespace": "config-management-system",
+    "thresholds": {
+      "latency_p95_ms": 15,
+      "success_rate": 0.995,
+      "throughput_p95_mbps": 200
+    }
+  },
+  "directories": {
+    "report_dir": "reports/20250914_101146_659660",
+    "evidence_dir": "reports/20250914_101146_659660/evidence",
+    "metrics_dir": "reports/20250914_101146_659660/evidence/metrics",
+    "logs_dir": "reports/20250914_101146_659660/evidence/logs"
+  }
+}

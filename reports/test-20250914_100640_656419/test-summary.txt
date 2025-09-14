@@ -1,0 +1,16 @@
+=== SLO Integration Test Summary ===
+
+Execution ID: 20250914_100640_656419
+Test Mode: basic
+Duration: 1s
+Target Site: both
+Dry Run: false
+Simulate Failure: false
+
+Test Results:
+- configuration_test: 1 test(s)
+
+Report Location: ./reports/test-20250914_100640_656419/integration-test-report.json
+Evidence Location: ./reports/test-20250914_100640_656419/evidence
+
+Test completed at: Sun Sep 14 10:06:41 UTC 2025

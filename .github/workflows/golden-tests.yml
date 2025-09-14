@@ -1,0 +1,176 @@
+name: Golden Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'tools/intent-compiler/**'
+      - 'tests/**'
+      - '.github/workflows/golden-tests.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'tools/intent-compiler/**'
+      - 'tests/**'
+      - '.github/workflows/golden-tests.yml'
+
+jobs:
+  golden-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.9, 3.11]
+        test-type: [golden, contract, integration]
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Cache pip dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          curl \
+          wget \
+          jq \
+          yq
+
+    - name: Install kpt
+      run: |
+        curl -fsSL https://github.com/GoogleContainerTools/kpt/releases/download/v1.0.0-beta.40/kpt_linux_amd64.tar.gz | tar -xz
+        sudo mv kpt /usr/local/bin/
+        kpt version
+
+    - name: Install kubeconform
+      run: |
+        curl -fsSL https://github.com/yannh/kubeconform/releases/latest/download/kubeconform-linux-amd64.tar.gz | tar -xz
+        sudo mv kubeconform /usr/local/bin/
+        kubeconform -v
+
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r tests/requirements.txt
+        if [ -f tools/intent-compiler/requirements.txt ]; then
+          pip install -r tools/intent-compiler/requirements.txt
+        fi
+
+    - name: Lint test code
+      run: |
+        flake8 tests/ --count --select=E9,F63,F7,F82 --show-source --statistics
+        black --check tests/
+        isort --check-only tests/
+
+    - name: Run golden tests - ${{ matrix.test-type }}
+      run: |
+        cd tests
+        python run_golden_tests.py \
+          --type ${{ matrix.test-type }} \
+          --verbose \
+          --report-file test-report-${{ matrix.test-type }}-py${{ matrix.python-version }}.json
+
+    - name: Generate coverage report
+      if: matrix.test-type == 'golden' && matrix.python-version == '3.9'
+      run: |
+        cd tests
+        pytest --cov=translate --cov-report=xml --cov-report=html
+
+    - name: Upload coverage to Codecov
+      if: matrix.test-type == 'golden' && matrix.python-version == '3.9'
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./tests/coverage.xml
+        flags: golden-tests
+        name: codecov-golden
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: test-results-${{ matrix.test-type }}-py${{ matrix.python-version }}
+        path: |
+          tests/test-report-*.json
+          tests/htmlcov/
+          tests/tests.log
+
+    - name: Upload golden outputs (on failure)
+      uses: actions/upload-artifact@v3
+      if: failure() && matrix.test-type == 'golden'
+      with:
+        name: failed-golden-outputs-py${{ matrix.python-version }}
+        path: tests/fixtures/expected/
+
+  validate-golden-outputs:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python 3.9
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.9
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r tests/requirements.txt
+
+    - name: Validate golden outputs
+      run: |
+        cd tests
+        python run_golden_tests.py --validate-golden --verbose
+
+    - name: Check for golden output changes
+      run: |
+        if git diff --quiet HEAD^ HEAD -- tests/fixtures/expected/; then
+          echo "No golden output changes detected"
+        else
+          echo "Golden output changes detected - please review carefully"
+          git diff HEAD^ HEAD -- tests/fixtures/expected/
+          exit 1
+        fi
+
+  performance-tests:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python 3.9
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.9
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r tests/requirements.txt
+
+    - name: Run performance tests
+      run: |
+        cd tests
+        pytest -m slow --verbose test_pipeline_integration.py::TestPipelinePerformance
+
+    - name: Archive performance results
+      uses: actions/upload-artifact@v3
+      with:
+        name: performance-results
+        path: tests/performance-*.json

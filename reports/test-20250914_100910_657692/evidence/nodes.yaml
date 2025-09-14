@@ -1,0 +1,248 @@
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: Node
+  metadata:
+    annotations:
+      kubeadm.alpha.kubernetes.io/cri-socket: unix:///run/containerd/containerd.sock
+      node.alpha.kubernetes.io/ttl: "0"
+      volumes.kubernetes.io/controller-managed-attach-detach: "true"
+    creationTimestamp: "2025-09-13T10:59:43Z"
+    labels:
+      beta.kubernetes.io/arch: amd64
+      beta.kubernetes.io/os: linux
+      kubernetes.io/arch: amd64
+      kubernetes.io/hostname: nephio-demo-control-plane
+      kubernetes.io/os: linux
+      nephio.org/role: control
+      node-role.kubernetes.io/control-plane: ""
+      node.kubernetes.io/exclude-from-external-load-balancers: ""
+    name: nephio-demo-control-plane
+    resourceVersion: "114453"
+    uid: 919bd453-814c-4306-b287-8f9bd5bbcbdc
+  spec:
+    podCIDR: 10.244.0.0/24
+    podCIDRs:
+    - 10.244.0.0/24
+    providerID: kind://docker/nephio-demo/nephio-demo-control-plane
+    taints:
+    - effect: NoSchedule
+      key: node-role.kubernetes.io/control-plane
+  status:
+    addresses:
+    - address: 172.18.0.2
+      type: InternalIP
+    - address: nephio-demo-control-plane
+      type: Hostname
+    allocatable:
+      cpu: "16"
+      ephemeral-storage: 203056560Ki
+      hugepages-1Gi: "0"
+      hugepages-2Mi: "0"
+      memory: 30796324Ki
+      pods: "110"
+    capacity:
+      cpu: "16"
+      ephemeral-storage: 203056560Ki
+      hugepages-1Gi: "0"
+      hugepages-2Mi: "0"
+      memory: 30796324Ki
+      pods: "110"
+    conditions:
+    - lastHeartbeatTime: "2025-09-14T10:08:52Z"
+      lastTransitionTime: "2025-09-13T10:59:39Z"
+      message: kubelet has sufficient memory available
+      reason: KubeletHasSufficientMemory
+      status: "False"
+      type: MemoryPressure
+    - lastHeartbeatTime: "2025-09-14T10:08:52Z"
+      lastTransitionTime: "2025-09-13T10:59:39Z"
+      message: kubelet has no disk pressure
+      reason: KubeletHasNoDiskPressure
+      status: "False"
+      type: DiskPressure
+    - lastHeartbeatTime: "2025-09-14T10:08:52Z"
+      lastTransitionTime: "2025-09-13T10:59:39Z"
+      message: kubelet has sufficient PID available
+      reason: KubeletHasSufficientPID
+      status: "False"
+      type: PIDPressure
+    - lastHeartbeatTime: "2025-09-14T10:08:52Z"
+      lastTransitionTime: "2025-09-13T11:00:21Z"
+      message: kubelet is posting ready status
+      reason: KubeletReady
+      status: "True"
+      type: Ready
+    daemonEndpoints:
+      kubeletEndpoint:
+        Port: 10250
+    images:
+    - names:
+      - docker.io/library/import-2023-12-14@sha256:1fa151789a5bf646c25d5f1e1ccd969ff4d83673edb4ce32172b983b2e567256
+      - registry.k8s.io/kube-apiserver:v1.29.0
+      sizeBytes: 86132707
+    - names:
+      - docker.io/library/import-2023-12-14@sha256:a48d94ee03bb986f7d1d39bad3ffd19e11aae65b91ed25f067cdb46e2c12c497
+      - registry.k8s.io/kube-proxy:v1.29.0
+      sizeBytes: 83495113
+    - names:
+      - docker.io/library/import-2023-12-14@sha256:79f1665568206e45b14adcb0569078ed784330b75c4e21b6c63e237f57594c21
+      - registry.k8s.io/kube-controller-manager:v1.29.0
+      sizeBytes: 80274761
+    - names:
+      - docker.io/library/import-2023-12-14@sha256:0b0a4cb00ccaf4ea1a4db343da03fb97f810c7979d8a7be85e8efd8461fdcb3e
+      - registry.k8s.io/kube-scheduler:v1.29.0
+      sizeBytes: 60606279
+    - names:
+      - registry.k8s.io/etcd:3.5.10-0
+      sizeBytes: 56649232
+    - names:
+      - docker.io/kindest/kindnetd:v20230511-dc714da8
+      sizeBytes: 27731571
+    - names:
+      - docker.io/kindest/local-path-provisioner:v20230511-dc714da8
+      sizeBytes: 19351145
+    - names:
+      - registry.k8s.io/coredns/coredns:v1.11.1
+      sizeBytes: 18182961
+    - names:
+      - docker.io/kindest/local-path-helper:v20230510-486859a6
+      sizeBytes: 3052318
+    - names:
+      - registry.k8s.io/pause:3.7
+      sizeBytes: 311278
+    nodeInfo:
+      architecture: amd64
+      bootID: 29e59202-04b1-4ab0-ab8c-8e2dd8978cb1
+      containerRuntimeVersion: containerd://1.7.1
+      kernelVersion: 5.15.0-100-generic
+      kubeProxyVersion: v1.29.0
+      kubeletVersion: v1.29.0
+      machineID: fc3425b51dac4883a8795ccd74bedcc5
+      operatingSystem: linux
+      osImage: Debian GNU/Linux 11 (bullseye)
+      systemUUID: 9f5bb037-c6e9-4fb1-92ff-cea23d5c04c7
+- apiVersion: v1
+  kind: Node
+  metadata:
+    annotations:
+      kubeadm.alpha.kubernetes.io/cri-socket: unix:///run/containerd/containerd.sock
+      node.alpha.kubernetes.io/ttl: "0"
+      volumes.kubernetes.io/controller-managed-attach-detach: "true"
+    creationTimestamp: "2025-09-13T11:00:09Z"
+    labels:
+      beta.kubernetes.io/arch: amd64
+      beta.kubernetes.io/os: linux
+      kubernetes.io/arch: amd64
+      kubernetes.io/hostname: nephio-demo-worker
+      kubernetes.io/os: linux
+      nephio.org/role: worker
+    name: nephio-demo-worker
+    resourceVersion: "114101"
+    uid: a2d5c917-c1e2-43e1-a39c-c9077b3bbb12
+  spec:
+    podCIDR: 10.244.1.0/24
+    podCIDRs:
+    - 10.244.1.0/24
+    providerID: kind://docker/nephio-demo/nephio-demo-worker
+  status:
+    addresses:
+    - address: 172.18.0.3
+      type: InternalIP
+    - address: nephio-demo-worker
+      type: Hostname
+    allocatable:
+      cpu: "16"
+      ephemeral-storage: 203056560Ki
+      hugepages-1Gi: "0"
+      hugepages-2Mi: "0"
+      memory: 30796324Ki
+      pods: "110"
+    capacity:
+      cpu: "16"
+      ephemeral-storage: 203056560Ki
+      hugepages-1Gi: "0"
+      hugepages-2Mi: "0"
+      memory: 30796324Ki
+      pods: "110"
+    conditions:
+    - lastHeartbeatTime: "2025-09-14T10:04:37Z"
+      lastTransitionTime: "2025-09-13T11:00:09Z"
+      message: kubelet has sufficient memory available
+      reason: KubeletHasSufficientMemory
+      status: "False"
+      type: MemoryPressure
+    - lastHeartbeatTime: "2025-09-14T10:04:37Z"
+      lastTransitionTime: "2025-09-13T11:00:09Z"
+      message: kubelet has no disk pressure
+      reason: KubeletHasNoDiskPressure
+      status: "False"
+      type: DiskPressure
+    - lastHeartbeatTime: "2025-09-14T10:04:37Z"
+      lastTransitionTime: "2025-09-13T11:00:09Z"
+      message: kubelet has sufficient PID available
+      reason: KubeletHasSufficientPID
+      status: "False"
+      type: PIDPressure
+    - lastHeartbeatTime: "2025-09-14T10:04:37Z"
+      lastTransitionTime: "2025-09-13T11:00:28Z"
+      message: kubelet is posting ready status
+      reason: KubeletReady
+      status: "True"
+      type: Ready
+    daemonEndpoints:
+      kubeletEndpoint:
+        Port: 10250
+    images:
+    - names:
+      - docker.io/library/import-2023-12-14@sha256:1fa151789a5bf646c25d5f1e1ccd969ff4d83673edb4ce32172b983b2e567256
+      - registry.k8s.io/kube-apiserver:v1.29.0
+      sizeBytes: 86132707
+    - names:
+      - docker.io/library/import-2023-12-14@sha256:a48d94ee03bb986f7d1d39bad3ffd19e11aae65b91ed25f067cdb46e2c12c497
+      - registry.k8s.io/kube-proxy:v1.29.0
+      sizeBytes: 83495113
+    - names:
+      - docker.io/library/import-2023-12-14@sha256:79f1665568206e45b14adcb0569078ed784330b75c4e21b6c63e237f57594c21
+      - registry.k8s.io/kube-controller-manager:v1.29.0
+      sizeBytes: 80274761
+    - names:
+      - docker.io/gitea/gitea@sha256:2edc102cbb636ae1ddac5fa0c715aa5b03079dee13ac6800b2cef6d4e912e718
+      - docker.io/gitea/gitea:1.24.6
+      sizeBytes: 75640966
+    - names:
+      - docker.io/library/import-2023-12-14@sha256:0b0a4cb00ccaf4ea1a4db343da03fb97f810c7979d8a7be85e8efd8461fdcb3e
+      - registry.k8s.io/kube-scheduler:v1.29.0
+      sizeBytes: 60606279
+    - names:
+      - registry.k8s.io/etcd:3.5.10-0
+      sizeBytes: 56649232
+    - names:
+      - docker.io/kindest/kindnetd:v20230511-dc714da8
+      sizeBytes: 27731571
+    - names:
+      - docker.io/kindest/local-path-provisioner:v20230511-dc714da8
+      sizeBytes: 19351145
+    - names:
+      - registry.k8s.io/coredns/coredns:v1.11.1
+      sizeBytes: 18182961
+    - names:
+      - docker.io/kindest/local-path-helper:v20230510-486859a6
+      sizeBytes: 3052318
+    - names:
+      - registry.k8s.io/pause:3.7
+      sizeBytes: 311278
+    nodeInfo:
+      architecture: amd64
+      bootID: 29e59202-04b1-4ab0-ab8c-8e2dd8978cb1
+      containerRuntimeVersion: containerd://1.7.1
+      kernelVersion: 5.15.0-100-generic
+      kubeProxyVersion: v1.29.0
+      kubeletVersion: v1.29.0
+      machineID: b13d887aa53045deb1bedfdc3bfef2b7
+      operatingSystem: linux
+      osImage: Debian GNU/Linux 11 (bullseye)
+      systemUUID: ac459057-2361-438f-aaa6-28d61c368f0a
+kind: List
+metadata:
+  resourceVersion: ""

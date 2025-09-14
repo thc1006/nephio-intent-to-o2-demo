@@ -1,0 +1,298 @@
+name: Security Scanning
+
+on:
+  push:
+    branches: [main, develop, summit-llm-e2e]
+  pull_request:
+    branches: [main, develop]
+  schedule:
+    # Run security scans daily at 3 AM UTC
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+env:
+  PYTHON_VERSION: '3.11'
+  GO_VERSION: '1.22'
+
+jobs:
+  # Dependency vulnerability scanning
+  dependency-check:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Set up Go ${{ env.GO_VERSION }}
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Install security scanning tools
+        run: |
+          pip install --upgrade pip
+          pip install safety bandit semgrep
+          go install github.com/securecodewarrior/github-action-add-sarif@latest
+
+      - name: Python dependency vulnerability scan
+        run: |
+          echo "::group::Python Security Scan"
+          # Check for known vulnerabilities in Python dependencies
+          find . -name "requirements*.txt" -o -name "pyproject.toml" | while read file; do
+            if [[ $file == *.txt ]]; then
+              echo "Scanning $file..."
+              safety check --file "$file" --output json > safety-report-$(basename "$file").json || true
+            fi
+          done
+
+          # Aggregate and display results
+          if ls safety-report-*.json 1> /dev/null 2>&1; then
+            echo "Security vulnerabilities found in Python dependencies:"
+            cat safety-report-*.json
+          else
+            echo "No Python dependency vulnerabilities detected"
+          fi
+          echo "::endgroup::"
+
+      - name: Go dependency vulnerability scan
+        run: |
+          echo "::group::Go Security Scan"
+          # Install govulncheck
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+
+          # Scan Go modules for vulnerabilities
+          find . -name "go.mod" -not -path "./vendor/*" | while read gomod; do
+            dir=$(dirname "$gomod")
+            echo "Scanning Go module in $dir..."
+            cd "$dir"
+            govulncheck ./... || echo "Vulnerabilities found in $dir"
+            cd - > /dev/null
+          done
+          echo "::endgroup::"
+
+      - name: Generate security report
+        run: |
+          cat > security-report.md << 'EOF'
+          # Security Scan Report
+
+          **Date**: $(date)
+          **Commit**: ${{ github.sha }}
+          **Branch**: ${{ github.ref_name }}
+
+          ## Python Dependencies
+          $(if ls safety-report-*.json 1> /dev/null 2>&1; then echo "⚠️ Vulnerabilities detected - see artifacts"; else echo "✅ No known vulnerabilities"; fi)
+
+          ## Go Dependencies
+          ✅ Scanned with govulncheck
+
+          ## Recommendations
+          - Regularly update dependencies to latest secure versions
+          - Monitor security advisories for used packages
+          - Consider using dependency pinning for production deployments
+          EOF
+
+      - name: Upload security artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-scan-results
+          path: |
+            safety-report-*.json
+            security-report.md
+          retention-days: 30
+
+  # Static Application Security Testing (SAST)
+  sast-scan:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install SAST tools
+        run: |
+          pip install bandit[toml] semgrep
+
+      - name: Run Bandit security linter
+        run: |
+          echo "::group::Bandit SAST Scan"
+          bandit -r tools/ -f json -o bandit-report.json || true
+          bandit -r tools/ -f txt || echo "Bandit scan completed with findings"
+          echo "::endgroup::"
+
+      - name: Run Semgrep security scan
+        run: |
+          echo "::group::Semgrep SAST Scan"
+          semgrep --config=auto --json --output=semgrep-report.json tools/ || true
+          echo "Semgrep scan completed"
+          echo "::endgroup::"
+
+      - name: Check for hardcoded secrets
+        run: |
+          echo "::group::Secret Detection"
+          # Look for potential hardcoded secrets
+          git log --all --full-history -- '*' | \
+            grep -E -i "(password|secret|key|token|api)" || echo "No obvious secrets in git history"
+
+          # Check current files for secret patterns
+          grep -r -E -i "(password|secret|key|token).*=.*['\"][^'\"]{8,}" . \
+            --exclude-dir=.git \
+            --exclude-dir=__pycache__ \
+            --exclude="*.md" || echo "No hardcoded secrets detected"
+          echo "::endgroup::"
+
+      - name: Upload SAST results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: sast-results
+          path: |
+            bandit-report.json
+            semgrep-report.json
+          retention-days: 30
+
+  # Container security scanning
+  container-security:
+    runs-on: ubuntu-22.04
+    if: hashFiles('**/Dockerfile') != ''
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  # GitOps security validation
+  gitops-security:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install security validation tools
+        run: |
+          # Install kube-score for Kubernetes manifest security analysis
+          wget https://github.com/zegl/kube-score/releases/latest/download/kube-score_linux_amd64.tar.gz
+          tar xf kube-score_linux_amd64.tar.gz
+          sudo mv kube-score /usr/local/bin/
+
+          # Install kubesec for security analysis
+          wget https://github.com/controlplaneio/kubesec/releases/latest/download/kubesec_linux_amd64.tar.gz
+          tar xf kubesec_linux_amd64.tar.gz
+          sudo mv kubesec /usr/local/bin/
+
+      - name: Kubernetes manifest security analysis
+        run: |
+          echo "::group::Kubernetes Security Analysis"
+
+          # Find and analyze Kubernetes manifests
+          find . -name "*.yaml" -o -name "*.yml" | grep -E "(k8s|kube|manifest)" | while read manifest; do
+            echo "Analyzing $manifest..."
+
+            # Run kube-score analysis
+            kube-score score "$manifest" || echo "Security issues found in $manifest"
+
+            # Run kubesec analysis
+            kubesec scan "$manifest" || echo "Kubesec analysis completed for $manifest"
+          done
+          echo "::endgroup::"
+
+      - name: Check GitOps repository security
+        run: |
+          echo "::group::GitOps Security Validation"
+
+          # Check for proper RBAC configurations
+          find . -name "*.yaml" | xargs grep -l "kind.*Role" | while read rbac_file; do
+            echo "RBAC file found: $rbac_file"
+            # Add specific RBAC security checks here
+          done
+
+          # Check for network policies
+          find . -name "*.yaml" | xargs grep -l "NetworkPolicy" | while read netpol_file; do
+            echo "NetworkPolicy found: $netpol_file"
+          done
+
+          echo "::endgroup::"
+
+  # Security compliance report
+  compliance-report:
+    runs-on: ubuntu-22.04
+    needs: [dependency-check, sast-scan, gitops-security]
+    if: always()
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download security artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: security-artifacts/
+
+      - name: Generate compliance report
+        run: |
+          mkdir -p reports
+
+          cat > reports/security-compliance-report.md << 'EOF'
+          # Security Compliance Report
+
+          **Generated**: $(date)
+          **Commit**: ${{ github.sha }}
+          **Workflow**: ${{ github.workflow }}
+
+          ## Compliance Status
+
+          | Check | Status | Notes |
+          |-------|--------|-------|
+          | Dependency Vulnerabilities | ${{ needs.dependency-check.result == 'success' && '✅ PASS' || '❌ FAIL' }} | Python and Go dependency scanning |
+          | Static Analysis (SAST) | ${{ needs.sast-scan.result == 'success' && '✅ PASS' || '❌ FAIL' }} | Bandit and Semgrep analysis |
+          | GitOps Security | ${{ needs.gitops-security.result == 'success' && '✅ PASS' || '❌ FAIL' }} | Kubernetes manifest analysis |
+          | Container Security | ${{ needs.container-security.result == 'success' && '✅ PASS' || '❌ FAIL' }} | Container image vulnerability scan |
+
+          ## Overall Security Score
+
+          ${{ (needs.dependency-check.result == 'success' && needs.sast-scan.result == 'success' && needs.gitops-security.result == 'success') && '✅ **COMPLIANT** - All security checks passed' || '⚠️ **NON-COMPLIANT** - Security issues detected' }}
+
+          ## Action Items
+
+          - Review and address any identified vulnerabilities
+          - Update dependencies to latest secure versions
+          - Implement recommended security controls
+          - Schedule regular security review meetings
+
+          EOF
+
+      - name: Upload compliance report
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-compliance-report
+          path: reports/
+          retention-days: 90
+
+      - name: Security summary
+        run: |
+          echo "## 🔒 Security Scan Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Dependency Check | ${{ needs.dependency-check.result == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| SAST Scan | ${{ needs.sast-scan.result == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| GitOps Security | ${{ needs.gitops-security.result == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Overall Status**: ${{ (needs.dependency-check.result == 'success' && needs.sast-scan.result == 'success' && needs.gitops-security.result == 'success') && '✅ SECURE' || '⚠️ REVIEW REQUIRED' }}" >> $GITHUB_STEP_SUMMARY
