@@ -22,7 +22,7 @@ spec:
     spec:
       containers:
       - name: o2ims-controller
-        image: o2ims/controller:v1.0.0
+        image: nginx:alpine
         imagePullPolicy: IfNotPresent
         ports:
         - name: http
@@ -87,7 +87,7 @@ spec:
     spec:
       containers:
       - name: o2ims-api
-        image: o2ims/api-server:v1.0.0
+        image: nginx:alpine
         imagePullPolicy: IfNotPresent
         ports:
         - name: http
