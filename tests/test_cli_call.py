@@ -13,13 +13,9 @@ import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "adapter", "app"))
 
-from main import (
-    PROMPT_TEMPLATE,
-    call_claude,
-    determine_target_site,
-    enforce_targetsite,
-    extract_json,
-)
+from main import (PROMPT_TEMPLATE, call_claude_with_retry,
+                  determine_target_site, enforce_tmf921_structure,
+                  extract_json)
 
 
 class TestCLICall:
@@ -34,7 +30,7 @@ class TestCLICall:
         mock_result.returncode = 0
         mock_run.return_value = mock_result
 
-        result = call_claude("test prompt")
+        result, retry_count = call_claude_with_retry("test prompt")
         assert "intentId" in result
         mock_run.assert_called_once()
 
@@ -48,7 +44,7 @@ class TestCLICall:
         from fastapi import HTTPException
 
         with pytest.raises(HTTPException) as exc:
-            call_claude("test prompt")
+            call_claude_with_retry("test prompt")
         assert exc.value.status_code == 504
 
     @patch("subprocess.run")
@@ -61,7 +57,7 @@ class TestCLICall:
         mock_run.return_value = mock_result
 
         with pytest.raises(Exception):
-            call_claude("test prompt")
+            call_claude_with_retry("test prompt")
 
 
 class TestJSONExtraction:
@@ -193,7 +189,7 @@ class TestDeterministicOutput:
         # Test multiple times with same input
         for _ in range(5):
             intent = intent_template.copy()
-            result = enforce_targetsite(intent, "edge1")
+            result = enforce_tmf921_structure(intent, "edge1", "test request")
             assert result["targetSite"] == "edge1"
             assert "parameters" in result
 
