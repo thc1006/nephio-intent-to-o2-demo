@@ -246,7 +246,7 @@ EOF
         echo "✅ 驗證報告已生成"
 
     - name: Upload validation report
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: validation-report
         path: validation-report.md

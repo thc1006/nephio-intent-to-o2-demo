@@ -32,7 +32,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
 
     - name: Cache pip dependencies
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ~/.cache/pip
         key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
@@ -90,14 +90,14 @@ jobs:
 
     - name: Upload coverage to Codecov
       if: matrix.test-type == 'golden' && matrix.python-version == '3.9'
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v4
       with:
         file: ./tests/coverage.xml
         flags: golden-tests
         name: codecov-golden
 
     - name: Upload test results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: test-results-${{ matrix.test-type }}-py${{ matrix.python-version }}
@@ -107,7 +107,7 @@ jobs:
           tests/tests.log
 
     - name: Upload golden outputs (on failure)
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: failure() && matrix.test-type == 'golden'
       with:
         name: failed-golden-outputs-py${{ matrix.python-version }}
@@ -170,7 +170,7 @@ jobs:
         pytest -m slow --verbose test_pipeline_integration.py::TestPipelinePerformance
 
     - name: Archive performance results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: performance-results
         path: tests/performance-*.json

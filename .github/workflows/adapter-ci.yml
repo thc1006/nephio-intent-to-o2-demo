@@ -21,7 +21,7 @@ jobs:
         python-version: [3.9, 3.11]
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v4
@@ -58,7 +58,7 @@ jobs:
         pytest tests/ --cov=adapter --cov-report=xml --cov-report=html
 
     - name: Upload coverage reports
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v4
       with:
         file: ./coverage.xml
         flags: unittests
@@ -67,7 +67,7 @@ jobs:
   validate-schema:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Validate JSON Schema
       run: |
@@ -89,7 +89,7 @@ print('✅ Schema is valid!')
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Set up Python
       uses: actions/setup-python@v4
@@ -105,7 +105,7 @@ print('✅ Schema is valid!')
         tar -czf dist/llm-adapter-${{ github.sha }}.tar.gz adapter/
 
     - name: Upload artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: llm-adapter-package
         path: dist/
@@ -121,7 +121,7 @@ print('✅ Schema is valid!')
         EOF
 
     - name: Upload requirements
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: requirements
         path: dist/requirements.txt
