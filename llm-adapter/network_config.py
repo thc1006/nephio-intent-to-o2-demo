@@ -40,11 +40,9 @@ VM_NETWORK_MAP = {
         "hostname": "VM-1",
         "role": "Nephio / Intent Gateway",
         "external_ip": "147.251.115.143",
-        "group_project_network": "192.168.0.47",  # 優先使用此網路與 VM-3 通信
-        "internal_ipv4": "172.16.0.78",
+        "internal_ipv4": "172.16.0.78",  # 這是實際使用的內部 IP
         "connectivity_to_vm3": {
-            "preferred": "192.168.0.47 -> 192.168.0.201",  # Via group-project-network
-            "alternative": "172.16.0.78 -> 172.16.2.10"    # Via internal-ipv4
+            "primary": "172.16.0.78 -> 172.16.2.10"  # Via internal-ipv4 (唯一可用路徑)
         }
     },
     "VM-2": {
@@ -71,19 +69,19 @@ VM_NETWORK_MAP = {
     }
 }
 
-# 服務發現配置
+# 服務發現配置 (更正：所有 VM 都使用 internal-ipv4)
 SERVICE_URLS = {
     "from_vm1": {
-        "llm_adapter": "http://192.168.0.201:8888",  # VM-1 應使用此 URL
-        "description": "VM-1 connects via group-project-network"
+        "llm_adapter": "http://172.16.2.10:8888",  # VM-1 使用 internal-ipv4
+        "description": "VM-1 connects via internal-ipv4 network"
     },
     "from_vm2": {
-        "llm_adapter": "http://192.168.0.201:8888",
-        "description": "VM-2 connects via group-project-network"
+        "llm_adapter": "http://172.16.2.10:8888",  # VM-2 使用 internal-ipv4
+        "description": "VM-2 connects via internal-ipv4 network"
     },
     "from_vm4": {
-        "llm_adapter": "http://172.16.2.10:8888",  # VM-4 必須使用 internal-ipv4
-        "description": "VM-4 only has internal-ipv4 connectivity"
+        "llm_adapter": "http://172.16.2.10:8888",  # VM-4 使用 internal-ipv4
+        "description": "VM-4 connects via internal-ipv4 network"
     },
     "from_external": {
         "ssh": "ssh ubuntu@147.251.115.156",

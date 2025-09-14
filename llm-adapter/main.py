@@ -182,6 +182,7 @@ def _log_validation_error(text: str, intent_dict: Dict[str, Any], error: str):
 
 
 @app.get("/health")
+@app.head("/health")
 async def health_check():
     """Health check endpoint"""
     return {
@@ -212,6 +213,7 @@ async def parse_intent_v1(request: IntentRequest):
 
 
 @app.get("/", response_class=HTMLResponse)
+@app.head("/", response_class=HTMLResponse)
 async def root():
     """Serve the web UI"""
     html_content = """
