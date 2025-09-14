@@ -1,12 +1,12 @@
 {
-  "intentId": "edge1-basic-001",
-  "sites": ["edge1"],
-  "resources": {
-    "edge1": [
-      "edge1-basic-001-edge1-provisioningrequest.yaml",
-      "intent-edge1-basic-001-edge1-configmap.yaml",
-      "kustomization.yaml"
-    ]
+  "checksum_algorithm": "sha256",
+  "generated_files": {},
+  "intent_id": "edge1-basic-001",
+  "resource_counts": {
+    "edge1": 3
   },
-  "generated": "2025-09-14T13:00:00Z"
+  "target_sites": [
+    "edge1"
+  ],
+  "timestamp": "2024-01-01T00:00:00+00:00"
 }

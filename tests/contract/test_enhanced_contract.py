@@ -5,13 +5,14 @@ Additional tests for NodePorts, Service configurations, and O2IMS specific field
 """
 
 import json
-import yaml
 import os
 import sys
 import tempfile
-from pathlib import Path
-from typing import Dict, Any, List
 import unittest
+from pathlib import Path
+from typing import Any, Dict, List
+
+import yaml
 
 # Import base test class
 sys.path.insert(0, str(Path(__file__).parent))
@@ -28,15 +29,8 @@ class TestNodePortMapping(ContractTestBase):
             "serviceType": "enhanced-mobile-broadband",
             "targetSite": "edge1",
             "resourceProfile": "standard",
-            "sla": {
-                "availability": 99.99,
-                "latency": 10,
-                "throughput": 1000
-            },
-            "serviceConfig": {
-                "exposeService": True,
-                "serviceType": "NodePort"
-            }
+            "sla": {"availability": 99.99, "latency": 10, "throughput": 1000},
+            "serviceConfig": {"exposeService": True, "serviceType": "NodePort"},
         }
 
         resources = self.run_translator(intent)
@@ -59,16 +53,12 @@ class TestNodePortMapping(ContractTestBase):
             "serviceType": "ultra-reliable-low-latency",
             "targetSite": "edge2",
             "resourceProfile": "premium",
-            "sla": {
-                "availability": 99.999,
-                "latency": 1,
-                "throughput": 5000
-            },
+            "sla": {"availability": 99.999, "latency": 1, "throughput": 5000},
             "serviceConfig": {
                 "exposeService": True,
                 "serviceType": "NodePort",
-                "priorityClass": "critical"
-            }
+                "priorityClass": "critical",
+            },
         }
 
         resources = self.run_translator(intent)
@@ -104,27 +94,27 @@ class TestO2IMSFieldValidation(ContractTestBase):
                 "deploymentFlavor": "small",
                 "instantiationLevel": "basic",
                 "virtualComputeDesc": {
-                    "virtualCpu": {
-                        "numVirtualCpu": 4,
-                        "cpuArchitecture": "x86_64"
-                    },
-                    "virtualMemory": {
-                        "virtualMemSize": 8192
-                    }
-                }
-            }
+                    "virtualCpu": {"numVirtualCpu": 4, "cpuArchitecture": "x86_64"},
+                    "virtualMemory": {"virtualMemSize": 8192},
+                },
+            },
         }
 
         resources = self.run_translator(intent)
-        pr = next((r for r in resources["edge1"] if r.get("kind") == "ProvisioningRequest"), None)
+        pr = next(
+            (r for r in resources["edge1"] if r.get("kind") == "ProvisioningRequest"),
+            None,
+        )
 
         self.assertIsNotNone(pr)
 
         # Check O2IMS specific fields
         if "o2imsConfig" in intent:
             # These should be mapped to annotations or spec fields
-            self.assertIn("o2ims.oran.org/deployment-flavor",
-                         pr.get("metadata", {}).get("annotations", {}))
+            self.assertIn(
+                "o2ims.oran.org/deployment-flavor",
+                pr.get("metadata", {}).get("annotations", {}),
+            )
 
     def test_o2ims_lifecycle_management(self):
         """Test O2IMS lifecycle management fields."""
@@ -137,14 +127,17 @@ class TestO2IMSFieldValidation(ContractTestBase):
                 "instantiationState": "INSTANTIATED",
                 "operationalState": "ENABLED",
                 "administrativeState": "UNLOCKED",
-                "usageState": "IN_USE"
-            }
+                "usageState": "IN_USE",
+            },
         }
 
         resources = self.run_translator(intent)
 
         for site in ["edge1", "edge2"]:
-            pr = next((r for r in resources[site] if r.get("kind") == "ProvisioningRequest"), None)
+            pr = next(
+                (r for r in resources[site] if r.get("kind") == "ProvisioningRequest"),
+                None,
+            )
 
             # Lifecycle states should be in status or annotations
             if "lifecycleConfig" in intent:
@@ -161,18 +154,23 @@ class TestO2IMSFieldValidation(ContractTestBase):
             "resourcePool": {
                 "computePool": "edge-compute-pool-01",
                 "storagePool": "fast-ssd-pool",
-                "networkPool": "sr-iov-pool"
-            }
+                "networkPool": "sr-iov-pool",
+            },
         }
 
         resources = self.run_translator(intent)
-        pr = next((r for r in resources["edge1"] if r.get("kind") == "ProvisioningRequest"), None)
+        pr = next(
+            (r for r in resources["edge1"] if r.get("kind") == "ProvisioningRequest"),
+            None,
+        )
 
         # Resource pool should be specified in spec
         if "resourcePool" in intent:
             spec = pr.get("spec", {})
             self.assertIn("resourcePool", spec)
-            self.assertEqual(spec["resourcePool"]["computePool"], "edge-compute-pool-01")
+            self.assertEqual(
+                spec["resourcePool"]["computePool"], "edge-compute-pool-01"
+            )
 
 
 class TestNamespaceAndLabelContract(ContractTestBase):
@@ -184,7 +182,7 @@ class TestNamespaceAndLabelContract(ContractTestBase):
             "intentId": "ns-001",
             "serviceType": "enhanced-mobile-broadband",
             "targetSite": "both",
-            "resourceProfile": "standard"
+            "resourceProfile": "standard",
         }
 
         resources = self.run_translator(intent)
@@ -210,9 +208,9 @@ class TestNamespaceAndLabelContract(ContractTestBase):
                 "labels": {
                     "environment": "production",
                     "team": "network-ops",
-                    "criticality": "high"
+                    "criticality": "high",
                 }
-            }
+            },
         }
 
         resources = self.run_translator(intent)
@@ -237,11 +235,14 @@ class TestNamespaceAndLabelContract(ContractTestBase):
             "intentId": "annotation-001",
             "serviceType": "enhanced-mobile-broadband",
             "targetSite": "edge1",
-            "resourceProfile": "standard"
+            "resourceProfile": "standard",
         }
 
         resources = self.run_translator(intent)
-        pr = next((r for r in resources["edge1"] if r.get("kind") == "ProvisioningRequest"), None)
+        pr = next(
+            (r for r in resources["edge1"] if r.get("kind") == "ProvisioningRequest"),
+            None,
+        )
 
         annotations = pr.get("metadata", {}).get("annotations", {})
 
@@ -260,10 +261,7 @@ class TestServiceMeshIntegration(ContractTestBase):
             "intentId": "mesh-001",
             "serviceType": "enhanced-mobile-broadband",
             "targetSite": "edge1",
-            "serviceMesh": {
-                "enabled": True,
-                "provider": "istio"
-            }
+            "serviceMesh": {"enabled": True, "provider": "istio"},
         }
 
         resources = self.run_translator(intent)
@@ -290,15 +288,16 @@ class TestResourceQuotaContract(ContractTestBase):
                 "limits.cpu": "100",
                 "limits.memory": "200Gi",
                 "requests.storage": "1Ti",
-                "persistentvolumeclaims": "10"
-            }
+                "persistentvolumeclaims": "10",
+            },
         }
 
         resources = self.run_translator(intent)
 
         # Check if ResourceQuota is generated
-        quota = next((r for r in resources["edge1"]
-                     if r.get("kind") == "ResourceQuota"), None)
+        quota = next(
+            (r for r in resources["edge1"] if r.get("kind") == "ResourceQuota"), None
+        )
 
         if intent.get("resourceQuota"):
             self.assertIsNotNone(quota, "ResourceQuota should be generated")
@@ -319,11 +318,14 @@ class TestSnapshotDeterminism(ContractTestBase):
             "intentId": "snapshot-001",
             "serviceType": "enhanced-mobile-broadband",
             "targetSite": "edge1",
-            "resourceProfile": "standard"
+            "resourceProfile": "standard",
         }
 
         resources = self.run_translator(intent)
-        pr = next((r for r in resources["edge1"] if r.get("kind") == "ProvisioningRequest"), None)
+        pr = next(
+            (r for r in resources["edge1"] if r.get("kind") == "ProvisioningRequest"),
+            None,
+        )
 
         # Test snapshot matching (should not fail if snapshot exists)
         try:
@@ -340,7 +342,7 @@ class TestSnapshotDeterminism(ContractTestBase):
             "intentId": "determinism-001",
             "serviceType": "ultra-reliable-low-latency",
             "targetSite": "edge2",
-            "resourceProfile": "premium"
+            "resourceProfile": "premium",
         }
 
         # Run translation 3 times
@@ -358,15 +360,15 @@ class TestSnapshotDeterminism(ContractTestBase):
             self.assertEqual(
                 sorted(results[0], key=lambda x: x.get("kind", "")),
                 sorted(results[i], key=lambda x: x.get("kind", "")),
-                f"Run {i+1} produced different output"
+                f"Run {i+1} produced different output",
             )
 
 
 def generate_enhanced_report(results):
     """Generate enhanced test report with detailed metrics."""
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("ENHANCED CONTRACT TEST REPORT")
-    print("="*80)
+    print("=" * 80)
 
     total_tests = results.testsRun
     failures = len(results.failures)
@@ -403,7 +405,7 @@ def generate_enhanced_report(results):
             for test, traceback in results.errors:
                 print(f"  - {test}")
 
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
 
     return 0 if passed == total_tests else 1
 

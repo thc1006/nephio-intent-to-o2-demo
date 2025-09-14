@@ -9,15 +9,17 @@ import json
 import os
 import sys
 import tempfile
-import yaml
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple
 from unittest.mock import patch
 
 import pytest
+import yaml
 
 # Add the intent-compiler to the path for testing
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / "tools" / "intent-compiler"))
+sys.path.insert(
+    0, str(Path(__file__).parent.parent.parent / "tools" / "intent-compiler")
+)
 
 from translate import IntentToKRMTranslator
 
@@ -51,11 +53,16 @@ class GoldenTestFramework:
         if not intent_file.exists():
             raise FileNotFoundError(f"Intent fixture not found: {intent_file}")
 
-        with open(intent_file, 'r') as f:
+        with open(intent_file, "r") as f:
             return json.load(f)
 
-    def save_golden_output(self, intent_name: str, output: Dict[str, List[Dict]],
-                          checksums: Dict[str, str], manifest_data: Dict[str, Any]) -> None:
+    def save_golden_output(
+        self,
+        intent_name: str,
+        output: Dict[str, List[Dict]],
+        checksums: Dict[str, str],
+        manifest_data: Dict[str, Any],
+    ) -> None:
         """Save golden output for an intent scenario.
 
         Args:
@@ -79,21 +86,24 @@ class GoldenTestFramework:
                 # Sort keys for deterministic output
                 sorted_resource = self._sort_keys_recursively(resource)
 
-                with open(resource_file, 'w') as f:
-                    yaml.dump(sorted_resource, f, sort_keys=True, default_flow_style=False)
+                with open(resource_file, "w") as f:
+                    yaml.dump(
+                        sorted_resource, f, sort_keys=True, default_flow_style=False
+                    )
 
         # Save checksums
         checksums_file = golden_dir / "checksums.json"
-        with open(checksums_file, 'w') as f:
+        with open(checksums_file, "w") as f:
             json.dump(checksums, f, sort_keys=True, indent=2)
 
         # Save manifest data
         manifest_file = golden_dir / "manifest.json"
-        with open(manifest_file, 'w') as f:
+        with open(manifest_file, "w") as f:
             json.dump(manifest_data, f, sort_keys=True, indent=2)
 
-    def load_golden_output(self, intent_name: str) -> Tuple[Dict[str, List[Dict]],
-                          Dict[str, str], Dict[str, Any]]:
+    def load_golden_output(
+        self, intent_name: str
+    ) -> Tuple[Dict[str, List[Dict]], Dict[str, str], Dict[str, Any]]:
         """Load golden output for comparison.
 
         Args:
@@ -112,28 +122,29 @@ class GoldenTestFramework:
         # Load resources
         resources = {}
         for site_dir in golden_dir.iterdir():
-            if site_dir.is_dir() and site_dir.name in ['edge1', 'edge2']:
+            if site_dir.is_dir() and site_dir.name in ["edge1", "edge2"]:
                 site_resources = []
                 for resource_file in site_dir.glob("*.yaml"):
-                    with open(resource_file, 'r') as f:
+                    with open(resource_file, "r") as f:
                         resource = yaml.safe_load(f)
                         site_resources.append(resource)
                 resources[site_dir.name] = site_resources
 
         # Load checksums
         checksums_file = golden_dir / "checksums.json"
-        with open(checksums_file, 'r') as f:
+        with open(checksums_file, "r") as f:
             checksums = json.load(f)
 
         # Load manifest
         manifest_file = golden_dir / "manifest.json"
-        with open(manifest_file, 'r') as f:
+        with open(manifest_file, "r") as f:
             manifest_data = json.load(f)
 
         return resources, checksums, manifest_data
 
-    def compare_outputs(self, actual: Dict[str, List[Dict]],
-                       expected: Dict[str, List[Dict]]) -> List[str]:
+    def compare_outputs(
+        self, actual: Dict[str, List[Dict]], expected: Dict[str, List[Dict]]
+    ) -> List[str]:
         """Compare actual vs expected outputs and return differences.
 
         Args:
@@ -174,14 +185,19 @@ class GoldenTestFramework:
                 )
 
             # Compare each resource
-            for i, (actual_res, expected_res) in enumerate(zip(actual_sorted, expected_sorted)):
-                resource_diff = self._compare_resources(actual_res, expected_res, f"{site}[{i}]")
+            for i, (actual_res, expected_res) in enumerate(
+                zip(actual_sorted, expected_sorted)
+            ):
+                resource_diff = self._compare_resources(
+                    actual_res, expected_res, f"{site}[{i}]"
+                )
                 differences.extend(resource_diff)
 
         return differences
 
-    def generate_test_scenario(self, intent_name: str,
-                             fixed_timestamp: Optional[str] = None) -> Dict[str, Any]:
+    def generate_test_scenario(
+        self, intent_name: str, fixed_timestamp: Optional[str] = None
+    ) -> Dict[str, Any]:
         """Generate KRM resources for a given intent scenario.
 
         Args:
@@ -203,7 +219,7 @@ class GoldenTestFramework:
 
             # Create temporary intent file
             intent_file = Path(tmpdir) / "intent.json"
-            with open(intent_file, 'w') as f:
+            with open(intent_file, "w") as f:
                 json.dump(intent_data, f)
 
             # Generate resources
@@ -214,7 +230,7 @@ class GoldenTestFramework:
             return {
                 "resources": resources,
                 "checksums": checksums,
-                "manifest": manifest_data
+                "manifest": manifest_data,
             }
 
     def _get_resource_filename(self, resource: Dict[str, Any]) -> str:
@@ -230,7 +246,8 @@ class GoldenTestFramework:
         kind_lower = kind.lower()
         # Handle camelCase to kebab-case conversion
         import re
-        kind_kebab = re.sub(r'([a-z0-9])([A-Z])', r'\1-\2', kind_lower).lower()
+
+        kind_kebab = re.sub(r"([a-z0-9])([A-Z])", r"\1-\2", kind_lower).lower()
 
         return f"{name}-{kind_kebab}.yaml"
 
@@ -243,8 +260,11 @@ class GoldenTestFramework:
         else:
             return obj
 
-    def _sort_resources_for_comparison(self, resources: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def _sort_resources_for_comparison(
+        self, resources: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
         """Sort resources for consistent comparison."""
+
         def sort_key(resource):
             kind = resource.get("kind", "")
             name = resource.get("metadata", {}).get("name", "")
@@ -252,8 +272,9 @@ class GoldenTestFramework:
 
         return sorted(resources, key=sort_key)
 
-    def _compare_resources(self, actual: Dict[str, Any], expected: Dict[str, Any],
-                          context: str) -> List[str]:
+    def _compare_resources(
+        self, actual: Dict[str, Any], expected: Dict[str, Any], context: str
+    ) -> List[str]:
         """Compare two resources and return differences."""
         differences = []
 
@@ -303,8 +324,7 @@ class TestGoldenFramework:
     def test_generate_test_scenario(self, golden_framework, fixed_timestamp):
         """Test generating test scenario."""
         scenario = golden_framework.generate_test_scenario(
-            "edge1-embb-with-sla",
-            fixed_timestamp=fixed_timestamp
+            "edge1-embb-with-sla", fixed_timestamp=fixed_timestamp
         )
 
         assert "resources" in scenario
@@ -328,7 +348,7 @@ class TestGoldenFramework:
         unsorted = {
             "z": {"y": "value", "a": {"c": 1, "b": 2}},
             "a": [{"z": 1, "a": 2}],
-            "m": "middle"
+            "m": "middle",
         }
 
         sorted_obj = golden_framework._sort_keys_recursively(unsorted)

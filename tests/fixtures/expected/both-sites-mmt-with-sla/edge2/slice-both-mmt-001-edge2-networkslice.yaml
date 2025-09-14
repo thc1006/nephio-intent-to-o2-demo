@@ -1,26 +1,17 @@
 apiVersion: workload.nephio.org/v1alpha1
 kind: NetworkSlice
 metadata:
-  name: both-mmt-001-edge2
-  namespace: default
   labels:
     intent-id: both-mmt-001
     service-type: massive-machine-type
-    site: edge2
+    target-site: edge2
+  name: slice-both-mmt-001-edge2
+  namespace: edge2
 spec:
-  networkId: "slice-both-mmt-001"
+  plmn:
+    mcc: '001'
+    mnc: '02'
+  qos:
+    5qi: 9
+    gfbr: 10Mbps
   sliceType: mMTC
-  sst: 3
-  sd: "000003"
-  connectivity:
-    - name: "iot-network"
-      type: "IPv4"
-      subnet: "10.3.0.0/16"
-  qosProfile:
-    latency: 100
-    throughput: 10
-    maxConnections: 100000
-    priority: 3
-  siteName: edge2
-  nodeSelectors:
-    kubernetes.io/hostname: edge2-control-plane

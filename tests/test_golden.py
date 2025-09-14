@@ -1,11 +1,13 @@
-import json
-import pytest
 import glob
+import json
 import os
+
+import pytest
 from jsonschema import validate
 
 with open("adapter/app/schema.json", "r") as f:
     TMF921_SCHEMA = json.load(f)
+
 
 class TestGoldenFiles:
     """Test golden file consistency and deterministic outputs"""
@@ -48,8 +50,9 @@ class TestGoldenFiles:
             with open(json_file, "r") as f:
                 intent = json.load(f)
 
-            assert all(key in intent for key in required_keys), \
-                f"Missing required keys in {json_file}"
+            assert all(
+                key in intent for key in required_keys
+            ), f"Missing required keys in {json_file}"
 
             if "requirements" in intent["parameters"]:
                 requirements = intent["parameters"]["requirements"]
@@ -64,7 +67,7 @@ class TestGoldenFiles:
         test_cases = [
             ("deploy_5g_gaming", "edge1"),
             ("iot_monitoring", "both"),
-            ("video_streaming", "edge2")
+            ("video_streaming", "edge2"),
         ]
 
         for base_name, expected_site in test_cases:
@@ -74,15 +77,16 @@ class TestGoldenFiles:
             with open(json_file, "r") as f:
                 intent = json.load(f)
 
-            assert intent["targetSite"] == expected_site, \
-                f"Expected targetSite '{expected_site}' for {base_name}"
+            assert (
+                intent["targetSite"] == expected_site
+            ), f"Expected targetSite '{expected_site}' for {base_name}"
 
     def test_golden_intent_types(self):
         """Test that intent types match the input descriptions"""
         test_cases = [
             ("deploy_5g_gaming", "5G_network_slice"),
             ("iot_monitoring", "iot_infrastructure"),
-            ("video_streaming", "video_streaming")
+            ("video_streaming", "video_streaming"),
         ]
 
         for base_name, expected_type in test_cases:
@@ -91,8 +95,9 @@ class TestGoldenFiles:
                 intent = json.load(f)
 
             if "type" in intent["parameters"]:
-                assert intent["parameters"]["type"] == expected_type, \
-                    f"Expected type '{expected_type}' for {base_name}"
+                assert (
+                    intent["parameters"]["type"] == expected_type
+                ), f"Expected type '{expected_type}' for {base_name}"
 
     def test_golden_requirements_present(self):
         """Test that requirements are properly populated"""

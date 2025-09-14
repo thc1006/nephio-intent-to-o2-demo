@@ -9,14 +9,15 @@ Following TDD principles:
 3. Refactor: Improve code while keeping tests passing
 """
 
-import unittest
-import subprocess
 import json
-import time
-import requests
 import statistics
-from pathlib import Path
+import subprocess
+import time
+import unittest
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from pathlib import Path
+
+import requests
 
 
 class TestACC13SLOEndpoints(unittest.TestCase):
@@ -39,10 +40,22 @@ class TestACC13SLOEndpoints(unittest.TestCase):
         """Test: Should be able to discover SLO-related services in edge1 cluster"""
         # Look for services that might contain SLO endpoints
         result = subprocess.run(
-            ["kubectl", "--context", self.context, "get", "services", "-A", "-o", "json"],
-            capture_output=True, text=True
+            [
+                "kubectl",
+                "--context",
+                self.context,
+                "get",
+                "services",
+                "-A",
+                "-o",
+                "json",
+            ],
+            capture_output=True,
+            text=True,
         )
-        self.assertEqual(result.returncode, 0, "Should be able to get services from edge1")
+        self.assertEqual(
+            result.returncode, 0, "Should be able to get services from edge1"
+        )
 
         services_data = json.loads(result.stdout)
         slo_services = []
@@ -50,12 +63,17 @@ class TestACC13SLOEndpoints(unittest.TestCase):
         for service in services_data.get("items", []):
             service_name = service.get("metadata", {}).get("name", "")
             # Look for services that might expose SLO endpoints
-            if any(keyword in service_name.lower() for keyword in ["slo", "metric", "monitor", "prometheus", "grafana"]):
+            if any(
+                keyword in service_name.lower()
+                for keyword in ["slo", "metric", "monitor", "prometheus", "grafana"]
+            ):
                 slo_services.append(service)
 
         # Store discovered services for other tests
         self.slo_endpoints = self._extract_service_endpoints(slo_services)
-        self.assertGreater(len(self.slo_endpoints), 0, "Should find at least one SLO-related service")
+        self.assertGreater(
+            len(self.slo_endpoints), 0, "Should find at least one SLO-related service"
+        )
 
     def _extract_service_endpoints(self, services):
         """Helper: Extract accessible endpoints from services"""
@@ -97,9 +115,20 @@ class TestACC13SLOEndpoints(unittest.TestCase):
 
                     # Check if service has endpoints
                     result = subprocess.run(
-                        ["kubectl", "--context", self.context, "get", "endpoints",
-                         service_name, "-n", namespace, "-o", "json"],
-                        capture_output=True, text=True
+                        [
+                            "kubectl",
+                            "--context",
+                            self.context,
+                            "get",
+                            "endpoints",
+                            service_name,
+                            "-n",
+                            namespace,
+                            "-o",
+                            "json",
+                        ],
+                        capture_output=True,
+                        text=True,
                     )
 
                     if result.returncode == 0:
@@ -110,25 +139,41 @@ class TestACC13SLOEndpoints(unittest.TestCase):
             except Exception as e:
                 print(f"Warning: Could not test endpoint {endpoint}: {e}")
 
-        self.assertGreater(len(reachable_endpoints), 0,
-                          "At least one SLO endpoint should be reachable")
+        self.assertGreater(
+            len(reachable_endpoints), 0, "At least one SLO endpoint should be reachable"
+        )
 
     def test_slo_endpoint_responds_to_health_check(self):
         """Test: SLO endpoints should respond to health check requests"""
         # This test will be implemented based on discovered endpoints
         # For now, we'll check if services are running and have pods
         result = subprocess.run(
-            ["kubectl", "--context", self.context, "get", "pods", "-A",
-             "-l", "app.kubernetes.io/component=metrics", "-o", "json"],
-            capture_output=True, text=True
+            [
+                "kubectl",
+                "--context",
+                self.context,
+                "get",
+                "pods",
+                "-A",
+                "-l",
+                "app.kubernetes.io/component=metrics",
+                "-o",
+                "json",
+            ],
+            capture_output=True,
+            text=True,
         )
 
         if result.returncode == 0:
             pods_data = json.loads(result.stdout)
-            running_pods = [pod for pod in pods_data.get("items", [])
-                          if pod.get("status", {}).get("phase") == "Running"]
-            self.assertGreater(len(running_pods), 0,
-                             "Should have at least one running metrics/SLO pod")
+            running_pods = [
+                pod
+                for pod in pods_data.get("items", [])
+                if pod.get("status", {}).get("phase") == "Running"
+            ]
+            self.assertGreater(
+                len(running_pods), 0, "Should have at least one running metrics/SLO pod"
+            )
 
     def test_baseline_response_time_measurement(self):
         """Test: Should be able to measure baseline response times"""
@@ -142,20 +187,27 @@ class TestACC13SLOEndpoints(unittest.TestCase):
 
             result = subprocess.run(
                 ["kubectl", "--context", self.context, "get", "nodes", "-o", "json"],
-                capture_output=True, text=True
+                capture_output=True,
+                text=True,
             )
 
             end_time = time.time()
             if result.returncode == 0:
-                response_time = (end_time - start_time) * 1000  # Convert to milliseconds
+                response_time = (
+                    end_time - start_time
+                ) * 1000  # Convert to milliseconds
                 baseline_times.append(response_time)
 
-        self.assertGreater(len(baseline_times), 5, "Should collect baseline measurements")
+        self.assertGreater(
+            len(baseline_times), 5, "Should collect baseline measurements"
+        )
 
         # Calculate baseline statistics
         if baseline_times:
             p95_baseline = self._calculate_percentile(baseline_times, 95)
-            self.assertLess(p95_baseline, 5000, "Baseline P95 should be under 5 seconds")
+            self.assertLess(
+                p95_baseline, 5000, "Baseline P95 should be under 5 seconds"
+            )
 
     def test_load_test_moves_p95(self):
         """Test: Short load test should cause P95 response time to increase"""
@@ -168,8 +220,11 @@ class TestACC13SLOEndpoints(unittest.TestCase):
         load_p95 = self._calculate_percentile(load_times, 95)
 
         # P95 should increase under load (demonstrating system responsiveness to load)
-        self.assertGreater(load_p95, baseline_p95 * 0.8,
-                          "P95 should increase under load (or stay similar if system handles load well)")
+        self.assertGreater(
+            load_p95,
+            baseline_p95 * 0.8,
+            "P95 should increase under load (or stay similar if system handles load well)",
+        )
 
     def _collect_response_times(self, num_requests=10, concurrent=1):
         """Helper: Collect response times from test requests"""
@@ -178,8 +233,18 @@ class TestACC13SLOEndpoints(unittest.TestCase):
         def make_request():
             start_time = time.time()
             result = subprocess.run(
-                ["kubectl", "--context", self.context, "get", "services", "-A", "-o", "json"],
-                capture_output=True, text=True
+                [
+                    "kubectl",
+                    "--context",
+                    self.context,
+                    "get",
+                    "services",
+                    "-A",
+                    "-o",
+                    "json",
+                ],
+                capture_output=True,
+                text=True,
             )
             end_time = time.time()
 
@@ -208,7 +273,7 @@ class TestACC13SLOEndpoints(unittest.TestCase):
         """Helper: Calculate percentile from data list"""
         if not data:
             return 0
-        return statistics.quantiles(sorted(data), n=100)[percentile-1]
+        return statistics.quantiles(sorted(data), n=100)[percentile - 1]
 
     def test_generate_acc13_artifacts(self):
         """Test: Should be able to generate acc13_slo.json artifact"""
@@ -216,31 +281,39 @@ class TestACC13SLOEndpoints(unittest.TestCase):
         baseline_times = self._collect_response_times(num_requests=10, concurrent=1)
         load_times = self._collect_response_times(num_requests=20, concurrent=3)
 
-        baseline_p95 = self._calculate_percentile(baseline_times, 95) if baseline_times else 0
+        baseline_p95 = (
+            self._calculate_percentile(baseline_times, 95) if baseline_times else 0
+        )
         load_p95 = self._calculate_percentile(load_times, 95) if load_times else 0
 
         artifact_data = {
             "phase": "ACC-13",
             "test_name": "SLO Endpoints",
             "context": self.context,
-            "timestamp": subprocess.check_output(["date", "-Iseconds"]).decode().strip(),
+            "timestamp": subprocess.check_output(["date", "-Iseconds"])
+            .decode()
+            .strip(),
             "status": "COMPLETED",
             "slo_measurements": {
                 "baseline": {
                     "samples": len(baseline_times),
                     "p95_ms": baseline_p95,
                     "avg_ms": statistics.mean(baseline_times) if baseline_times else 0,
-                    "raw_times": baseline_times[:5]  # Sample of raw times
+                    "raw_times": baseline_times[:5],  # Sample of raw times
                 },
                 "load_test": {
                     "samples": len(load_times),
                     "p95_ms": load_p95,
                     "avg_ms": statistics.mean(load_times) if load_times else 0,
-                    "raw_times": load_times[:5]  # Sample of raw times
+                    "raw_times": load_times[:5],  # Sample of raw times
                 },
-                "p95_change_percent": ((load_p95 - baseline_p95) / baseline_p95 * 100) if baseline_p95 > 0 else 0
+                "p95_change_percent": ((load_p95 - baseline_p95) / baseline_p95 * 100)
+                if baseline_p95 > 0
+                else 0,
             },
-            "endpoints_discovered": self.slo_endpoints[:3] if hasattr(self, 'slo_endpoints') else []
+            "endpoints_discovered": self.slo_endpoints[:3]
+            if hasattr(self, "slo_endpoints")
+            else [],
         }
 
         # Write artifact
@@ -290,20 +363,24 @@ class TestACC13Performance(unittest.TestCase):
 
             results[concurrency] = {
                 "p95": self._calculate_percentile(response_times, 95),
-                "avg": statistics.mean(response_times)
+                "avg": statistics.mean(response_times),
             }
 
         # Verify that P95 doesn't degrade too much with increased concurrency
         p95_1 = results[1]["p95"]
         p95_20 = results[20]["p95"]
 
-        self.assertLess(p95_20, p95_1 * 3, "P95 should not degrade more than 3x under 20x concurrency")
+        self.assertLess(
+            p95_20,
+            p95_1 * 3,
+            "P95 should not degrade more than 3x under 20x concurrency",
+        )
 
     def _calculate_percentile(self, data, percentile):
         """Helper: Calculate percentile from data list"""
         if not data:
             return 0
-        return statistics.quantiles(sorted(data), n=100)[percentile-1]
+        return statistics.quantiles(sorted(data), n=100)[percentile - 1]
 
 
 if __name__ == "__main__":

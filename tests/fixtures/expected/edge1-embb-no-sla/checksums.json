@@ -1,5 +1,5 @@
 {
-  "edge1/edge1-basic-001-edge1-provisioningrequest.yaml": "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2",
-  "edge1/intent-edge1-basic-001-edge1-configmap.yaml": "b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3",
-  "edge1/kustomization.yaml": "c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4"
+  "edge1/ConfigMap/intent-edge1-basic-001-edge1": "a492d5c0c0d7ae369f12d8d0fc6dc76cd0489c0a83ee9b178994c0862ed09d70",
+  "edge1/Kustomization/kustomization-edge1": "5d147ade72426adb7811fcc62760cbea080b4251df3684817db579ff6b39ce3f",
+  "edge1/ProvisioningRequest/edge1-basic-001-edge1": "2316967b09abda11954b152553c401f8d439cfa44b5bdbfb53af5914bbe139e0"
 }

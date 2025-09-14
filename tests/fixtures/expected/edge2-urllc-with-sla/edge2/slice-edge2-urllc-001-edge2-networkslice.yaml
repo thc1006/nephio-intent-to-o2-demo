@@ -1,26 +1,17 @@
 apiVersion: workload.nephio.org/v1alpha1
 kind: NetworkSlice
 metadata:
-  name: edge2-urllc-001-edge2
-  namespace: default
   labels:
     intent-id: edge2-urllc-001
     service-type: ultra-reliable-low-latency
-    site: edge2
+    target-site: edge2
+  name: slice-edge2-urllc-001-edge2
+  namespace: edge2
 spec:
-  networkId: "slice-edge2-urllc-001"
+  plmn:
+    mcc: '001'
+    mnc: '02'
+  qos:
+    5qi: 1
+    gfbr: 500Mbps
   sliceType: URLLC
-  sst: 2
-  sd: "000002"
-  connectivity:
-    - name: "internet"
-      type: "IPv4"
-      subnet: "10.1.0.0/16"
-  qosProfile:
-    latency: 1
-    throughput: 500
-    reliability: 99.9999
-    priority: 1
-  siteName: edge2
-  nodeSelectors:
-    kubernetes.io/hostname: edge2-control-plane

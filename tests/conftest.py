@@ -2,12 +2,12 @@
 
 import json
 import tempfile
-import yaml
 from pathlib import Path
 from typing import Any, Dict, List
 from unittest.mock import Mock
 
 import pytest
+import yaml
 
 
 @pytest.fixture(scope="session")
@@ -57,13 +57,13 @@ def mock_kpt_render():
 
 def load_yaml_file(file_path: Path) -> Any:
     """Load and return contents of a YAML file."""
-    with open(file_path, 'r') as f:
+    with open(file_path, "r") as f:
         return yaml.safe_load(f)
 
 
 def load_json_file(file_path: Path) -> Dict[str, Any]:
     """Load and return contents of a JSON file."""
-    with open(file_path, 'r') as f:
+    with open(file_path, "r") as f:
         return json.load(f)
 
 
@@ -82,10 +82,12 @@ def yaml_normalizer():
 @pytest.fixture
 def json_normalizer():
     """Fixture providing JSON normalization function."""
+
     def normalize_json(content: str) -> str:
         """Normalize JSON content for comparison."""
         data = json.loads(content)
         return json.dumps(data, sort_keys=True, indent=2)
+
     return normalize_json
 
 
@@ -93,4 +95,5 @@ def json_normalizer():
 def golden_framework(test_data_dir):
     """Provide golden test framework instance."""
     from golden.test_framework import GoldenTestFramework
+
     return GoldenTestFramework(test_data_dir)

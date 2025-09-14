@@ -15,11 +15,13 @@ from typing import Dict, List, Optional
 import pytest
 
 
-def run_golden_tests(test_type: Optional[str] = None,
-                    generate_golden: bool = False,
-                    update_golden: bool = False,
-                    verbose: bool = False,
-                    output_dir: Optional[str] = None) -> int:
+def run_golden_tests(
+    test_type: Optional[str] = None,
+    generate_golden: bool = False,
+    update_golden: bool = False,
+    verbose: bool = False,
+    output_dir: Optional[str] = None,
+) -> int:
     """Run golden tests with specified options.
 
     Args:
@@ -60,19 +62,18 @@ def run_golden_tests(test_type: Optional[str] = None,
         args.extend(["--output-dir", output_dir])
 
     # Add coverage reporting
-    args.extend([
-        "--cov=translate",
-        "--cov-report=term-missing",
-        "--cov-report=html:htmlcov"
-    ])
+    args.extend(
+        ["--cov=translate", "--cov-report=term-missing", "--cov-report=html:htmlcov"]
+    )
 
     # Run tests
     print(f"Running golden tests with args: {args}")
     return pytest.main(args)
 
 
-def generate_golden_outputs(test_scenarios: List[str],
-                          output_dir: Optional[str] = None) -> Dict[str, bool]:
+def generate_golden_outputs(
+    test_scenarios: List[str], output_dir: Optional[str] = None
+) -> Dict[str, bool]:
     """Generate golden outputs for specified test scenarios.
 
     Args:
@@ -98,10 +99,7 @@ def generate_golden_outputs(test_scenarios: List[str],
         try:
             result = framework.generate_test_scenario(scenario, fixed_timestamp)
             framework.save_golden_output(
-                scenario,
-                result["resources"],
-                result["checksums"],
-                result["manifest"]
+                scenario, result["resources"], result["checksums"], result["manifest"]
             )
             results[scenario] = True
             print(f"✓ Generated golden output for {scenario}")
@@ -139,8 +137,11 @@ def validate_golden_outputs(test_scenarios: List[str]) -> Dict[str, bool]:
             current = framework.generate_test_scenario(scenario, fixed_timestamp)
 
             # Load golden output
-            expected_resources, expected_checksums, expected_manifest = \
-                framework.load_golden_output(scenario)
+            (
+                expected_resources,
+                expected_checksums,
+                expected_manifest,
+            ) = framework.load_golden_output(scenario)
 
             # Compare outputs
             differences = framework.compare_outputs(
@@ -168,58 +169,55 @@ def main():
     parser = argparse.ArgumentParser(description="Golden test runner")
 
     parser.add_argument(
-        "--type", "-t",
+        "--type",
+        "-t",
         choices=["golden", "contract", "framework", "all"],
         default="all",
-        help="Type of tests to run"
+        help="Type of tests to run",
     )
 
     parser.add_argument(
-        "--generate-golden", "-g",
+        "--generate-golden",
+        "-g",
         action="store_true",
-        help="Generate new golden outputs"
+        help="Generate new golden outputs",
     )
 
     parser.add_argument(
-        "--update-golden", "-u",
+        "--update-golden",
+        "-u",
         action="store_true",
-        help="Update existing golden outputs"
+        help="Update existing golden outputs",
     )
 
     parser.add_argument(
-        "--validate-golden", "-V",
+        "--validate-golden",
+        "-V",
         action="store_true",
-        help="Validate existing golden outputs"
+        help="Validate existing golden outputs",
     )
 
     parser.add_argument(
-        "--scenarios", "-s",
+        "--scenarios",
+        "-s",
         nargs="*",
         default=[
             "edge1-embb-with-sla",
             "edge2-urllc-with-sla",
             "both-sites-mmt-with-sla",
             "edge1-embb-no-sla",
-            "minimal-intent"
+            "minimal-intent",
         ],
-        help="Test scenarios to process"
+        help="Test scenarios to process",
     )
 
     parser.add_argument(
-        "--verbose", "-v",
-        action="store_true",
-        help="Enable verbose output"
+        "--verbose", "-v", action="store_true", help="Enable verbose output"
     )
 
-    parser.add_argument(
-        "--output-dir", "-o",
-        help="Directory for test outputs"
-    )
+    parser.add_argument("--output-dir", "-o", help="Directory for test outputs")
 
-    parser.add_argument(
-        "--report-file",
-        help="File to write test report"
-    )
+    parser.add_argument("--report-file", help="File to write test report")
 
     args = parser.parse_args()
 
@@ -258,7 +256,7 @@ def main():
         generate_golden=args.generate_golden,
         update_golden=args.update_golden,
         verbose=args.verbose,
-        output_dir=args.output_dir
+        output_dir=args.output_dir,
     )
 
     elapsed_time = time.time() - start_time
@@ -273,10 +271,10 @@ def main():
             "test_type": args.type,
             "scenarios": args.scenarios,
             "generate_golden": args.generate_golden,
-            "update_golden": args.update_golden
+            "update_golden": args.update_golden,
         }
 
-        with open(args.report_file, 'w') as f:
+        with open(args.report_file, "w") as f:
             json.dump(report, f, indent=2)
 
         print(f"Test report written to {args.report_file}")

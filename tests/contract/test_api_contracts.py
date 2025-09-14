@@ -14,15 +14,13 @@ from unittest.mock import Mock, patch
 import pytest
 
 # Add the intent-compiler to the path for testing
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / "tools" / "intent-compiler"))
-
-from translate import (
-    IntentToKRMTranslator,
-    IntentTranslationError,
-    IntentValidationError,
-    ResourceGenerationError,
-    FileSystemError
+sys.path.insert(
+    0, str(Path(__file__).parent.parent.parent / "tools" / "intent-compiler")
 )
+
+from translate import (FileSystemError, IntentToKRMTranslator,
+                       IntentTranslationError, IntentValidationError,
+                       ResourceGenerationError)
 
 
 class TestIntentValidationContract:
@@ -34,16 +32,12 @@ class TestIntentValidationContract:
             "intentId": "contract-test-001",
             "serviceType": "enhanced-mobile-broadband",
             "targetSite": "edge1",
-            "sla": {
-                "availability": 99.9,
-                "latency": 10,
-                "throughput": 100
-            }
+            "sla": {"availability": 99.9, "latency": 10, "throughput": 100},
         }
 
         intent_file = temp_workspace / "input" / "valid_intent.json"
         intent_file.parent.mkdir(parents=True, exist_ok=True)
-        with open(intent_file, 'w') as f:
+        with open(intent_file, "w") as f:
             json.dump(valid_intent, f)
 
         translator = IntentToKRMTranslator(str(temp_workspace / "output"))
@@ -56,12 +50,12 @@ class TestIntentValidationContract:
         """Test that missing intentId raises IntentValidationError."""
         invalid_intent = {
             "serviceType": "enhanced-mobile-broadband",
-            "targetSite": "edge1"
+            "targetSite": "edge1",
         }
 
         intent_file = temp_workspace / "input" / "no_id.json"
         intent_file.parent.mkdir(parents=True, exist_ok=True)
-        with open(intent_file, 'w') as f:
+        with open(intent_file, "w") as f:
             json.dump(invalid_intent, f)
 
         translator = IntentToKRMTranslator(str(temp_workspace / "output"))
@@ -74,14 +68,11 @@ class TestIntentValidationContract:
 
     def test_invalid_target_site_contract(self, temp_workspace):
         """Test that invalid targetSite raises IntentValidationError."""
-        invalid_intent = {
-            "intentId": "test-001",
-            "targetSite": "invalid-site"
-        }
+        invalid_intent = {"intentId": "test-001", "targetSite": "invalid-site"}
 
         intent_file = temp_workspace / "input" / "invalid_site.json"
         intent_file.parent.mkdir(parents=True, exist_ok=True)
-        with open(intent_file, 'w') as f:
+        with open(intent_file, "w") as f:
             json.dump(invalid_intent, f)
 
         translator = IntentToKRMTranslator(str(temp_workspace / "output"))
@@ -123,14 +114,14 @@ class TestResourceGenerationContract:
         return {
             "intentId": "resource-test-001",
             "serviceType": "enhanced-mobile-broadband",
-            "targetSite": "edge1"
+            "targetSite": "edge1",
         }
 
     def test_provisioning_request_contract(self, basic_intent, temp_workspace):
         """Test ProvisioningRequest generation contract."""
         intent_file = temp_workspace / "input" / "basic.json"
         intent_file.parent.mkdir(parents=True, exist_ok=True)
-        with open(intent_file, 'w') as f:
+        with open(intent_file, "w") as f:
             json.dump(basic_intent, f)
 
         translator = IntentToKRMTranslator(str(temp_workspace / "output"))
@@ -152,7 +143,7 @@ class TestResourceGenerationContract:
         """Test ConfigMap generation contract."""
         intent_file = temp_workspace / "input" / "basic.json"
         intent_file.parent.mkdir(parents=True, exist_ok=True)
-        with open(intent_file, 'w') as f:
+        with open(intent_file, "w") as f:
             json.dump(basic_intent, f)
 
         translator = IntentToKRMTranslator(str(temp_workspace / "output"))
@@ -175,15 +166,11 @@ class TestResourceGenerationContract:
 
     def test_network_slice_contract_with_sla(self, basic_intent, temp_workspace):
         """Test NetworkSlice generation contract when SLA is present."""
-        basic_intent["sla"] = {
-            "availability": 99.9,
-            "latency": 10,
-            "throughput": 100
-        }
+        basic_intent["sla"] = {"availability": 99.9, "latency": 10, "throughput": 100}
 
         intent_file = temp_workspace / "input" / "with_sla.json"
         intent_file.parent.mkdir(parents=True, exist_ok=True)
-        with open(intent_file, 'w') as f:
+        with open(intent_file, "w") as f:
             json.dump(basic_intent, f)
 
         translator = IntentToKRMTranslator(str(temp_workspace / "output"))
@@ -215,7 +202,7 @@ class TestResourceGenerationContract:
         """Test that NetworkSlice is not generated without SLA."""
         intent_file = temp_workspace / "input" / "no_sla.json"
         intent_file.parent.mkdir(parents=True, exist_ok=True)
-        with open(intent_file, 'w') as f:
+        with open(intent_file, "w") as f:
             json.dump(basic_intent, f)
 
         translator = IntentToKRMTranslator(str(temp_workspace / "output"))
@@ -229,7 +216,7 @@ class TestResourceGenerationContract:
         """Test Kustomization generation contract."""
         intent_file = temp_workspace / "input" / "basic.json"
         intent_file.parent.mkdir(parents=True, exist_ok=True)
-        with open(intent_file, 'w') as f:
+        with open(intent_file, "w") as f:
             json.dump(basic_intent, f)
 
         translator = IntentToKRMTranslator(str(temp_workspace / "output"))
@@ -261,7 +248,7 @@ class TestSLAConversionContract:
             "latency": 10,
             "throughput": 100,
             "connections": 1000,
-            "reliability": 99.99
+            "reliability": 99.99,
         }
 
         converted = translator._convert_sla(sla)
@@ -278,10 +265,10 @@ class TestSLAConversionContract:
         translator = IntentToKRMTranslator(str(temp_workspace / "output"))
 
         test_cases = [
-            {"latency": 1, "expected_5qi": 1},    # URLLC
-            {"latency": 5, "expected_5qi": 5},    # Low latency
-            {"latency": 30, "expected_5qi": 7},   # Voice
-            {"latency": 100, "expected_5qi": 9}   # Best effort
+            {"latency": 1, "expected_5qi": 1},  # URLLC
+            {"latency": 5, "expected_5qi": 5},  # Low latency
+            {"latency": 30, "expected_5qi": 7},  # Voice
+            {"latency": 100, "expected_5qi": 9},  # Best effort
         ]
 
         for case in test_cases:
@@ -316,7 +303,7 @@ class TestFileSystemContract:
         intent = {"intentId": "fs-test-001", "targetSite": "edge1"}
         intent_file = temp_workspace / "input" / "fs_test.json"
         intent_file.parent.mkdir(parents=True, exist_ok=True)
-        with open(intent_file, 'w') as f:
+        with open(intent_file, "w") as f:
             json.dump(intent, f)
 
         result = translator.translate(str(intent_file))
@@ -350,31 +337,25 @@ class TestFileSystemContract:
             {
                 "resource": {
                     "kind": "ProvisioningRequest",
-                    "metadata": {"name": "test-pr"}
+                    "metadata": {"name": "test-pr"},
                 },
-                "expected": "test-pr-provisioning-request.yaml"
+                "expected": "test-pr-provisioning-request.yaml",
             },
             {
-                "resource": {
-                    "kind": "ConfigMap",
-                    "metadata": {"name": "test-cm"}
-                },
-                "expected": "test-cm-config-map.yaml"
+                "resource": {"kind": "ConfigMap", "metadata": {"name": "test-cm"}},
+                "expected": "test-cm-config-map.yaml",
             },
             {
-                "resource": {
-                    "kind": "NetworkSlice",
-                    "metadata": {"name": "test-ns"}
-                },
-                "expected": "test-ns-network-slice.yaml"
+                "resource": {"kind": "NetworkSlice", "metadata": {"name": "test-ns"}},
+                "expected": "test-ns-network-slice.yaml",
             },
             {
                 "resource": {
                     "kind": "Kustomization",
-                    "metadata": {"name": "kustomization-edge1"}
+                    "metadata": {"name": "kustomization-edge1"},
                 },
-                "expected": "kustomization.yaml"
-            }
+                "expected": "kustomization.yaml",
+            },
         ]
 
         for case in test_cases:
@@ -400,7 +381,7 @@ class TestErrorHandlingContract:
         invalid_intent = {"serviceType": "enhanced-mobile-broadband"}
         intent_file = temp_workspace / "input" / "validation_error.json"
         intent_file.parent.mkdir(parents=True, exist_ok=True)
-        with open(intent_file, 'w') as f:
+        with open(intent_file, "w") as f:
             json.dump(invalid_intent, f)
 
         translator = IntentToKRMTranslator(str(temp_workspace / "output"))
@@ -413,7 +394,7 @@ class TestErrorHandlingContract:
         assert "intentId" in error_message
         assert "Missing required fields" in error_message
 
-    @patch('builtins.open')
+    @patch("builtins.open")
     def test_filesystem_error_handling(self, mock_open, temp_workspace):
         """Test that filesystem errors are properly handled."""
         mock_open.side_effect = PermissionError("Permission denied")

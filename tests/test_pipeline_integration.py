@@ -44,23 +44,22 @@ class TestPipelineIntegration:
                 "latency": 8,
                 "throughput": 1500,
                 "connections": 10000,
-                "reliability": 99.9
+                "reliability": 99.9,
             },
             "metadata": {
                 "customer": "enterprise-premium-001",
                 "priority": "high",
-                "deployment": "production"
-            }
+                "deployment": "production",
+            },
         }
 
         intent_file = pipeline_workspace / "input" / "pipeline_embb.json"
-        with open(intent_file, 'w') as f:
+        with open(intent_file, "w") as f:
             json.dump(intent, f, indent=2)
 
         # Initialize translator
         translator = IntentToKRMTranslator(
-            str(pipeline_workspace / "output"),
-            enable_caching=True
+            str(pipeline_workspace / "output"), enable_caching=True
         )
         translator._manifest_data["timestamp"] = fixed_timestamp
 
@@ -71,9 +70,11 @@ class TestPipelineIntegration:
 
         # Validate pipeline results
         self._validate_pipeline_results(
-            resources, checksums, manifest_path,
+            resources,
+            checksums,
+            manifest_path,
             expected_sites=["edge1"],
-            expected_intent_id="pipeline-embb-edge1-001"
+            expected_intent_id="pipeline-embb-edge1-001",
         )
 
         # Validate specific eMBB characteristics
@@ -109,22 +110,21 @@ class TestPipelineIntegration:
                 "latency": 1,
                 "throughput": 800,
                 "connections": 5000,
-                "reliability": 99.9999
+                "reliability": 99.9999,
             },
             "metadata": {
                 "customer": "critical-systems-001",
                 "priority": "critical",
-                "deployment": "multi-site"
-            }
+                "deployment": "multi-site",
+            },
         }
 
         intent_file = pipeline_workspace / "input" / "pipeline_urllc.json"
-        with open(intent_file, 'w') as f:
+        with open(intent_file, "w") as f:
             json.dump(intent, f, indent=2)
 
         translator = IntentToKRMTranslator(
-            str(pipeline_workspace / "output"),
-            enable_caching=True
+            str(pipeline_workspace / "output"), enable_caching=True
         )
         translator._manifest_data["timestamp"] = fixed_timestamp
 
@@ -135,9 +135,11 @@ class TestPipelineIntegration:
 
         # Validate multi-site deployment
         self._validate_pipeline_results(
-            resources, checksums, manifest_path,
+            resources,
+            checksums,
+            manifest_path,
             expected_sites=["edge1", "edge2"],
-            expected_intent_id="pipeline-urllc-both-001"
+            expected_intent_id="pipeline-urllc-both-001",
         )
 
         # Validate URLLC characteristics for both sites
@@ -167,14 +169,11 @@ class TestPipelineIntegration:
             "targetSite": "edge2",
             "resourceProfile": "basic",
             "description": "Basic mMTC service without SLA requirements",
-            "metadata": {
-                "customer": "iot-basic-001",
-                "priority": "low"
-            }
+            "metadata": {"customer": "iot-basic-001", "priority": "low"},
         }
 
         intent_file = pipeline_workspace / "input" / "pipeline_mmt.json"
-        with open(intent_file, 'w') as f:
+        with open(intent_file, "w") as f:
             json.dump(intent, f, indent=2)
 
         translator = IntentToKRMTranslator(str(pipeline_workspace / "output"))
@@ -218,7 +217,7 @@ class TestPipelineIntegration:
         # Test invalid intent structure
         invalid_intent = {"invalidField": "value"}
         invalid_file = pipeline_workspace / "input" / "invalid.json"
-        with open(invalid_file, 'w') as f:
+        with open(invalid_file, "w") as f:
             json.dump(invalid_intent, f)
 
         with pytest.raises(Exception):  # Should be IntentValidationError
@@ -230,11 +229,11 @@ class TestPipelineIntegration:
             "intentId": "idempotency-test-001",
             "serviceType": "enhanced-mobile-broadband",
             "targetSite": "edge1",
-            "sla": {"availability": 99.9, "latency": 10, "throughput": 100}
+            "sla": {"availability": 99.9, "latency": 10, "throughput": 100},
         }
 
         intent_file = pipeline_workspace / "input" / "idempotency.json"
-        with open(intent_file, 'w') as f:
+        with open(intent_file, "w") as f:
             json.dump(intent, f)
 
         # Run pipeline multiple times
@@ -257,23 +256,32 @@ class TestPipelineIntegration:
             for site in base_resources:
                 assert site in resources, f"Site {site} missing in run {i+1}"
 
-                base_site_resources = sorted(base_resources[site],
-                                           key=lambda r: (r["kind"], r.get("metadata", {}).get("name", "")))
-                site_resources = sorted(resources[site],
-                                      key=lambda r: (r["kind"], r.get("metadata", {}).get("name", "")))
+                base_site_resources = sorted(
+                    base_resources[site],
+                    key=lambda r: (r["kind"], r.get("metadata", {}).get("name", "")),
+                )
+                site_resources = sorted(
+                    resources[site],
+                    key=lambda r: (r["kind"], r.get("metadata", {}).get("name", "")),
+                )
 
-                assert len(base_site_resources) == len(site_resources), \
-                    f"Resource count differs for {site} in run {i+1}"
+                assert len(base_site_resources) == len(
+                    site_resources
+                ), f"Resource count differs for {site} in run {i+1}"
 
-                for j, (base_resource, resource) in enumerate(zip(base_site_resources, site_resources)):
+                for j, (base_resource, resource) in enumerate(
+                    zip(base_site_resources, site_resources)
+                ):
                     # Normalize for comparison
                     base_json = json.dumps(base_resource, sort_keys=True)
                     resource_json = json.dumps(resource, sort_keys=True)
-                    assert base_json == resource_json, \
-                        f"Resource {j} differs for {site} in run {i+1}"
+                    assert (
+                        base_json == resource_json
+                    ), f"Resource {j} differs for {site} in run {i+1}"
 
-    def _validate_pipeline_results(self, resources, checksums, manifest_path,
-                                 expected_sites, expected_intent_id):
+    def _validate_pipeline_results(
+        self, resources, checksums, manifest_path, expected_sites, expected_intent_id
+    ):
         """Validate common pipeline result structure."""
         # Validate sites
         assert set(resources.keys()) == set(expected_sites)
@@ -301,7 +309,7 @@ class TestPipelineIntegration:
 
         # Validate manifest file exists and has correct structure
         assert Path(manifest_path).exists()
-        with open(manifest_path, 'r') as f:
+        with open(manifest_path, "r") as f:
             manifest = json.load(f)
 
         assert manifest["intent_id"] == expected_intent_id
@@ -332,7 +340,7 @@ class TestPipelinePerformance:
                 "connections": 100000,
                 "reliability": 99.9999,
                 "packetLoss": 0.001,
-                "jitter": 0.5
+                "jitter": 0.5,
             },
             "metadata": {
                 "customer": "performance-customer-001",
@@ -340,12 +348,12 @@ class TestPipelinePerformance:
                 "deployment": "multi-site",
                 "environment": "production",
                 "version": "1.0.0",
-                "tags": ["high-performance", "critical", "multi-site"]
-            }
+                "tags": ["high-performance", "critical", "multi-site"],
+            },
         }
 
         intent_file = pipeline_workspace / "input" / "performance.json"
-        with open(intent_file, 'w') as f:
+        with open(intent_file, "w") as f:
             json.dump(intent, f, indent=2)
 
         translator = IntentToKRMTranslator(str(pipeline_workspace / "output"))
@@ -362,7 +370,9 @@ class TestPipelinePerformance:
         print(f"Translation time: {translation_time:.3f} seconds")
 
         # Should complete within reasonable time (adjust threshold as needed)
-        assert translation_time < 5.0, f"Translation took too long: {translation_time:.3f}s"
+        assert (
+            translation_time < 5.0
+        ), f"Translation took too long: {translation_time:.3f}s"
 
         # Validate results were generated correctly
         assert len(resources) == 2  # Both sites
@@ -370,7 +380,9 @@ class TestPipelinePerformance:
         assert Path(manifest_path).exists()
 
     @pytest.mark.slow
-    def test_multiple_intent_batch_performance(self, pipeline_workspace, fixed_timestamp):
+    def test_multiple_intent_batch_performance(
+        self, pipeline_workspace, fixed_timestamp
+    ):
         """Test pipeline performance with multiple intents."""
         import time
 
@@ -384,8 +396,8 @@ class TestPipelinePerformance:
                 "sla": {
                     "availability": 99.9,
                     "latency": 10,
-                    "throughput": 100 + i * 10
-                }
+                    "throughput": 100 + i * 10,
+                },
             }
             intents.append(intent)
 
@@ -395,7 +407,7 @@ class TestPipelinePerformance:
 
         for i, intent in enumerate(intents):
             intent_file = pipeline_workspace / "input" / f"batch_{i:03d}.json"
-            with open(intent_file, 'w') as f:
+            with open(intent_file, "w") as f:
                 json.dump(intent, f)
 
             output_dir = pipeline_workspace / f"output_{i:03d}"
@@ -416,8 +428,9 @@ class TestPipelinePerformance:
         print(f"Average time per intent: {avg_time_per_intent:.3f} seconds")
 
         # Should process intents efficiently
-        assert avg_time_per_intent < 1.0, \
-            f"Average processing time too high: {avg_time_per_intent:.3f}s"
+        assert (
+            avg_time_per_intent < 1.0
+        ), f"Average processing time too high: {avg_time_per_intent:.3f}s"
 
         # Validate all results
         assert len(results) == len(intents)

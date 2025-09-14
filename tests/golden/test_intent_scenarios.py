@@ -11,7 +11,9 @@ from pathlib import Path
 import pytest
 
 # Add the intent-compiler to the path for testing
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / "tools" / "intent-compiler"))
+sys.path.insert(
+    0, str(Path(__file__).parent.parent.parent / "tools" / "intent-compiler")
+)
 
 from golden.test_framework import GoldenTestFramework
 
@@ -29,8 +31,7 @@ class TestIntentScenarioGolden:
         """Test edge1 eMBB service with SLA requirements."""
         intent_name = "edge1-embb-with-sla"
         scenario = self.framework.generate_test_scenario(
-            intent_name,
-            fixed_timestamp=self.fixed_timestamp
+            intent_name, fixed_timestamp=self.fixed_timestamp
         )
 
         resources = scenario["resources"]
@@ -50,7 +51,7 @@ class TestIntentScenarioGolden:
             "ProvisioningRequest",
             "ConfigMap",
             "NetworkSlice",
-            "Kustomization"
+            "Kustomization",
         ]
         assert sorted(resource_kinds) == sorted(expected_kinds)
 
@@ -90,8 +91,7 @@ class TestIntentScenarioGolden:
         """Test edge2 URLLC service with strict SLA requirements."""
         intent_name = "edge2-urllc-with-sla"
         scenario = self.framework.generate_test_scenario(
-            intent_name,
-            fixed_timestamp=self.fixed_timestamp
+            intent_name, fixed_timestamp=self.fixed_timestamp
         )
 
         resources = scenario["resources"]
@@ -132,8 +132,7 @@ class TestIntentScenarioGolden:
         """Test both sites mMTC service with relaxed SLA."""
         intent_name = "both-sites-mmt-with-sla"
         scenario = self.framework.generate_test_scenario(
-            intent_name,
-            fixed_timestamp=self.fixed_timestamp
+            intent_name, fixed_timestamp=self.fixed_timestamp
         )
 
         resources = scenario["resources"]
@@ -150,12 +149,16 @@ class TestIntentScenarioGolden:
         assert len(resources["edge2"]) == 4
 
         # Validate edge1 ProvisioningRequest
-        edge1_pr = next(r for r in resources["edge1"] if r["kind"] == "ProvisioningRequest")
+        edge1_pr = next(
+            r for r in resources["edge1"] if r["kind"] == "ProvisioningRequest"
+        )
         assert edge1_pr["metadata"]["name"] == "both-mmt-001-edge1"
         assert edge1_pr["metadata"]["namespace"] == "edge1"
 
         # Validate edge2 ProvisioningRequest
-        edge2_pr = next(r for r in resources["edge2"] if r["kind"] == "ProvisioningRequest")
+        edge2_pr = next(
+            r for r in resources["edge2"] if r["kind"] == "ProvisioningRequest"
+        )
         assert edge2_pr["metadata"]["name"] == "both-mmt-001-edge2"
         assert edge2_pr["metadata"]["namespace"] == "edge2"
 
@@ -191,8 +194,7 @@ class TestIntentScenarioGolden:
         """Test edge1 eMBB service without SLA requirements."""
         intent_name = "edge1-embb-no-sla"
         scenario = self.framework.generate_test_scenario(
-            intent_name,
-            fixed_timestamp=self.fixed_timestamp
+            intent_name, fixed_timestamp=self.fixed_timestamp
         )
 
         resources = scenario["resources"]
@@ -200,7 +202,9 @@ class TestIntentScenarioGolden:
 
         # Should generate fewer resources without SLA
         edge1_resources = resources["edge1"]
-        assert len(edge1_resources) == 3  # PR, ConfigMap, Kustomization (no NetworkSlice)
+        assert (
+            len(edge1_resources) == 3
+        )  # PR, ConfigMap, Kustomization (no NetworkSlice)
 
         resource_kinds = [r["kind"] for r in edge1_resources]
         expected_kinds = ["ProvisioningRequest", "ConfigMap", "Kustomization"]
@@ -212,7 +216,9 @@ class TestIntentScenarioGolden:
 
         # Kustomization should not reference NetworkSlice
         kustomization = next(r for r in edge1_resources if r["kind"] == "Kustomization")
-        networkslice_ref = any("networkslice" in resource for resource in kustomization["resources"])
+        networkslice_ref = any(
+            "networkslice" in resource for resource in kustomization["resources"]
+        )
         assert not networkslice_ref
 
         # Validate manifest
@@ -222,8 +228,7 @@ class TestIntentScenarioGolden:
         """Test minimal intent with default values."""
         intent_name = "minimal-intent"
         scenario = self.framework.generate_test_scenario(
-            intent_name,
-            fixed_timestamp=self.fixed_timestamp
+            intent_name, fixed_timestamp=self.fixed_timestamp
         )
 
         resources = scenario["resources"]
@@ -257,12 +262,10 @@ class TestDeterministicOutput:
 
         # Generate scenario twice with same fixed timestamp
         scenario1 = golden_framework.generate_test_scenario(
-            intent_name,
-            fixed_timestamp=fixed_timestamp
+            intent_name, fixed_timestamp=fixed_timestamp
         )
         scenario2 = golden_framework.generate_test_scenario(
-            intent_name,
-            fixed_timestamp=fixed_timestamp
+            intent_name, fixed_timestamp=fixed_timestamp
         )
 
         # Checksums should be identical
@@ -274,8 +277,12 @@ class TestDeterministicOutput:
             resources2 = scenario2["resources"][site]
 
             # Sort resources for comparison
-            resources1_sorted = golden_framework._sort_resources_for_comparison(resources1)
-            resources2_sorted = golden_framework._sort_resources_for_comparison(resources2)
+            resources1_sorted = golden_framework._sort_resources_for_comparison(
+                resources1
+            )
+            resources2_sorted = golden_framework._sort_resources_for_comparison(
+                resources2
+            )
 
             # Convert to JSON for comparison
             json1 = json.dumps(resources1_sorted, sort_keys=True, indent=2)
@@ -287,8 +294,7 @@ class TestDeterministicOutput:
         """Test that all resource keys are consistently ordered."""
         intent_name = "both-sites-mmt-with-sla"
         scenario = golden_framework.generate_test_scenario(
-            intent_name,
-            fixed_timestamp=fixed_timestamp
+            intent_name, fixed_timestamp=fixed_timestamp
         )
 
         for site, resources in scenario["resources"].items():
@@ -296,13 +302,16 @@ class TestDeterministicOutput:
                 # Check that all dict keys are sorted at top level
                 if isinstance(resource, dict):
                     keys = list(resource.keys())
-                    assert keys == sorted(keys), f"Keys not sorted in {site} resource: {keys}"
+                    assert keys == sorted(
+                        keys
+                    ), f"Keys not sorted in {site} resource: {keys}"
 
                 # Check metadata keys are sorted
                 if "metadata" in resource:
                     metadata_keys = list(resource["metadata"].keys())
-                    assert metadata_keys == sorted(metadata_keys), \
-                        f"Metadata keys not sorted in {site} resource: {metadata_keys}"
+                    assert metadata_keys == sorted(
+                        metadata_keys
+                    ), f"Metadata keys not sorted in {site} resource: {metadata_keys}"
 
 
 class TestIdempotency:
@@ -316,22 +325,24 @@ class TestIdempotency:
         scenarios = []
         for _ in range(3):
             scenario = golden_framework.generate_test_scenario(
-                intent_name,
-                fixed_timestamp=fixed_timestamp
+                intent_name, fixed_timestamp=fixed_timestamp
             )
             scenarios.append(scenario)
 
         # All scenarios should have identical checksums
         base_checksums = scenarios[0]["checksums"]
         for i, scenario in enumerate(scenarios[1:], 1):
-            assert scenario["checksums"] == base_checksums, \
-                f"Checksums differ in run {i+1}"
+            assert (
+                scenario["checksums"] == base_checksums
+            ), f"Checksums differ in run {i+1}"
 
         # All scenarios should have identical resource counts
         base_manifest = scenarios[0]["manifest"]
         for i, scenario in enumerate(scenarios[1:], 1):
-            assert scenario["manifest"]["resource_counts"] == base_manifest["resource_counts"], \
-                f"Resource counts differ in run {i+1}"
+            assert (
+                scenario["manifest"]["resource_counts"]
+                == base_manifest["resource_counts"]
+            ), f"Resource counts differ in run {i+1}"
 
     def test_checksum_consistency(self, golden_framework, fixed_timestamp):
         """Test that checksums are consistent across runs."""
@@ -339,16 +350,16 @@ class TestIdempotency:
 
         # Generate scenario
         scenario = golden_framework.generate_test_scenario(
-            intent_name,
-            fixed_timestamp=fixed_timestamp
+            intent_name, fixed_timestamp=fixed_timestamp
         )
 
         checksums = scenario["checksums"]
         resources = scenario["resources"]
 
         # Verify that checksums match actual resource content
-        from translate import IntentToKRMTranslator
         import tempfile
+
+        from translate import IntentToKRMTranslator
 
         with tempfile.TemporaryDirectory() as tmpdir:
             translator = IntentToKRMTranslator(str(Path(tmpdir) / "output"))
@@ -357,18 +368,21 @@ class TestIdempotency:
                 # Find the corresponding resource
                 site, kind, name = resource_id.split("/", 2)
                 resource = next(
-                    r for r in resources[site]
+                    r
+                    for r in resources[site]
                     if r["kind"] == kind and r["metadata"]["name"] == name
                 )
 
                 # Calculate checksum for the resource
                 import yaml
+
                 resource_yaml = yaml.dump(
                     translator._sort_resource_keys(resource),
                     sort_keys=True,
-                    default_flow_style=False
+                    default_flow_style=False,
                 )
                 actual_checksum = translator._calculate_checksum(resource_yaml)
 
-                assert actual_checksum == expected_checksum, \
-                    f"Checksum mismatch for {resource_id}"
+                assert (
+                    actual_checksum == expected_checksum
+                ), f"Checksum mismatch for {resource_id}"
