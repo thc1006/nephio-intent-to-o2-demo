@@ -4,7 +4,7 @@
 set -euo pipefail
 
 # External Gitea Configuration
-GITEA_URL="http://147.251.115.143:8888"
+GITEA_URL="http://172.16.0.78:8888"
 GITEA_USER="${GITEA_USER:-admin}"  # Update with actual username
 GITEA_REPO="edge1-config"
 NAMESPACE="config-management-system"

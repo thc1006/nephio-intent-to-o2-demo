@@ -9,7 +9,7 @@ set -euo pipefail
 # Configuration
 readonly SCRIPT_NAME="p0.4B_vm2_manual"
 readonly EDGE_CLUSTER_NAME="edge1"
-readonly VM1_GITEA_URL="http://147.251.115.143:8888"
+readonly VM1_GITEA_URL="http://172.16.0.78:8888"
 readonly GITEA_USER="admin1"
 readonly GITEA_REPO="edge1-config"
 readonly VM2_IP="172.16.4.45"

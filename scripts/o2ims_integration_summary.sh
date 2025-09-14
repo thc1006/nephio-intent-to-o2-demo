@@ -20,7 +20,7 @@ echo ""
 SMO_KUBECONFIG="/tmp/focom-kubeconfig"
 EDGE_KUBECONFIG="/tmp/kubeconfig-edge.yaml"
 O2IMS_API="http://172.16.4.45:31280"
-GITEA_URL="http://147.251.115.143:8888"
+GITEA_URL="http://172.16.0.78:8888"
 
 echo -e "${BLUE}▶ Environment Configuration${NC}"
 echo "┌─────────────────────────────────────────────────────────────────┐"

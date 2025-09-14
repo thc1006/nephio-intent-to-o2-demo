@@ -338,7 +338,7 @@ kubectl get all -n intent-to-krm
 
 ### Phase 4: GitOps Repository Setup
 - **Task:** Configure Gitea repository synchronization
-- **Repository:** `http://147.251.115.143:8888/admin1/edge1-config`
+- **Repository:** `http://172.16.0.78:8888/admin1/edge1-config` (內部 IP)
 - **Scripts Created:**
   - `/scripts/push_krm_to_gitea.sh`
   - `/scripts/setup_gitea_access.sh`
@@ -396,7 +396,7 @@ metadata:
 spec:
   sourceFormat: unstructured
   git:
-    repo: http://147.251.115.143:8888/admin1/edge1-config
+    repo: http://172.16.0.78:8888/admin1/edge1-config  # 使用內部 IP
     branch: main
     dir: /apps/intent
     period: 30s
@@ -525,13 +525,13 @@ Problem: GitOps sync not working
 ================================
     │
     ├─→ Check Gitea connectivity
-    │   └─→ curl http://147.251.115.143:8888
+    │   └─→ curl http://172.16.0.78:8888  # 內部連接
     │
     ├─→ Check ConfigSync logs
     │   └─→ kubectl logs -n config-management-system deploy/root-reconciler
     │
     └─→ Verify repository access
-        └─→ git clone http://147.251.115.143:8888/admin1/edge1-config
+        └─→ git clone http://172.16.0.78:8888/admin1/edge1-config
 
 Problem: CRDs not found
 =======================

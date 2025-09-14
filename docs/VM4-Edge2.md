@@ -47,7 +47,7 @@ edge2-control-plane   Ready    control-plane   118s   v1.27.3
 
 ### GitOps Configuration
 ```yaml
-Repository: http://147.251.115.143:8888/admin1/edge2-config
+Repository: http://172.16.0.78:8888/admin1/edge2-config  # 內部 IP
 Branch: main
 Directory: /edge2  # Watches subdirectory, not root
 Sync Interval: 30 seconds
@@ -76,7 +76,7 @@ Failed to connect to 147.251.115.143 port 8888 after 580 ms: Couldn't connect to
 ```
 
 **Root Cause Analysis:**
-- VM-4 (172.16.0.89) cannot reach VM-1's Gitea server at 147.251.115.143:8888
+- VM-4 (172.16.0.89) should use internal IP 172.16.0.78:8888 for Gitea
 - This prevents Config Sync from pulling configurations
 - The cluster is operational but isolated from GitOps pipeline
 
@@ -198,7 +198,7 @@ spec:
 | Kubernetes Nodes | ✅ Ready | edge2-control-plane operational |
 | Config Sync Operator | ✅ Installed | v1.17.0 running |
 | RootSync Resource | ✅ Created | Configured for edge2 directory |
-| GitOps Connectivity | ❌ Failed | Cannot reach 147.251.115.143:8888 |
+| GitOps Connectivity | ⚠️ | Use internal IP 172.16.0.78:8888 |
 | Git Authentication | ✅ Configured | Token stored in secret |
 
 ## Troubleshooting Guide
@@ -217,7 +217,7 @@ spec:
 3. Test manual git clone from within cluster:
    ```bash
    kubectl run git-test --rm -it --image=alpine/git -- \
-     clone http://admin1:token@147.251.115.143:8888/admin1/edge2-config.git
+     clone http://admin1:token@172.16.0.78:8888/admin1/edge2-config.git
    ```
 
 4. Check RootSync conditions:

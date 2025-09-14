@@ -71,7 +71,8 @@ VM-1 (SMO)                    VM-2 (Edge)
     ├──── TCP:30080 ─────────────✗ (No service)
     └──── TCP:30443 ─────────────✗ (No service)
     
-External Gitea: 147.251.115.143:8888 ──✓
+Internal Gitea: 172.16.0.78:8888 ──✓
+External Gitea: 147.251.115.143:8888 ──✓ (for external access only)
 ```
 
 ## ✅ Verification Commands
@@ -108,9 +109,9 @@ else
     echo "❌ FAIL"
 fi
 
-# Test Gitea
-echo -n "Gitea (147.251.115.143:8888): "
-if nc -vz -w 2 147.251.115.143 8888 > /dev/null 2>&1; then
+# Test Gitea (Internal IP for Edge connectivity)
+echo -n "Gitea (172.16.0.78:8888): "
+if nc -vz -w 2 172.16.0.78 8888 > /dev/null 2>&1; then
     echo "✅ PASS"
 else
     echo "❌ FAIL"
@@ -146,8 +147,9 @@ kubectl --kubeconfig=/tmp/kubeconfig-edge.yaml get nodes
 
 ### If Gitea Fails
 ```bash
-# Check Gitea service
-curl -I http://147.251.115.143:8888
+# Check Gitea service (use internal IP for Edge nodes)
+curl -I http://172.16.0.78:8888
+# External access (if needed): curl -I http://147.251.115.143:8888
 ```
 
 ## 📊 Performance Metrics
