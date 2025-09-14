@@ -16,7 +16,7 @@ on:
 env:
   GO_VERSION: '1.22'
   PYTHON_VERSION: '3.11'
-  KPT_VERSION: 'v1.0.0-beta.49'
+  KPT_VERSION: 'v1.0.0-beta.58'
   KUBECONFORM_VERSION: 'v0.6.4'
   COSIGN_VERSION: 'v2.2.3'
 

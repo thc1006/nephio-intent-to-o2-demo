@@ -33,7 +33,7 @@ on:
 env:
   PYTHON_VERSION: '3.11'
   GO_VERSION: '1.22'
-  KPT_VERSION: 'v1.0.0-beta.49'
+  KPT_VERSION: 'v1.0.0-beta.58'
   KUBECONFORM_VERSION: 'v0.6.4'
 
 jobs:
@@ -68,7 +68,8 @@ jobs:
           pip install --upgrade pip jsonschema pyyaml
 
           # Install kpt
-          curl -fsSL "https://github.com/GoogleContainerTools/kpt/releases/download/${{ env.KPT_VERSION }}/kpt_linux_amd64.tar.gz" | tar -xz
+          curl -fsSL "https://github.com/GoogleContainerTools/kpt/releases/download/${{ env.KPT_VERSION }}/kpt_linux_amd64" -o kpt
+          chmod +x kpt
           sudo mv kpt /usr/local/bin/
 
           # Install kubeconform
