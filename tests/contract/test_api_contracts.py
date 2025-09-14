@@ -18,9 +18,13 @@ sys.path.insert(
     0, str(Path(__file__).parent.parent.parent / "tools" / "intent-compiler")
 )
 
-from translate import (FileSystemError, IntentToKRMTranslator,
-                       IntentTranslationError, IntentValidationError,
-                       ResourceGenerationError)
+from translate import (
+    FileSystemError,
+    IntentToKRMTranslator,
+    IntentTranslationError,
+    IntentValidationError,
+    ResourceGenerationError,
+)
 
 
 class TestIntentValidationContract:

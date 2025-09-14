@@ -13,6 +13,7 @@ from typing import Any, Dict, List
 import jsonschema
 import pytest
 from jsonschema import ValidationError, validate
+
 # Import from existing test module
 from test_intent_schema import TestIntentSchema
 

@@ -13,9 +13,13 @@ import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "adapter", "app"))
 
-from main import (PROMPT_TEMPLATE, call_claude_with_retry,
-                  determine_target_site, enforce_tmf921_structure,
-                  extract_json)
+from main import (
+    PROMPT_TEMPLATE,
+    call_claude_with_retry,
+    determine_target_site,
+    enforce_tmf921_structure,
+    extract_json,
+)
 
 
 class TestCLICall:
