@@ -55,9 +55,9 @@ Natural Language → Intent (JSON) → KRM → GitOps → Edge Deployment → SL
 - **Edge2**: Core services operational (95%)
 
 ## 📝 Version
-- **Current**: v1.1.0-rc2
-- **Released**: 2025-09-13
-- See [RELEASE_NOTES_v1.1.0.md](RELEASE_NOTES_v1.1.0.md)
+- **Current**: v1.1.1
+- **Released**: 2025-09-14
+- See [RELEASE_NOTES_v1.1.1.md](RELEASE_NOTES_v1.1.1.md)
 
 ## 🤝 Contributing
 Please refer to contribution guidelines in docs/
