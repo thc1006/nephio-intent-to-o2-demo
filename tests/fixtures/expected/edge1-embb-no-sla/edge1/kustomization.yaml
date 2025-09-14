@@ -1,0 +1,5 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - edge1-basic-001-edge1-provisioningrequest.yaml
+  - intent-edge1-basic-001-edge1-configmap.yaml

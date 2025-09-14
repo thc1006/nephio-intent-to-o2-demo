@@ -1,0 +1,28 @@
+apiVersion: o2ims.provisioning/v1alpha1
+kind: ProvisioningRequest
+metadata:
+  name: edge1-basic-001-edge1
+  namespace: default
+  labels:
+    intent-id: edge1-basic-001
+    service-type: enhanced-mobile-broadband
+    site: edge1
+    resource-profile: basic
+spec:
+  site: edge1
+  serviceType: enhanced-mobile-broadband
+  resourceProfile: basic
+  template:
+    spec:
+      serviceType: eMBB
+      plmn:
+        mcc: "001"
+        mnc: "01"
+      connectivity:
+        dataNetworks:
+          - name: internet
+            pool:
+              - "10.0.0.0/16"
+      capacity:
+        maxSessions: 10000
+        maxSubscribers: 10000

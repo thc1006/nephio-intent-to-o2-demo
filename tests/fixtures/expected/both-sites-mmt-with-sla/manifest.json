@@ -1,0 +1,19 @@
+{
+  "intentId": "both-mmt-001",
+  "sites": ["edge1", "edge2"],
+  "resources": {
+    "edge1": [
+      "both-mmt-001-edge1-provisioningrequest.yaml",
+      "intent-both-mmt-001-edge1-configmap.yaml",
+      "slice-both-mmt-001-edge1-networkslice.yaml",
+      "kustomization.yaml"
+    ],
+    "edge2": [
+      "both-mmt-001-edge2-provisioningrequest.yaml",
+      "intent-both-mmt-001-edge2-configmap.yaml",
+      "slice-both-mmt-001-edge2-networkslice.yaml",
+      "kustomization.yaml"
+    ]
+  },
+  "generated": "2025-09-14T13:00:00Z"
+}

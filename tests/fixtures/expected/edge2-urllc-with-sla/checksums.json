@@ -1,0 +1,6 @@
+{
+  "edge2/edge2-urllc-001-edge2-provisioningrequest.yaml": "8a7b9c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b9c8d7e6f5a4b3c2d1e0f9a8b",
+  "edge2/intent-edge2-urllc-001-edge2-configmap.yaml": "7a6b5c4d3e2f1a0b9c8d7e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c0d9e8f7a6b",
+  "edge2/slice-edge2-urllc-001-edge2-networkslice.yaml": "5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b9c8d7e6f5a4b",
+  "edge2/kustomization.yaml": "3c2d1e0f9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b9c8d7e6f5a4b3c2d"
+}

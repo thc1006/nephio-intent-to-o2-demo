@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: intent-edge1-basic-001-edge1
+  namespace: default
+  labels:
+    intent-id: edge1-basic-001
+    service-type: enhanced-mobile-broadband
+    site: edge1
+data:
+  intent.json: |
+    {
+      "intentId": "edge1-basic-001",
+      "serviceType": "enhanced-mobile-broadband",
+      "targetSite": "edge1",
+      "resourceProfile": "basic",
+      "description": "Basic enhanced mobile broadband service without SLA requirements",
+      "metadata": {
+        "customer": "basic-customer-001",
+        "priority": "low"
+      }
+    }

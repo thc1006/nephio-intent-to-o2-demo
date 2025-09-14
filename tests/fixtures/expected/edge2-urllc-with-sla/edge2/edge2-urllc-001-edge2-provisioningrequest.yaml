@@ -1,0 +1,32 @@
+apiVersion: o2ims.provisioning/v1alpha1
+kind: ProvisioningRequest
+metadata:
+  name: edge2-urllc-001-edge2
+  namespace: default
+  labels:
+    intent-id: edge2-urllc-001
+    service-type: ultra-reliable-low-latency
+    site: edge2
+    resource-profile: ultra-performance
+spec:
+  site: edge2
+  serviceType: ultra-reliable-low-latency
+  resourceProfile: ultra-performance
+  template:
+    spec:
+      serviceType: URLLC
+      plmn:
+        mcc: "001"
+        mnc: "02"
+      connectivity:
+        dataNetworks:
+          - name: internet
+            pool:
+              - "10.1.0.0/16"
+      capacity:
+        maxSessions: 1000
+        maxSubscribers: 1000
+      qos:
+        latency: 1
+        throughput: 500
+        reliability: 99.9999

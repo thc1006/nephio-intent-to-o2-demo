@@ -1,0 +1,31 @@
+apiVersion: o2ims.provisioning/v1alpha1
+kind: ProvisioningRequest
+metadata:
+  name: both-mmt-001-edge2
+  namespace: default
+  labels:
+    intent-id: both-mmt-001
+    service-type: massive-machine-type
+    site: edge2
+    resource-profile: standard
+spec:
+  site: edge2
+  serviceType: massive-machine-type
+  resourceProfile: standard
+  template:
+    spec:
+      serviceType: mMTC
+      plmn:
+        mcc: "001"
+        mnc: "02"
+      connectivity:
+        dataNetworks:
+          - name: iot-network
+            pool:
+              - "10.3.0.0/16"
+      capacity:
+        maxSessions: 100000
+        maxSubscribers: 100000
+      qos:
+        latency: 100
+        throughput: 10
