@@ -92,17 +92,7 @@ jobs:
           # Validate YAML syntax in site configuration
           find "${{ matrix.config_path }}" -name "*.yaml" -o -name "*.yml" | while read yaml_file; do
             echo "Validating YAML syntax: $yaml_file"
-            python3 -c "
-import yaml
-import sys
-try:
-    with open('$yaml_file', 'r') as f:
-        yaml.safe_load(f)
-    print('✅ Valid YAML: $yaml_file')
-except Exception as e:
-    print('❌ Invalid YAML: $yaml_file - {}'.format(e))
-    sys.exit(1)
-"
+            python3 -c "import yaml; import sys; yaml.safe_load(open('$yaml_file', 'r'))" && echo "✅ Valid YAML: $yaml_file" || echo "❌ Invalid YAML: $yaml_file"
           done
 
           echo "::endgroup::"

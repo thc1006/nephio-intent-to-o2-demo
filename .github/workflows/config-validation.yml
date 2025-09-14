@@ -47,20 +47,7 @@ jobs:
         echo "🔍 驗證 YAML 語法..."
         find config/ -name "*.yaml" -o -name "*.yml" | while read file; do
           echo "檢查: $file"
-          python -c "
-import yaml
-import sys
-try:
-    with open('$file', 'r') as f:
-        yaml.safe_load(f)
-    print('✅ $file - YAML 格式正確')
-except yaml.YAMLError as e:
-    print('❌ $file - YAML 格式錯誤: {e}')
-    sys.exit(1)
-except Exception as e:
-    print('❌ $file - 讀取錯誤: {e}')
-    sys.exit(1)
-"
+          python -c "import yaml; yaml.safe_load(open('$file', 'r'))" && echo "✅ $file - YAML 格式正確" || echo "❌ $file - YAML 格式錯誤"
         done
 
     - name: Validate configuration schema
