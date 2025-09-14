@@ -9,7 +9,7 @@
 
 ### Prerequisites
 - Ubuntu 22.04 LTS on VM-2
-- Network connectivity to VM-1's Gitea (http://147.251.115.143:8888)
+- Network connectivity to VM-1's Gitea (http://172.16.0.78:8888 for internal)
 - Sudo privileges on VM-2
 - At least 4GB RAM and 20GB disk space
 
@@ -91,7 +91,7 @@ kubectl get all -n edge1
 
 ```bash
 # Test Gitea repository access from VM-2
-curl -I http://147.251.115.143:8888/admin1/edge1-config
+curl -I http://172.16.0.78:8888/admin1/edge1-config  # Use internal IP
 
 # Expected: HTTP 200 OK or 301/302 redirect
 ```
@@ -227,7 +227,7 @@ kubectl logs -n config-management-system -l app=root-reconciler --tail=50
 kubectl delete pod -n config-management-system -l app=root-reconciler
 
 # Verify repository structure
-curl http://147.251.115.143:8888/admin1/edge1-config
+curl http://172.16.0.78:8888/admin1/edge1-config
 ```
 
 ### Issue 5: Network Connectivity Issues
@@ -242,7 +242,7 @@ curl http://147.251.115.143:8888/admin1/edge1-config
 ping 147.251.115.143
 
 # Test HTTP connectivity
-curl -v http://147.251.115.143:8888
+curl -v http://172.16.0.78:8888
 
 # Check firewall rules
 sudo iptables -L -n
@@ -250,9 +250,8 @@ sudo iptables -L -n
 # Check routing
 ip route get 147.251.115.143
 
-# Alternative: Use SSH tunnel
-ssh -L 8888:147.251.115.143:8888 ubuntu@VM1_IP
-# Then update RootSync to use http://localhost:8888
+# Note: SSH tunnel usually not needed for internal network
+# Direct connection via internal IP is preferred
 ```
 
 ## Manual Recovery Steps
@@ -329,7 +328,7 @@ spec:
   sourceType: git
   sourceFormat: unstructured
   git:
-    repo: http://147.251.115.143:8888/admin1/edge1-config.git
+    repo: http://172.16.0.78:8888/admin1/edge1-config.git  # Internal IP
     branch: main
     dir: /
     period: 30s
@@ -373,7 +372,7 @@ status=$(kubectl get rootsync -n config-management-system edge1-rootsync -o json
 [[ "$status" == "SYNCED" ]] && echo "✓ RootSync synced" || echo "✗ RootSync status: $status"
 
 echo "=== Git Connectivity ==="
-curl -s -o /dev/null -w "%{http_code}" http://147.251.115.143:8888/admin1/edge1-config | \
+curl -s -o /dev/null -w "%{http_code}" http://172.16.0.78:8888/admin1/edge1-config | \
   grep -q "200\|301\|302" && echo "✓ Git repository accessible" || echo "✗ Git repository not accessible"
 EOF
 
@@ -413,7 +412,7 @@ The script uses these environment variables (can be overridden):
 
 ```bash
 export EDGE_CLUSTER_NAME="edge1"
-export VM1_GITEA_URL="http://147.251.115.143:8888"
+export VM1_GITEA_URL="http://172.16.0.78:8888"  # Internal IP
 export GITEA_USER="admin1"
 export GITEA_REPO="edge1-config"
 export VM2_IP="172.16.4.45"

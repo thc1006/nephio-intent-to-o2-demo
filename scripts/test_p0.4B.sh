@@ -66,7 +66,7 @@ else
     ERRORS=$((ERRORS + 1))
 fi
 
-if grep -q 'VM1_GITEA_URL="http://147.251.115.143:8888"' "$SCRIPT_PATH"; then
+if grep -q 'VM1_GITEA_URL="http://172.16.0.78:8888"' "$SCRIPT_PATH"; then
     echo -e "${GREEN}✓ Correct Gitea URL configured${NC}"
 else
     echo -e "${RED}✗ Gitea URL not correctly configured${NC}"
@@ -212,7 +212,7 @@ fi
 
 # Quick connectivity test
 echo -e "${YELLOW}Bonus: Testing Gitea connectivity from VM-1${NC}"
-if curl -s -o /dev/null -w "%{http_code}" "http://147.251.115.143:8888" | grep -q "200\|301\|302"; then
+if curl -s -o /dev/null -w "%{http_code}" "http://172.16.0.78:8888" | grep -q "200\|301\|302"; then
     echo -e "${GREEN}✓ Gitea is accessible from current host${NC}"
 else
     echo -e "${YELLOW}⚠ Cannot reach Gitea (may be normal if testing locally)${NC}"

@@ -47,7 +47,7 @@
 | SSH | 22 | TCP | ❌ 超時（需額外設置） | 管理訪問 |
 | Kubernetes API | 6443 | TCP | ✅ 成功 | K8s 叢集管理 |
 | SLO Service | 30090 | TCP | ✅ 成功 | SLO 監控服務 |
-| O2IMS API | 31280 | TCP | ✅ 成功（如已部署） | O-RAN O2 介面 |
+| O2IMS API | 31280 | TCP | ✅ 成功 | O-RAN O2 介面 (nginx 占位符) |
 
 ---
 
