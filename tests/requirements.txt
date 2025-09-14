@@ -1,0 +1,26 @@
+# Test requirements for golden test suite
+
+# Core testing framework
+pytest>=7.0.0
+pytest-cov>=4.0.0
+pytest-timeout>=2.1.0
+pytest-xdist>=3.0.0
+
+# YAML and JSON processing
+PyYAML>=6.0
+jsonschema>=4.0.0
+
+# Test utilities
+freezegun>=1.2.0  # For time mocking
+responses>=0.20.0  # For HTTP mocking
+factory-boy>=3.2.0  # For test data generation
+
+# Coverage and reporting
+coverage>=7.0.0
+pytest-html>=3.0.0  # HTML test reports
+pytest-json-report>=1.5.0  # JSON test reports
+
+# Development tools
+black>=22.0.0  # Code formatting
+isort>=5.0.0  # Import sorting
+flake8>=5.0.0  # Linting

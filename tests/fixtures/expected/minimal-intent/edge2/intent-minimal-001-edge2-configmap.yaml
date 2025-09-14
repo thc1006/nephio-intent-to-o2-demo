@@ -1,0 +1,12 @@
+apiVersion: v1
+data:
+  intent.json: "{\n  \"intentId\": \"minimal-001\"\n}"
+  serviceType: unknown
+  site: edge2
+kind: ConfigMap
+metadata:
+  labels:
+    intent-id: minimal-001
+    target-site: edge2
+  name: intent-minimal-001-edge2
+  namespace: edge2

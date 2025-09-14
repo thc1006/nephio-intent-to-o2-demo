@@ -9,11 +9,12 @@ Following TDD principles:
 3. Refactor: Improve code while keeping tests passing
 """
 
-import unittest
-import subprocess
 import json
 import os
+import subprocess
+import unittest
 from pathlib import Path
+
 import yaml
 
 
@@ -35,25 +36,42 @@ class TestACC12RootSyncVerification(unittest.TestCase):
         """Test: kubectl context 'edge1' should exist"""
         result = subprocess.run(
             ["kubectl", "config", "get-contexts", "-o", "name"],
-            capture_output=True, text=True
+            capture_output=True,
+            text=True,
         )
-        self.assertIn("edge1", result.stdout, "edge1 context should exist in kubectl config")
+        self.assertIn(
+            "edge1", result.stdout, "edge1 context should exist in kubectl config"
+        )
 
     def test_config_management_namespace_exists(self):
         """Test: config-management-system namespace should exist in edge1"""
         result = subprocess.run(
             ["kubectl", "--context", self.context, "get", "namespace", self.namespace],
-            capture_output=True, text=True
+            capture_output=True,
+            text=True,
         )
-        self.assertEqual(result.returncode, 0,
-                        f"Namespace {self.namespace} should exist in {self.context}")
+        self.assertEqual(
+            result.returncode,
+            0,
+            f"Namespace {self.namespace} should exist in {self.context}",
+        )
 
     def test_rootsync_resource_exists(self):
         """Test: RootSync resource should exist in config-management-system namespace"""
         result = subprocess.run(
-            ["kubectl", "--context", self.context, "get", "rootsync",
-             "-n", self.namespace, "-o", "json"],
-            capture_output=True, text=True
+            [
+                "kubectl",
+                "--context",
+                self.context,
+                "get",
+                "rootsync",
+                "-n",
+                self.namespace,
+                "-o",
+                "json",
+            ],
+            capture_output=True,
+            text=True,
         )
         self.assertEqual(result.returncode, 0, "RootSync resource should exist")
 
@@ -64,9 +82,19 @@ class TestACC12RootSyncVerification(unittest.TestCase):
     def test_rootsync_is_synced(self):
         """Test: RootSync should be in SYNCED state"""
         result = subprocess.run(
-            ["kubectl", "--context", self.context, "get", "rootsync",
-             "-n", self.namespace, "-o", "yaml"],
-            capture_output=True, text=True
+            [
+                "kubectl",
+                "--context",
+                self.context,
+                "get",
+                "rootsync",
+                "-n",
+                self.namespace,
+                "-o",
+                "yaml",
+            ],
+            capture_output=True,
+            text=True,
         )
         self.assertEqual(result.returncode, 0, "Should be able to get RootSync status")
 
@@ -76,22 +104,39 @@ class TestACC12RootSyncVerification(unittest.TestCase):
         # Check if we have items (multiple RootSync resources)
         if "items" in rootsync_yaml:
             items = rootsync_yaml["items"]
-            self.assertGreater(len(items), 0, "Should have at least one RootSync resource")
+            self.assertGreater(
+                len(items), 0, "Should have at least one RootSync resource"
+            )
 
             for item in items:
                 if "status" in item and "sync" in item["status"]:
                     sync_status = item["status"]["sync"].get("state", "")
-                    self.assertEqual(sync_status, "SYNCED",
-                                   f"RootSync {item.get('metadata', {}).get('name', 'unknown')} should be SYNCED")
+                    self.assertEqual(
+                        sync_status,
+                        "SYNCED",
+                        f"RootSync {item.get('metadata', {}).get('name', 'unknown')} should be SYNCED",
+                    )
 
     def test_rootsync_points_to_gitops_edge1_config(self):
         """Test: RootSync should point to gitops/edge1-config/ directory"""
         result = subprocess.run(
-            ["kubectl", "--context", self.context, "get", "rootsync",
-             "-n", self.namespace, "-o", "yaml"],
-            capture_output=True, text=True
+            [
+                "kubectl",
+                "--context",
+                self.context,
+                "get",
+                "rootsync",
+                "-n",
+                self.namespace,
+                "-o",
+                "yaml",
+            ],
+            capture_output=True,
+            text=True,
         )
-        self.assertEqual(result.returncode, 0, "Should be able to get RootSync configuration")
+        self.assertEqual(
+            result.returncode, 0, "Should be able to get RootSync configuration"
+        )
 
         rootsync_yaml = yaml.safe_load(result.stdout)
 
@@ -101,23 +146,38 @@ class TestACC12RootSyncVerification(unittest.TestCase):
                 if "spec" in item and "git" in item["spec"]:
                     git_spec = item["spec"]["git"]
                     dir_path = git_spec.get("dir", "")
-                    self.assertIn("edge1-config", dir_path,
-                                "RootSync should point to edge1-config directory")
+                    self.assertIn(
+                        "edge1-config",
+                        dir_path,
+                        "RootSync should point to edge1-config directory",
+                    )
 
     def test_artifacts_directory_exists(self):
         """Test: artifacts/edge1 directory should exist for output"""
-        self.assertTrue(self.artifacts_dir.exists(),
-                       "artifacts/edge1 directory should exist")
-        self.assertTrue(self.artifacts_dir.is_dir(),
-                       "artifacts/edge1 should be a directory")
+        self.assertTrue(
+            self.artifacts_dir.exists(), "artifacts/edge1 directory should exist"
+        )
+        self.assertTrue(
+            self.artifacts_dir.is_dir(), "artifacts/edge1 should be a directory"
+        )
 
     def test_generate_acc12_artifacts(self):
         """Test: Should be able to generate acc12_rootsync.json artifact"""
         # Get RootSync data
         result = subprocess.run(
-            ["kubectl", "--context", self.context, "get", "rootsync",
-             "-n", self.namespace, "-o", "yaml"],
-            capture_output=True, text=True
+            [
+                "kubectl",
+                "--context",
+                self.context,
+                "get",
+                "rootsync",
+                "-n",
+                self.namespace,
+                "-o",
+                "yaml",
+            ],
+            capture_output=True,
+            text=True,
         )
         self.assertEqual(result.returncode, 0, "Should be able to get RootSync data")
 
@@ -129,9 +189,11 @@ class TestACC12RootSyncVerification(unittest.TestCase):
             "test_name": "Bring-up & RootSync",
             "context": self.context,
             "namespace": self.namespace,
-            "timestamp": subprocess.check_output(["date", "-Iseconds"]).decode().strip(),
+            "timestamp": subprocess.check_output(["date", "-Iseconds"])
+            .decode()
+            .strip(),
             "status": "PENDING",  # Will be updated by implementation
-            "rootsync_data": rootsync_yaml
+            "rootsync_data": rootsync_yaml,
         }
 
         # Write artifact

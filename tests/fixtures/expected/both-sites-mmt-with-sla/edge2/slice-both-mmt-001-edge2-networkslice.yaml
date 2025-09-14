@@ -1,0 +1,17 @@
+apiVersion: workload.nephio.org/v1alpha1
+kind: NetworkSlice
+metadata:
+  labels:
+    intent-id: both-mmt-001
+    service-type: massive-machine-type
+    target-site: edge2
+  name: slice-both-mmt-001-edge2
+  namespace: edge2
+spec:
+  plmn:
+    mcc: '001'
+    mnc: '02'
+  qos:
+    5qi: 9
+    gfbr: 10Mbps
+  sliceType: mMTC

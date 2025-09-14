@@ -5,25 +5,27 @@ Ensures deterministic output for same inputs
 """
 
 import json
-import pytest
-from unittest.mock import patch, MagicMock
-import sys
 import os
+import sys
+from unittest.mock import MagicMock, patch
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'adapter', 'app'))
+import pytest
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "adapter", "app"))
 
 from main import (
-    extract_json,
-    call_claude,
+    PROMPT_TEMPLATE,
+    call_claude_with_retry,
     determine_target_site,
-    enforce_targetsite,
-    PROMPT_TEMPLATE
+    enforce_tmf921_structure,
+    extract_json,
 )
+
 
 class TestCLICall:
     """Test Claude CLI integration"""
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_call_claude_success(self, mock_run):
         """Test successful Claude CLI call"""
         mock_result = MagicMock()
@@ -32,22 +34,24 @@ class TestCLICall:
         mock_result.returncode = 0
         mock_run.return_value = mock_result
 
-        result = call_claude("test prompt")
+        result, retry_count = call_claude_with_retry("test prompt")
         assert "intentId" in result
         mock_run.assert_called_once()
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_call_claude_timeout(self, mock_run):
         """Test Claude CLI timeout handling"""
         import subprocess
+
         mock_run.side_effect = subprocess.TimeoutExpired("cmd", 20)
 
         from fastapi import HTTPException
+
         with pytest.raises(HTTPException) as exc:
-            call_claude("test prompt")
+            call_claude_with_retry("test prompt")
         assert exc.value.status_code == 504
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_call_claude_error(self, mock_run):
         """Test Claude CLI error handling"""
         mock_result = MagicMock()
@@ -57,7 +61,7 @@ class TestCLICall:
         mock_run.return_value = mock_result
 
         with pytest.raises(Exception):
-            call_claude("test prompt")
+            call_claude_with_retry("test prompt")
 
 
 class TestJSONExtraction:
@@ -68,7 +72,7 @@ class TestJSONExtraction:
         outputs = [
             '{"intentId": "123", "targetSite": "edge1"}',
             '  {"intentId": "456", "targetSite": "edge2"}  ',
-            '\n{"intentId": "789", "targetSite": "both"}\n'
+            '\n{"intentId": "789", "targetSite": "both"}\n',
         ]
 
         for output in outputs:
@@ -100,7 +104,7 @@ class TestJSONExtraction:
         outputs = [
             '```json\n{"intentId": "md1", "targetSite": "edge1"}\n```',
             '```\n{"intentId": "md2", "targetSite": "edge2"}\n```',
-            'Here is the JSON:\n```json\n{"intentId": "md3", "targetSite": "both"}\n```\nDone.'
+            'Here is the JSON:\n```json\n{"intentId": "md3", "targetSite": "both"}\n```\nDone.',
         ]
 
         for output in outputs:
@@ -146,7 +150,7 @@ class TestJSONExtraction:
             "{ broken json",
             '{"key": }',
             "null",
-            "undefined"
+            "undefined",
         ]
 
         for output in invalid_outputs:
@@ -163,14 +167,8 @@ class TestDeterministicOutput:
         nl_request = "Deploy 5G slice at edge1"
         target_site = "edge1"
 
-        prompt1 = PROMPT_TEMPLATE.format(
-            nl_request=nl_request,
-            target_site=target_site
-        )
-        prompt2 = PROMPT_TEMPLATE.format(
-            nl_request=nl_request,
-            target_site=target_site
-        )
+        prompt1 = PROMPT_TEMPLATE.format(nl_request=nl_request, target_site=target_site)
+        prompt2 = PROMPT_TEMPLATE.format(nl_request=nl_request, target_site=target_site)
 
         assert prompt1 == prompt2
 
@@ -180,7 +178,7 @@ class TestDeterministicOutput:
             "Deploy at edge1",
             "Configure edge site 2",
             "Setup both edges",
-            "Install network service"
+            "Install network service",
         ]
 
         for text in test_inputs:
@@ -190,15 +188,12 @@ class TestDeterministicOutput:
 
     def test_enforce_targetsite_deterministic(self):
         """Test that enforcement is deterministic"""
-        intent_template = {
-            "intentId": "test_123",
-            "name": "Test"
-        }
+        intent_template = {"intentId": "test_123", "name": "Test"}
 
         # Test multiple times with same input
         for _ in range(5):
             intent = intent_template.copy()
-            result = enforce_targetsite(intent, "edge1")
+            result = enforce_tmf921_structure(intent, "edge1", "test request")
             assert result["targetSite"] == "edge1"
             assert "parameters" in result
 
@@ -210,10 +205,7 @@ class TestDeterministicOutput:
             "intentId": "hash_test",
             "name": "Hash Test",
             "targetSite": "edge1",
-            "parameters": {
-                "type": "test",
-                "config": {"key": "value"}
-            }
+            "parameters": {"type": "test", "config": {"key": "value"}},
         }
 
         # Generate hash multiple times
@@ -232,7 +224,7 @@ class TestDeterministicOutput:
             ("Deploy 5G network slice with ultra-low latency at edge1", "edge1"),
             ("Configure IoT monitoring for edge site 2", "edge2"),
             ("Setup video streaming CDN across both edge sites", "both"),
-            ("Deploy network service", "both")  # Default
+            ("Deploy network service", "both"),  # Default
         ]
 
         for nl_text, expected_site in golden_inputs:
@@ -264,7 +256,7 @@ class TestPromptEngineering:
             '"targetSite"',
             '"parameters"',
             '"priority"',
-            '"lifecycle"'
+            '"lifecycle"',
         ]
 
         for field in required_fields:
@@ -273,18 +265,15 @@ class TestPromptEngineering:
     def test_prompt_formatting_edge_cases(self):
         """Test prompt formatting with edge cases"""
         edge_cases = [
-            ("Deploy \"quoted\" service", "edge1"),
+            ('Deploy "quoted" service', "edge1"),
             ("Setup service with {braces}", "edge2"),
             ("Configure\nmultiline\nrequest", "both"),
-            ("Deploy with special chars: @#$%", "edge1")
+            ("Deploy with special chars: @#$%", "edge1"),
         ]
 
         for nl_text, target_site in edge_cases:
             # Should not raise exception
-            prompt = PROMPT_TEMPLATE.format(
-                nl_request=nl_text,
-                target_site=target_site
-            )
+            prompt = PROMPT_TEMPLATE.format(nl_request=nl_text, target_site=target_site)
             assert target_site in prompt
             assert nl_text in prompt
 

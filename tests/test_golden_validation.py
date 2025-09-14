@@ -4,14 +4,15 @@ Golden test validation for intent JSON files
 This test MUST pass in CI or the workflow will fail
 """
 
-import json
-import pytest
-import os
 import glob
+import json
+import os
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Any, Dict, List
+
 import jsonschema
-from jsonschema import validate, ValidationError
+import pytest
+from jsonschema import ValidationError, validate
 
 # Import from existing test module
 from test_intent_schema import TestIntentSchema
@@ -32,7 +33,7 @@ class TestGoldenValidation:
     def load_json_file(self, file_path: Path) -> Dict[str, Any]:
         """Load and parse JSON file"""
         try:
-            with open(file_path, 'r') as f:
+            with open(file_path, "r") as f:
                 return json.load(f)
         except json.JSONDecodeError as e:
             pytest.fail(f"Failed to parse JSON in {file_path}: {e}")
@@ -41,7 +42,9 @@ class TestGoldenValidation:
 
     def test_golden_files_exist(self):
         """Ensure golden test directory exists and contains files"""
-        assert self.golden_dir.exists(), f"Golden test directory not found: {self.golden_dir}"
+        assert (
+            self.golden_dir.exists()
+        ), f"Golden test directory not found: {self.golden_dir}"
 
         golden_files = self.get_golden_files()
         assert len(golden_files) > 0, "No golden test files found in tests/golden/"
@@ -65,7 +68,9 @@ class TestGoldenValidation:
                     self.validate_intent_structure(intent_data, file_path)
                     print(f"✅ {file_path.name} passed validation")
                 else:
-                    print(f"⚠️  {file_path.name} is not an intent-like structure, skipping schema validation")
+                    print(
+                        f"⚠️  {file_path.name} is not an intent-like structure, skipping schema validation"
+                    )
 
             except Exception as e:
                 failed_files.append((file_path.name, str(e)))
@@ -107,11 +112,17 @@ class TestGoldenValidation:
                 print(f"✅ {file_path.name} correctly failed with error: {e}")
 
         if passed_invalid_files:
-            pytest.fail(f"Invalid golden files unexpectedly passed validation: {passed_invalid_files}")
+            pytest.fail(
+                f"Invalid golden files unexpectedly passed validation: {passed_invalid_files}"
+            )
 
     def is_intent_like(self, data: Dict[str, Any]) -> bool:
         """Check if JSON structure looks like an intent"""
-        required_intent_fields = {"intentExpectationId", "intentExpectationType", "intent"}
+        required_intent_fields = {
+            "intentExpectationId",
+            "intentExpectationType",
+            "intent",
+        }
         data_fields = set(data.keys())
 
         # Must have at least 2 of the 3 key fields to be considered intent-like
@@ -122,7 +133,9 @@ class TestGoldenValidation:
         """Validate intent structure and common fields"""
         # Check required fields
         required_fields = ["intentExpectationId", "intentExpectationType", "intent"]
-        missing_fields = [field for field in required_fields if field not in intent_data]
+        missing_fields = [
+            field for field in required_fields if field not in intent_data
+        ]
         if missing_fields:
             raise AssertionError(f"Missing required fields: {missing_fields}")
 
@@ -131,7 +144,9 @@ class TestGoldenValidation:
             valid_targets = ["edge1", "edge2", "both"]
             target_site = intent_data["targetSite"]
             if target_site not in valid_targets:
-                raise ValidationError(f"Invalid targetSite '{target_site}', must be one of {valid_targets}")
+                raise ValidationError(
+                    f"Invalid targetSite '{target_site}', must be one of {valid_targets}"
+                )
 
         # Validate intent section
         intent = intent_data.get("intent", {})
@@ -142,7 +157,9 @@ class TestGoldenValidation:
         if "serviceType" in intent:
             valid_service_types = ["eMBB", "URLLC", "mMTC"]
             if intent["serviceType"] not in valid_service_types:
-                raise ValidationError(f"Invalid serviceType '{intent['serviceType']}', must be one of {valid_service_types}")
+                raise ValidationError(
+                    f"Invalid serviceType '{intent['serviceType']}', must be one of {valid_service_types}"
+                )
 
         # Validate numeric fields are positive
         if "networkSlice" in intent:
@@ -151,7 +168,9 @@ class TestGoldenValidation:
                 if field in network_slice:
                     value = network_slice[field]
                     if not isinstance(value, int) or value < 0:
-                        raise ValidationError(f"Field '{field}' must be a positive integer, got: {value}")
+                        raise ValidationError(
+                            f"Field '{field}' must be a positive integer, got: {value}"
+                        )
 
         # Validate QoS fields format
         if "qos" in intent:
@@ -161,9 +180,15 @@ class TestGoldenValidation:
                 if throughput_field in qos:
                     value = qos[throughput_field]
                     if not isinstance(value, str) or not value:
-                        raise ValidationError(f"Field '{throughput_field}' must be a non-empty string")
-                    if not any(value.endswith(unit) for unit in ["bps", "Kbps", "Mbps", "Gbps"]):
-                        raise ValidationError(f"Field '{throughput_field}' must specify bandwidth unit (bps, Kbps, Mbps, Gbps)")
+                        raise ValidationError(
+                            f"Field '{throughput_field}' must be a non-empty string"
+                        )
+                    if not any(
+                        value.endswith(unit) for unit in ["bps", "Kbps", "Mbps", "Gbps"]
+                    ):
+                        raise ValidationError(
+                            f"Field '{throughput_field}' must specify bandwidth unit (bps, Kbps, Mbps, Gbps)"
+                        )
 
             # Check latency format
             if "latency" in qos:
@@ -175,7 +200,9 @@ class TestGoldenValidation:
             if "reliability" in qos:
                 reliability = qos["reliability"]
                 if not isinstance(reliability, str) or not reliability.endswith("%"):
-                    raise ValidationError("Reliability must be a string ending with '%'")
+                    raise ValidationError(
+                        "Reliability must be a string ending with '%'"
+                    )
 
     def test_target_site_routing_consistency(self):
         """Test that targetSite values are consistent with routing expectations"""
@@ -196,11 +223,17 @@ class TestGoldenValidation:
 
             # Check filename consistency with targetSite
             if target_site == "edge1" and "edge1" not in file_path.name:
-                print(f"⚠️  Warning: {file_path.name} has targetSite=edge1 but filename doesn't indicate edge1")
+                print(
+                    f"⚠️  Warning: {file_path.name} has targetSite=edge1 but filename doesn't indicate edge1"
+                )
             elif target_site == "edge2" and "edge2" not in file_path.name:
-                print(f"⚠️  Warning: {file_path.name} has targetSite=edge2 but filename doesn't indicate edge2")
+                print(
+                    f"⚠️  Warning: {file_path.name} has targetSite=edge2 but filename doesn't indicate edge2"
+                )
             elif target_site == "both" and "both" not in file_path.name:
-                print(f"⚠️  Warning: {file_path.name} has targetSite=both but filename doesn't indicate both")
+                print(
+                    f"⚠️  Warning: {file_path.name} has targetSite=both but filename doesn't indicate both"
+                )
 
     def test_json_syntax_validity(self):
         """Test that all JSON files have valid syntax"""
@@ -209,7 +242,7 @@ class TestGoldenValidation:
         syntax_errors = []
         for file_path in golden_files:
             try:
-                with open(file_path, 'r') as f:
+                with open(file_path, "r") as f:
                     json.load(f)
                 print(f"✅ {file_path.name} has valid JSON syntax")
             except json.JSONDecodeError as e:

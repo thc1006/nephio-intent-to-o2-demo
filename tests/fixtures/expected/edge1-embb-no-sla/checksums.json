@@ -1,0 +1,5 @@
+{
+  "edge1/ConfigMap/intent-edge1-basic-001-edge1": "a492d5c0c0d7ae369f12d8d0fc6dc76cd0489c0a83ee9b178994c0862ed09d70",
+  "edge1/Kustomization/kustomization-edge1": "5d147ade72426adb7811fcc62760cbea080b4251df3684817db579ff6b39ce3f",
+  "edge1/ProvisioningRequest/edge1-basic-001-edge1": "2316967b09abda11954b152553c401f8d439cfa44b5bdbfb53af5914bbe139e0"
+}

@@ -5,13 +5,13 @@ Tests PR readiness checks and edge resource verification
 """
 
 import json
+import os
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
-import sys
-import os
+from unittest.mock import MagicMock, Mock, patch
 
 # Add scripts directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
@@ -32,9 +32,10 @@ class TestEdgeVerification(unittest.TestCase):
     def tearDown(self):
         """Clean up test environment"""
         import shutil
+
         shutil.rmtree(self.test_dir, ignore_errors=True)
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_check_pr_status_with_o2imsctl(self, mock_run):
         """Test PR status check using o2imsctl"""
         # Mock o2imsctl response
@@ -43,15 +44,13 @@ class TestEdgeVerification(unittest.TestCase):
                 {
                     "metadata": {"name": "test-edge1-pr"},
                     "spec": {"targetCluster": "edge1"},
-                    "status": {"phase": "Ready"}
+                    "status": {"phase": "Ready"},
                 }
             ]
         }
 
         mock_run.return_value = MagicMock(
-            returncode=0,
-            stdout=json.dumps(mock_response),
-            stderr=""
+            returncode=0, stdout=json.dumps(mock_response), stderr=""
         )
 
         result = self.verifier.check_pr_status("edge1")
@@ -63,7 +62,7 @@ class TestEdgeVerification(unittest.TestCase):
         self.assertEqual(len(result["provisioningRequests"]), 1)
         self.assertEqual(result["provisioningRequests"][0]["status"], "Ready")
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_check_pr_status_with_kubectl_fallback(self, mock_run):
         """Test PR status check with kubectl fallback"""
         # First call to o2imsctl fails
@@ -72,20 +71,20 @@ class TestEdgeVerification(unittest.TestCase):
             # kubectl response
             MagicMock(
                 returncode=0,
-                stdout=json.dumps({
-                    "items": [
-                        {
-                            "metadata": {"name": "edge2-packagerevision"},
-                            "status": {
-                                "conditions": [
-                                    {"type": "Ready", "status": "True"}
-                                ]
+                stdout=json.dumps(
+                    {
+                        "items": [
+                            {
+                                "metadata": {"name": "edge2-packagerevision"},
+                                "status": {
+                                    "conditions": [{"type": "Ready", "status": "True"}]
+                                },
                             }
-                        }
-                    ]
-                }),
-                stderr=""
-            )
+                        ]
+                    }
+                ),
+                stderr="",
+            ),
         ]
 
         result = self.verifier.check_pr_status("edge2")
@@ -94,7 +93,7 @@ class TestEdgeVerification(unittest.TestCase):
         self.assertTrue(result["ready"])
         self.assertEqual(result["total"], 1)
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_check_edge_resources(self, mock_run):
         """Test edge resource checking"""
         # Mock kubectl responses for different resource types
@@ -102,44 +101,36 @@ class TestEdgeVerification(unittest.TestCase):
             # NetworkSlices
             MagicMock(
                 returncode=0,
-                stdout=json.dumps({
-                    "items": [
-                        {"metadata": {"name": "edge1-embb-slice"}},
-                        {"metadata": {"name": "edge1-urllc-slice"}}
-                    ]
-                }),
-                stderr=""
+                stdout=json.dumps(
+                    {
+                        "items": [
+                            {"metadata": {"name": "edge1-embb-slice"}},
+                            {"metadata": {"name": "edge1-urllc-slice"}},
+                        ]
+                    }
+                ),
+                stderr="",
             ),
             # ConfigMaps
             MagicMock(
                 returncode=0,
-                stdout=json.dumps({
-                    "items": [
-                        {"metadata": {"name": "edge1-config"}}
-                    ]
-                }),
-                stderr=""
+                stdout=json.dumps({"items": [{"metadata": {"name": "edge1-config"}}]}),
+                stderr="",
             ),
             # Services
             MagicMock(
                 returncode=0,
-                stdout=json.dumps({
-                    "items": [
-                        {"metadata": {"name": "edge1-service"}}
-                    ]
-                }),
-                stderr=""
+                stdout=json.dumps({"items": [{"metadata": {"name": "edge1-service"}}]}),
+                stderr="",
             ),
             # Deployments
             MagicMock(
                 returncode=0,
-                stdout=json.dumps({
-                    "items": [
-                        {"metadata": {"name": "edge1-deployment"}}
-                    ]
-                }),
-                stderr=""
-            )
+                stdout=json.dumps(
+                    {"items": [{"metadata": {"name": "edge1-deployment"}}]}
+                ),
+                stderr="",
+            ),
         ]
 
         result = self.verifier.check_edge_resources("edge1")
@@ -150,7 +141,7 @@ class TestEdgeVerification(unittest.TestCase):
         self.assertEqual(result["deployments"], 1)
         self.assertEqual(result["status"], "healthy")
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_probe_service_endpoint(self, mock_run):
         """Test service endpoint probing"""
         # Mock successful endpoint retrieval and curl test
@@ -160,13 +151,13 @@ class TestEdgeVerification(unittest.TestCase):
             # Get ClusterIP
             MagicMock(returncode=0, stdout="10.96.0.1", stderr=""),
             # Curl test success
-            MagicMock(returncode=0, stdout="200", stderr="")
+            MagicMock(returncode=0, stdout="200", stderr=""),
         ]
 
         result = self.verifier.probe_service_endpoint("test-service", "default")
         self.assertEqual(result, "healthy")
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_verify_edge_site_success(self, mock_run):
         """Test successful edge site verification"""
         # Mock all positive responses
@@ -174,20 +165,24 @@ class TestEdgeVerification(unittest.TestCase):
             # o2imsctl pr list
             MagicMock(
                 returncode=0,
-                stdout=json.dumps({
-                    "items": [{
-                        "metadata": {"name": "edge1-pr"},
-                        "spec": {"targetCluster": "edge1"},
-                        "status": {"phase": "Ready"}
-                    }]
-                }),
-                stderr=""
+                stdout=json.dumps(
+                    {
+                        "items": [
+                            {
+                                "metadata": {"name": "edge1-pr"},
+                                "spec": {"targetCluster": "edge1"},
+                                "status": {"phase": "Ready"},
+                            }
+                        ]
+                    }
+                ),
+                stderr="",
             ),
             # NetworkSlices
             MagicMock(
                 returncode=0,
                 stdout=json.dumps({"items": [{"metadata": {"name": "edge1-slice"}}]}),
-                stderr=""
+                stderr="",
             ),
             # ConfigMaps
             MagicMock(returncode=0, stdout=json.dumps({"items": []}), stderr=""),
@@ -195,10 +190,10 @@ class TestEdgeVerification(unittest.TestCase):
             MagicMock(
                 returncode=0,
                 stdout=json.dumps({"items": [{"metadata": {"name": "edge1-svc"}}]}),
-                stderr=""
+                stderr="",
             ),
             # Deployments
-            MagicMock(returncode=0, stdout=json.dumps({"items": []}), stderr="")
+            MagicMock(returncode=0, stdout=json.dumps({"items": []}), stderr=""),
         ]
 
         result = self.verifier.verify_edge_site("edge1")
@@ -210,13 +205,15 @@ class TestEdgeVerification(unittest.TestCase):
 
     def test_verify_multiple_edges_parallel(self):
         """Test parallel verification of multiple edges"""
-        with patch.object(self.verifier, 'verify_edge_site') as mock_verify:
+        with patch.object(self.verifier, "verify_edge_site") as mock_verify:
             mock_verify.side_effect = [
                 {"edge": "edge1", "status": "success"},
-                {"edge": "edge2", "status": "partial"}
+                {"edge": "edge2", "status": "partial"},
             ]
 
-            result = self.verifier.verify_multiple_edges(["edge1", "edge2"], parallel=True)
+            result = self.verifier.verify_multiple_edges(
+                ["edge1", "edge2"], parallel=True
+            )
 
             self.assertEqual(result["summary"]["total"], 2)
             self.assertEqual(result["overallStatus"], "PARTIAL")
@@ -228,7 +225,7 @@ class TestEdgeVerification(unittest.TestCase):
         test_results = {
             "timestamp": "20250113_120000",
             "edge": "edge1",
-            "status": "success"
+            "status": "success",
         }
 
         self.verifier.save_results(test_results, "edge1")
@@ -252,28 +249,32 @@ class TestABServiceProbing(unittest.TestCase):
 
     def setUp(self):
         """Set up test environment"""
-        self.script_path = Path(__file__).parent.parent / "scripts" / "phase19b_ab_test_probe.sh"
+        self.script_path = (
+            Path(__file__).parent.parent / "scripts" / "phase19b_ab_test_probe.sh"
+        )
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_service_probe_command(self, mock_run):
         """Test service probe command execution"""
         mock_run.return_value = MagicMock(
             returncode=0,
-            stdout=json.dumps({
-                "edge": "edge1",
-                "services": [
-                    {"name": "service1", "status": "ok", "health": "healthy"}
-                ],
-                "summary": {"total": 1, "healthy": 1}
-            }),
-            stderr=""
+            stdout=json.dumps(
+                {
+                    "edge": "edge1",
+                    "services": [
+                        {"name": "service1", "status": "ok", "health": "healthy"}
+                    ],
+                    "summary": {"total": 1, "healthy": 1},
+                }
+            ),
+            stderr="",
         )
 
         # Test probe command
         result = subprocess.run(
             ["bash", str(self.script_path), "probe", "edge1"],
             capture_output=True,
-            text=True
+            text=True,
         )
 
         output = json.loads(result.stdout)
@@ -287,30 +288,30 @@ class TestABServiceProbing(unittest.TestCase):
             "service_a": {
                 "health": "healthy",
                 "avg_latency_ms": 50,
-                "success_rate": 99.5
+                "success_rate": 99.5,
             },
             "service_b": {
                 "health": "healthy",
                 "avg_latency_ms": 45,
-                "success_rate": 99.8
-            }
+                "success_rate": 99.8,
+            },
         }
 
         # Verify metrics comparison
         self.assertLess(
             test_metrics["service_b"]["avg_latency_ms"],
-            test_metrics["service_a"]["avg_latency_ms"]
+            test_metrics["service_a"]["avg_latency_ms"],
         )
         self.assertGreater(
             test_metrics["service_b"]["success_rate"],
-            test_metrics["service_a"]["success_rate"]
+            test_metrics["service_a"]["success_rate"],
         )
 
 
 class TestIntegration(unittest.TestCase):
     """Integration tests for Phase 19-B verification system"""
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_end_to_end_verification_flow(self, mock_run):
         """Test complete verification flow"""
         # Setup mock responses for complete flow
@@ -318,34 +319,49 @@ class TestIntegration(unittest.TestCase):
             # Initial PR check
             MagicMock(
                 returncode=0,
-                stdout=json.dumps({
-                    "items": [{
-                        "metadata": {"name": "edge1-pr"},
-                        "status": {"phase": "Processing"}
-                    }]
-                }),
-                stderr=""
+                stdout=json.dumps(
+                    {
+                        "items": [
+                            {
+                                "metadata": {"name": "edge1-pr"},
+                                "status": {"phase": "Processing"},
+                            }
+                        ]
+                    }
+                ),
+                stderr="",
             ),
             # Resource checks (multiple calls)
-            *[MagicMock(returncode=0, stdout=json.dumps({"items": []}), stderr="")
-              for _ in range(4)],
+            *[
+                MagicMock(returncode=0, stdout=json.dumps({"items": []}), stderr="")
+                for _ in range(4)
+            ],
             # Second PR check (now Ready)
             MagicMock(
                 returncode=0,
-                stdout=json.dumps({
-                    "items": [{
-                        "metadata": {"name": "edge1-pr"},
-                        "status": {"phase": "Ready"}
-                    }]
-                }),
-                stderr=""
+                stdout=json.dumps(
+                    {
+                        "items": [
+                            {
+                                "metadata": {"name": "edge1-pr"},
+                                "status": {"phase": "Ready"},
+                            }
+                        ]
+                    }
+                ),
+                stderr="",
             ),
             # Final resource checks
-            *[MagicMock(
-                returncode=0,
-                stdout=json.dumps({"items": [{"metadata": {"name": f"edge1-{t}"}}]}),
-                stderr=""
-            ) for t in ["slice", "config", "service", "deployment"]]
+            *[
+                MagicMock(
+                    returncode=0,
+                    stdout=json.dumps(
+                        {"items": [{"metadata": {"name": f"edge1-{t}"}}]}
+                    ),
+                    stderr="",
+                )
+                for t in ["slice", "config", "service", "deployment"]
+            ],
         ]
 
         # Create verifier with short timeout for testing
@@ -361,6 +377,7 @@ class TestIntegration(unittest.TestCase):
 
         # Cleanup
         import shutil
+
         shutil.rmtree(test_dir, ignore_errors=True)
 
 

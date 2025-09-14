@@ -1,0 +1,17 @@
+apiVersion: workload.nephio.org/v1alpha1
+kind: NetworkSlice
+metadata:
+  labels:
+    intent-id: edge2-urllc-001
+    service-type: ultra-reliable-low-latency
+    target-site: edge2
+  name: slice-edge2-urllc-001-edge2
+  namespace: edge2
+spec:
+  plmn:
+    mcc: '001'
+    mnc: '02'
+  qos:
+    5qi: 1
+    gfbr: 500Mbps
+  sliceType: URLLC

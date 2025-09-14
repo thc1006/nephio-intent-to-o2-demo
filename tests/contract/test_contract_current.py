@@ -5,10 +5,11 @@ Tests only the features that are actually implemented in the translator.
 """
 
 import json
-import yaml
 import sys
-from pathlib import Path
 import unittest
+from pathlib import Path
+
+import yaml
 
 # Import base test class
 sys.path.insert(0, str(Path(__file__).parent))
@@ -25,11 +26,7 @@ class TestCurrentImplementation(ContractTestBase):
             "serviceType": "enhanced-mobile-broadband",
             "targetSite": "both",
             "resourceProfile": "standard",
-            "sla": {
-                "availability": 99.99,
-                "latency": 10,
-                "throughput": 1000
-            }
+            "sla": {"availability": 99.99, "latency": 10, "throughput": 1000},
         }
 
         resources = self.run_translator(intent)
@@ -43,8 +40,12 @@ class TestCurrentImplementation(ContractTestBase):
         self.assertEqual(len(resources["edge2"]), 4)
 
         # Verify site-specific configurations
-        edge1_pr = next(r for r in resources["edge1"] if r.get("kind") == "ProvisioningRequest")
-        edge2_pr = next(r for r in resources["edge2"] if r.get("kind") == "ProvisioningRequest")
+        edge1_pr = next(
+            r for r in resources["edge1"] if r.get("kind") == "ProvisioningRequest"
+        )
+        edge2_pr = next(
+            r for r in resources["edge2"] if r.get("kind") == "ProvisioningRequest"
+        )
 
         self.assertEqual(edge1_pr["spec"]["targetCluster"], "edge-cluster-01")
         self.assertEqual(edge2_pr["spec"]["targetCluster"], "edge-cluster-02")
@@ -65,15 +66,25 @@ class TestCurrentImplementation(ContractTestBase):
                     "intentId": f"resource-{service_type}",
                     "serviceType": service_type,
                     "targetSite": "edge1",
-                    "resourceProfile": "standard"
+                    "resourceProfile": "standard",
                 }
 
                 resources = self.run_translator(intent)
-                pr = next(r for r in resources["edge1"] if r.get("kind") == "ProvisioningRequest")
+                pr = next(
+                    r
+                    for r in resources["edge1"]
+                    if r.get("kind") == "ProvisioningRequest"
+                )
 
-                self.assertEqual(pr["spec"]["resourceRequirements"]["cpu"], expected_cpu)
-                self.assertEqual(pr["spec"]["resourceRequirements"]["memory"], expected_mem)
-                self.assertEqual(pr["spec"]["resourceRequirements"]["storage"], expected_storage)
+                self.assertEqual(
+                    pr["spec"]["resourceRequirements"]["cpu"], expected_cpu
+                )
+                self.assertEqual(
+                    pr["spec"]["resourceRequirements"]["memory"], expected_mem
+                )
+                self.assertEqual(
+                    pr["spec"]["resourceRequirements"]["storage"], expected_storage
+                )
 
     def test_sla_field_conversion(self):
         """Test SLA fields are converted to O2IMS format."""
@@ -85,12 +96,14 @@ class TestCurrentImplementation(ContractTestBase):
                 "availability": 99.999,
                 "latency": 5,
                 "throughput": 2000,
-                "connections": 100000
-            }
+                "connections": 100000,
+            },
         }
 
         resources = self.run_translator(intent)
-        pr = next(r for r in resources["edge1"] if r.get("kind") == "ProvisioningRequest")
+        pr = next(
+            r for r in resources["edge1"] if r.get("kind") == "ProvisioningRequest"
+        )
 
         sla_reqs = pr["spec"]["slaRequirements"]
         self.assertEqual(sla_reqs["availability"], "99.999%")
@@ -104,10 +117,7 @@ class TestCurrentImplementation(ContractTestBase):
             "intentId": "qos-001",
             "serviceType": "enhanced-mobile-broadband",  # Using known service type
             "targetSite": "edge2",
-            "sla": {
-                "latency": 1,
-                "throughput": 5000
-            }
+            "sla": {"latency": 1, "throughput": 5000},
         }
 
         resources = self.run_translator(intent)
@@ -116,26 +126,32 @@ class TestCurrentImplementation(ContractTestBase):
         # 1ms latency should get 5QI=1 regardless of service type
         self.assertEqual(ns["spec"]["qos"]["5qi"], 1)
         self.assertEqual(ns["spec"]["qos"]["gfbr"], "5000Mbps")
-        self.assertEqual(ns["spec"]["sliceType"], "eMBB")  # Will be eMBB due to service type
+        self.assertEqual(
+            ns["spec"]["sliceType"], "eMBB"
+        )  # Will be eMBB due to service type
 
     def test_plmn_configuration(self):
         """Test PLMN IDs are correctly set for each site."""
         intent = {
             "intentId": "plmn-001",
             "serviceType": "massive-machine-type",
-            "targetSite": "both"
+            "targetSite": "both",
         }
 
         resources = self.run_translator(intent)
 
         # Check edge1 PLMN
-        edge1_pr = next(r for r in resources["edge1"] if r.get("kind") == "ProvisioningRequest")
+        edge1_pr = next(
+            r for r in resources["edge1"] if r.get("kind") == "ProvisioningRequest"
+        )
         self.assertEqual(edge1_pr["spec"]["networkConfig"]["plmnId"], "00101")
         self.assertEqual(edge1_pr["spec"]["networkConfig"]["gnbId"], "00001")
         self.assertEqual(edge1_pr["spec"]["networkConfig"]["tac"], "0001")
 
         # Check edge2 PLMN
-        edge2_pr = next(r for r in resources["edge2"] if r.get("kind") == "ProvisioningRequest")
+        edge2_pr = next(
+            r for r in resources["edge2"] if r.get("kind") == "ProvisioningRequest"
+        )
         self.assertEqual(edge2_pr["spec"]["networkConfig"]["plmnId"], "00102")
         self.assertEqual(edge2_pr["spec"]["networkConfig"]["gnbId"], "00002")
         self.assertEqual(edge2_pr["spec"]["networkConfig"]["tac"], "0002")
@@ -147,10 +163,7 @@ class TestCurrentImplementation(ContractTestBase):
             "serviceType": "enhanced-mobile-broadband",
             "targetSite": "edge1",
             "resourceProfile": "premium",
-            "sla": {
-                "availability": 99.99,
-                "latency": 10
-            }
+            "sla": {"availability": 99.99, "latency": 10},
         }
 
         resources = self.run_translator(intent)
@@ -160,7 +173,9 @@ class TestCurrentImplementation(ContractTestBase):
         intent_data = json.loads(cm["data"]["intent.json"])
         self.assertEqual(intent_data["intentId"], intent["intentId"])
         self.assertEqual(intent_data["serviceType"], intent["serviceType"])
-        self.assertEqual(intent_data["sla"]["availability"], intent["sla"]["availability"])
+        self.assertEqual(
+            intent_data["sla"]["availability"], intent["sla"]["availability"]
+        )
 
     def test_kustomization_resource_list(self):
         """Test Kustomization lists all generated resources."""
@@ -168,17 +183,19 @@ class TestCurrentImplementation(ContractTestBase):
             "intentId": "kust-002",
             "serviceType": "enhanced-mobile-broadband",
             "targetSite": "edge1",
-            "sla": {"latency": 10}
+            "sla": {"latency": 10},
         }
 
         resources = self.run_translator(intent)
-        kustomization = next(r for r in resources["edge1"] if r.get("kind") == "Kustomization")
+        kustomization = next(
+            r for r in resources["edge1"] if r.get("kind") == "Kustomization"
+        )
 
         # Should reference all other resources
         expected_resources = [
             "kust-002-edge1-provisioning-request.yaml",
             "intent-kust-002-edge1-configmap.yaml",
-            "slice-kust-002-edge1-networkslice.yaml"
+            "slice-kust-002-edge1-networkslice.yaml",
         ]
 
         self.assertEqual(sorted(kustomization["resources"]), sorted(expected_resources))
@@ -189,7 +206,7 @@ class TestCurrentImplementation(ContractTestBase):
             "intentId": "anno-001",
             "serviceType": "enhanced-mobile-broadband",
             "targetSite": "edge1",
-            "resourceProfile": "basic"
+            "resourceProfile": "basic",
         }
 
         resources = self.run_translator(intent)
@@ -209,9 +226,9 @@ class TestCurrentImplementation(ContractTestBase):
 
 def generate_current_test_report(results):
     """Generate test report for current implementation."""
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("CONTRACT TEST REPORT - CURRENT IMPLEMENTATION")
-    print("="*80)
+    print("=" * 80)
 
     total_tests = results.testsRun
     failures = len(results.failures)
@@ -244,7 +261,7 @@ def generate_current_test_report(results):
             for test, _ in results.failures:
                 print(f"  - {test}")
 
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     return 0 if passed == total_tests else 1
 
 

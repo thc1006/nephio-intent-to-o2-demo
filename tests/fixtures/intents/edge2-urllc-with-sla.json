@@ -1,0 +1,18 @@
+{
+  "intentId": "edge2-urllc-001",
+  "serviceType": "ultra-reliable-low-latency",
+  "targetSite": "edge2",
+  "resourceProfile": "ultra-performance",
+  "description": "Ultra-reliable low-latency service for edge2 site with strict SLA",
+  "sla": {
+    "availability": 99.999,
+    "latency": 1,
+    "throughput": 500,
+    "connections": 1000,
+    "reliability": 99.9999
+  },
+  "metadata": {
+    "customer": "critical-services-001",
+    "priority": "critical"
+  }
+}

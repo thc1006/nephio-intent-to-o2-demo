@@ -4,18 +4,20 @@
 Ensures exact field mappings and deterministic outputs for all service types.
 """
 
-import json
-import yaml
-import os
-import sys
+import difflib
 import hashlib
-import tempfile
+import json
+import os
 import subprocess
-from pathlib import Path
-from typing import Dict, Any, List, Tuple
+import sys
+import tempfile
 import unittest
 from datetime import datetime
-import difflib
+from pathlib import Path
+from typing import Any, Dict, List, Tuple
+
+import yaml
+
 
 class ContractTestBase(unittest.TestCase):
     """Base class for contract tests with snapshot support."""
@@ -41,6 +43,7 @@ class ContractTestBase(unittest.TestCase):
     def tearDown(self):
         """Clean up test."""
         import shutil
+
         if os.path.exists(self.temp_dir):
             shutil.rmtree(self.temp_dir)
 
@@ -54,7 +57,14 @@ class ContractTestBase(unittest.TestCase):
                 elif isinstance(value, dict):
                     result[key] = self.normalize_timestamp(value)
                 elif isinstance(value, list):
-                    result[key] = [self.normalize_timestamp(item) if isinstance(item, dict) else item for item in value]
+                    result[key] = [
+                        (
+                            self.normalize_timestamp(item)
+                            if isinstance(item, dict)
+                            else item
+                        )
+                        for item in value
+                    ]
                 else:
                     result[key] = value
             return result
@@ -62,51 +72,67 @@ class ContractTestBase(unittest.TestCase):
 
     def load_and_normalize_yaml(self, filepath: Path) -> Dict[str, Any]:
         """Load YAML and normalize for comparison."""
-        with open(filepath, 'r') as f:
+        with open(filepath, "r") as f:
             data = yaml.safe_load(f)
         return self.normalize_timestamp(data)
 
-    def assert_snapshot_match(self, name: str, actual: Dict[str, Any], update: bool = False):
+    def assert_snapshot_match(
+        self, name: str, actual: Dict[str, Any], update: bool = False
+    ):
         """Assert that actual matches snapshot or update if requested."""
         snapshot_file = self.snapshots_dir / f"{name}.yaml"
         actual_normalized = self.normalize_timestamp(actual)
 
         if update or not snapshot_file.exists():
             # Create/update snapshot
-            with open(snapshot_file, 'w') as f:
-                yaml.dump(actual_normalized, f, default_flow_style=False, sort_keys=True)
+            with open(snapshot_file, "w") as f:
+                yaml.dump(
+                    actual_normalized, f, default_flow_style=False, sort_keys=True
+                )
             if not snapshot_file.exists():
                 self.fail(f"Snapshot created: {snapshot_file}")
         else:
             # Compare with snapshot
-            with open(snapshot_file, 'r') as f:
+            with open(snapshot_file, "r") as f:
                 expected = yaml.safe_load(f)
 
             if actual_normalized != expected:
                 # Generate detailed diff
-                actual_yaml = yaml.dump(actual_normalized, default_flow_style=False, sort_keys=True)
-                expected_yaml = yaml.dump(expected, default_flow_style=False, sort_keys=True)
-                diff = '\n'.join(difflib.unified_diff(
-                    expected_yaml.splitlines(),
-                    actual_yaml.splitlines(),
-                    fromfile=f"{name}_expected",
-                    tofile=f"{name}_actual",
-                    lineterm=''
-                ))
+                actual_yaml = yaml.dump(
+                    actual_normalized, default_flow_style=False, sort_keys=True
+                )
+                expected_yaml = yaml.dump(
+                    expected, default_flow_style=False, sort_keys=True
+                )
+                diff = "\n".join(
+                    difflib.unified_diff(
+                        expected_yaml.splitlines(),
+                        actual_yaml.splitlines(),
+                        fromfile=f"{name}_expected",
+                        tofile=f"{name}_actual",
+                        lineterm="",
+                    )
+                )
                 self.fail(f"Snapshot mismatch for {name}:\n{diff}")
 
     def run_translator(self, intent: Dict[str, Any]) -> Dict[str, List[Dict[str, Any]]]:
         """Run translator and return generated resources."""
         intent_file = Path(self.temp_dir) / "intent.json"
-        with open(intent_file, 'w') as f:
+        with open(intent_file, "w") as f:
             json.dump(intent, f, indent=2)
 
         output_dir = Path(self.temp_dir) / "output"
 
         result = subprocess.run(
-            [sys.executable, str(self.translator), str(intent_file), "-o", str(output_dir)],
+            [
+                sys.executable,
+                str(self.translator),
+                str(intent_file),
+                "-o",
+                str(output_dir),
+            ],
             capture_output=True,
-            text=True
+            text=True,
         )
 
         self.assertEqual(result.returncode, 0, f"Translation failed: {result.stderr}")
@@ -133,11 +159,7 @@ class TestEMBBContract(ContractTestBase):
             "serviceType": "enhanced-mobile-broadband",
             "targetSite": "edge1",
             "resourceProfile": "standard",
-            "sla": {
-                "availability": 99.99,
-                "latency": 10,
-                "throughput": 1000
-            }
+            "sla": {"availability": 99.99, "latency": 10, "throughput": 1000},
         }
 
         resources = self.run_translator(intent)
@@ -147,7 +169,9 @@ class TestEMBBContract(ContractTestBase):
         edge1_resources = resources["edge1"]
 
         # Find ProvisioningRequest
-        pr = next((r for r in edge1_resources if r.get("kind") == "ProvisioningRequest"), None)
+        pr = next(
+            (r for r in edge1_resources if r.get("kind") == "ProvisioningRequest"), None
+        )
         self.assertIsNotNone(pr, "ProvisioningRequest not found")
 
         # Assert exact field mappings for ProvisioningRequest
@@ -155,7 +179,9 @@ class TestEMBBContract(ContractTestBase):
         self.assertEqual(pr["metadata"]["name"], "embb-001-edge1")
         self.assertEqual(pr["metadata"]["namespace"], "edge1")
         self.assertEqual(pr["metadata"]["labels"]["intent-id"], "embb-001")
-        self.assertEqual(pr["metadata"]["labels"]["service-type"], "enhanced-mobile-broadband")
+        self.assertEqual(
+            pr["metadata"]["labels"]["service-type"], "enhanced-mobile-broadband"
+        )
         self.assertEqual(pr["metadata"]["labels"]["target-site"], "edge1")
         self.assertEqual(pr["spec"]["targetCluster"], "edge-cluster-01")
         self.assertEqual(pr["spec"]["networkConfig"]["plmnId"], "00101")
@@ -209,11 +235,7 @@ class TestURLLCContract(ContractTestBase):
             "serviceType": "ultra-reliable-low-latency",
             "targetSite": "edge2",
             "resourceProfile": "premium",
-            "sla": {
-                "availability": 99.999,
-                "latency": 1,
-                "throughput": 5000
-            }
+            "sla": {"availability": 99.999, "latency": 1, "throughput": 5000},
         }
 
         resources = self.run_translator(intent)
@@ -223,7 +245,9 @@ class TestURLLCContract(ContractTestBase):
         edge2_resources = resources["edge2"]
 
         # Find ProvisioningRequest
-        pr = next((r for r in edge2_resources if r.get("kind") == "ProvisioningRequest"), None)
+        pr = next(
+            (r for r in edge2_resources if r.get("kind") == "ProvisioningRequest"), None
+        )
         self.assertIsNotNone(pr, "ProvisioningRequest not found")
 
         # Assert URLLC-specific mappings
@@ -257,10 +281,7 @@ class TestMMTCContract(ContractTestBase):
             "serviceType": "massive-machine-type",
             "targetSite": "both",
             "resourceProfile": "standard",
-            "sla": {
-                "availability": 99.9,
-                "connections": 1000000
-            }
+            "sla": {"availability": 99.9, "connections": 1000000},
         }
 
         resources = self.run_translator(intent)
@@ -270,15 +291,23 @@ class TestMMTCContract(ContractTestBase):
         self.assertIn("edge2", resources)
 
         # Test edge1 mMTC resources
-        edge1_pr = next((r for r in resources["edge1"] if r.get("kind") == "ProvisioningRequest"), None)
+        edge1_pr = next(
+            (r for r in resources["edge1"] if r.get("kind") == "ProvisioningRequest"),
+            None,
+        )
         self.assertIsNotNone(edge1_pr)
         self.assertEqual(edge1_pr["spec"]["networkConfig"]["sliceType"], "mMTC")
         self.assertEqual(edge1_pr["spec"]["resourceRequirements"]["cpu"], "4")
         self.assertEqual(edge1_pr["spec"]["resourceRequirements"]["memory"], "8Gi")
-        self.assertEqual(edge1_pr["spec"]["slaRequirements"]["maxConnections"], "1000000")
+        self.assertEqual(
+            edge1_pr["spec"]["slaRequirements"]["maxConnections"], "1000000"
+        )
 
         # Test edge2 mMTC resources
-        edge2_pr = next((r for r in resources["edge2"] if r.get("kind") == "ProvisioningRequest"), None)
+        edge2_pr = next(
+            (r for r in resources["edge2"] if r.get("kind") == "ProvisioningRequest"),
+            None,
+        )
         self.assertIsNotNone(edge2_pr)
         self.assertEqual(edge2_pr["spec"]["networkConfig"]["sliceType"], "mMTC")
         self.assertEqual(edge2_pr["spec"]["targetCluster"], "edge-cluster-02")
@@ -301,13 +330,15 @@ class TestKustomizationContract(ContractTestBase):
             "intentId": "kust-001",
             "serviceType": "enhanced-mobile-broadband",
             "targetSite": "edge1",
-            "resourceProfile": "standard"
+            "resourceProfile": "standard",
         }
 
         resources = self.run_translator(intent)
 
         # Find Kustomization
-        kustomization = next((r for r in resources["edge1"] if r.get("kind") == "Kustomization"), None)
+        kustomization = next(
+            (r for r in resources["edge1"] if r.get("kind") == "Kustomization"), None
+        )
         self.assertIsNotNone(kustomization)
 
         # Verify fields
@@ -320,14 +351,16 @@ class TestKustomizationContract(ContractTestBase):
         expected_resources = [
             "kust-001-edge1-provisioning-request.yaml",
             "intent-kust-001-edge1-configmap.yaml",
-            "slice-kust-001-edge1-networkslice.yaml"
+            "slice-kust-001-edge1-networkslice.yaml",
         ]
         self.assertEqual(kustomization["resources"], expected_resources)
 
         # Verify annotation
         self.assertEqual(
-            kustomization["metadata"]["annotations"]["config.kubernetes.io/local-config"],
-            "true"
+            kustomization["metadata"]["annotations"][
+                "config.kubernetes.io/local-config"
+            ],
+            "true",
         )
 
 
@@ -341,11 +374,7 @@ class TestDeterministicOutput(ContractTestBase):
             "serviceType": "enhanced-mobile-broadband",
             "targetSite": "edge1",
             "resourceProfile": "standard",
-            "sla": {
-                "availability": 99.99,
-                "latency": 10,
-                "throughput": 1000
-            }
+            "sla": {"availability": 99.99, "latency": 10, "throughput": 1000},
         }
 
         # Run translator twice
@@ -357,8 +386,20 @@ class TestDeterministicOutput(ContractTestBase):
             self.assertIn(site, resources2)
 
             # Sort resources by kind and name for comparison
-            sorted1 = sorted(resources1[site], key=lambda r: (r.get("kind", ""), r.get("metadata", {}).get("name", "")))
-            sorted2 = sorted(resources2[site], key=lambda r: (r.get("kind", ""), r.get("metadata", {}).get("name", "")))
+            sorted1 = sorted(
+                resources1[site],
+                key=lambda r: (
+                    r.get("kind", ""),
+                    r.get("metadata", {}).get("name", ""),
+                ),
+            )
+            sorted2 = sorted(
+                resources2[site],
+                key=lambda r: (
+                    r.get("kind", ""),
+                    r.get("metadata", {}).get("name", ""),
+                ),
+            )
 
             self.assertEqual(len(sorted1), len(sorted2))
 
@@ -367,7 +408,7 @@ class TestDeterministicOutput(ContractTestBase):
                 self.assertEqual(
                     self.normalize_timestamp(r1),
                     self.normalize_timestamp(r2),
-                    f"Non-deterministic output for {r1.get('kind')}"
+                    f"Non-deterministic output for {r1.get('kind')}",
                 )
 
     def test_file_ordering(self):
@@ -376,22 +417,24 @@ class TestDeterministicOutput(ContractTestBase):
             "intentId": "ord-001",
             "serviceType": "enhanced-mobile-broadband",
             "targetSite": "both",
-            "sla": {
-                "availability": 99.99,
-                "latency": 10,
-                "throughput": 1000
-            }
+            "sla": {"availability": 99.99, "latency": 10, "throughput": 1000},
         }
 
         intent_file = Path(self.temp_dir) / "intent.json"
-        with open(intent_file, 'w') as f:
+        with open(intent_file, "w") as f:
             json.dump(intent, f)
 
         output_dir = Path(self.temp_dir) / "output"
 
         subprocess.run(
-            [sys.executable, str(self.translator), str(intent_file), "-o", str(output_dir)],
-            capture_output=True
+            [
+                sys.executable,
+                str(self.translator),
+                str(intent_file),
+                "-o",
+                str(output_dir),
+            ],
+            capture_output=True,
         )
 
         # Check file naming conventions
@@ -406,7 +449,7 @@ class TestDeterministicOutput(ContractTestBase):
                 f"intent-ord-001-{site}-configmap.yaml",
                 "kustomization.yaml",
                 f"ord-001-{site}-provisioning-request.yaml",
-                f"slice-ord-001-{site}-networkslice.yaml"
+                f"slice-ord-001-{site}-networkslice.yaml",
             ]
 
             self.assertEqual(files, expected_patterns)
@@ -424,11 +467,18 @@ class TestFieldMappingValidation(ContractTestBase):
                 "intentId": f"prof-{profile}",
                 "serviceType": "enhanced-mobile-broadband",
                 "targetSite": "edge1",
-                "resourceProfile": profile
+                "resourceProfile": profile,
             }
 
             resources = self.run_translator(intent)
-            pr = next((r for r in resources["edge1"] if r.get("kind") == "ProvisioningRequest"), None)
+            pr = next(
+                (
+                    r
+                    for r in resources["edge1"]
+                    if r.get("kind") == "ProvisioningRequest"
+                ),
+                None,
+            )
 
             # Verify profile is in annotations
             self.assertEqual(pr["metadata"]["annotations"]["resource-profile"], profile)
@@ -441,17 +491,17 @@ class TestFieldMappingValidation(ContractTestBase):
         """Test SLA parameters map correctly to QoS settings."""
         # Test cases match the actual translator logic
         test_cases = [
-            (1, 1),    # latency <= 1 -> 5QI=1 (URLLC)
-            (5, 5),    # latency <= 10 -> 5QI=5 (Low latency)
-            (20, 7),   # latency <= 50 -> 5QI=7 (Voice)
+            (1, 1),  # latency <= 1 -> 5QI=1 (URLLC)
+            (5, 5),  # latency <= 10 -> 5QI=5 (Low latency)
+            (20, 7),  # latency <= 50 -> 5QI=7 (Voice)
             (100, 9),  # latency > 50 -> 5QI=9 (Best effort)
         ]
 
         for latency_value, expected_5qi in test_cases:
             with self.subTest(latency=latency_value, expected_5qi=expected_5qi):
                 # Create a fresh temp directory for each test
-                import tempfile
                 import shutil
+                import tempfile
 
                 temp_dir = tempfile.mkdtemp(prefix=f"qos-test-{latency_value}-")
 
@@ -460,7 +510,7 @@ class TestFieldMappingValidation(ContractTestBase):
                         "intentId": f"qos-{latency_value}",
                         "serviceType": "enhanced-mobile-broadband",
                         "targetSite": "edge1",
-                        "sla": {"latency": latency_value}
+                        "sla": {"latency": latency_value},
                     }
 
                     # Save the original temp_dir and replace it
@@ -472,15 +522,24 @@ class TestFieldMappingValidation(ContractTestBase):
                     # Restore original temp_dir
                     self.temp_dir = original_temp
 
-                    ns = next((r for r in resources["edge1"] if r.get("kind") == "NetworkSlice"), None)
+                    ns = next(
+                        (
+                            r
+                            for r in resources["edge1"]
+                            if r.get("kind") == "NetworkSlice"
+                        ),
+                        None,
+                    )
 
-                    self.assertIsNotNone(ns, f"NetworkSlice not found for latency {latency_value}")
+                    self.assertIsNotNone(
+                        ns, f"NetworkSlice not found for latency {latency_value}"
+                    )
 
                     actual_5qi = ns["spec"]["qos"]["5qi"]
                     self.assertEqual(
                         actual_5qi,
                         expected_5qi,
-                        f"Latency {latency_value}ms should map to 5QI {expected_5qi}, got {actual_5qi}"
+                        f"Latency {latency_value}ms should map to 5QI {expected_5qi}, got {actual_5qi}",
                     )
 
                 finally:
@@ -491,9 +550,9 @@ class TestFieldMappingValidation(ContractTestBase):
 
 def generate_test_report(results):
     """Generate detailed test report."""
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("CONTRACT TEST REPORT")
-    print("="*80)
+    print("=" * 80)
 
     total_tests = results.testsRun
     failures = len(results.failures)
@@ -514,14 +573,16 @@ def generate_test_report(results):
         if results.failures:
             print("\nFailures:")
             for test, traceback in results.failures:
-                print(f"  - {test}: {traceback.split('AssertionError:')[-1].strip()[:100]}")
+                print(
+                    f"  - {test}: {traceback.split('AssertionError:')[-1].strip()[:100]}"
+                )
 
         if results.errors:
             print("\nErrors:")
             for test, traceback in results.errors:
                 print(f"  - {test}: {traceback.split('Error:')[-1].strip()[:100]}")
 
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
 
     # Return exit code
     return 0 if passed == total_tests else 1

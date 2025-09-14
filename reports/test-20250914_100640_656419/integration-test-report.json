@@ -1,0 +1,33 @@
+{
+  "test_execution": {
+    "timestamp": "2025-09-14T10:06:41.019Z",
+    "execution_id": "20250914_100640_656419",
+    "test_mode": "basic",
+    "duration_seconds": 1,
+    "script_version": "1.0.0"
+  },
+  "environment": {
+    "target_site": "both",
+    "dry_run": "false",
+    "simulate_failure": "false"
+  },
+  "results": [
+    {
+      "configuration_test": {
+        "timestamp": "2025-09-14T10:06:40.943Z",
+        "config_tests": [
+          "slo_config_exists",
+          "slo_config_valid",
+          "rollback_config_exists",
+          "rollback_config_loadable"
+        ],
+        "tests_passed": 4
+      }
+    }
+  ],
+  "evidence": {
+    "test_reports_dir": "./reports/test-20250914_100640_656419",
+    "evidence_dir": "./reports/test-20250914_100640_656419/evidence",
+    "artifacts_dir": "./artifacts/test-20250914_100640_656419"
+  }
+}

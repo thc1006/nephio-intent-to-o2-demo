@@ -1,0 +1,12 @@
+{
+  "checksum_algorithm": "sha256",
+  "generated_files": {},
+  "intent_id": "edge2-urllc-001",
+  "resource_counts": {
+    "edge2": 4
+  },
+  "target_sites": [
+    "edge2"
+  ],
+  "timestamp": "2024-01-01T00:00:00+00:00"
+}

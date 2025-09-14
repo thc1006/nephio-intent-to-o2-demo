@@ -1,0 +1,14 @@
+{
+  "checksum_algorithm": "sha256",
+  "generated_files": {},
+  "intent_id": "minimal-001",
+  "resource_counts": {
+    "edge1": 3,
+    "edge2": 3
+  },
+  "target_sites": [
+    "edge1",
+    "edge2"
+  ],
+  "timestamp": "2024-01-01T00:00:00+00:00"
+}

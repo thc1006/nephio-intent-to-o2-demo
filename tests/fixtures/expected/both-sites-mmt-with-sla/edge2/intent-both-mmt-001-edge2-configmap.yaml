@@ -1,0 +1,18 @@
+apiVersion: v1
+data:
+  intent.json: "{\n  \"description\": \"Massive machine type communication across\
+    \ both edge sites\",\n  \"intentId\": \"both-mmt-001\",\n  \"metadata\": {\n \
+    \   \"customer\": \"iot-platform-001\",\n    \"deployment\": \"multi-site\",\n\
+    \    \"priority\": \"standard\"\n  },\n  \"resourceProfile\": \"standard\",\n\
+    \  \"serviceType\": \"massive-machine-type\",\n  \"sla\": {\n    \"availability\"\
+    : 99.5,\n    \"connections\": 100000,\n    \"latency\": 100,\n    \"throughput\"\
+    : 10\n  },\n  \"targetSite\": \"both\"\n}"
+  serviceType: massive-machine-type
+  site: edge2
+kind: ConfigMap
+metadata:
+  labels:
+    intent-id: both-mmt-001
+    target-site: edge2
+  name: intent-both-mmt-001-edge2
+  namespace: edge2

@@ -2,13 +2,15 @@
 """Golden tests for intent-to-KRM translation."""
 
 import json
-import yaml
 import os
-import sys
 import subprocess
+import sys
 import tempfile
-from pathlib import Path
 import unittest
+from pathlib import Path
+
+import yaml
+
 
 class TestIntentToKRM(unittest.TestCase):
     """Test intent translation with golden files."""
@@ -17,12 +19,15 @@ class TestIntentToKRM(unittest.TestCase):
         """Set up test environment."""
         self.test_dir = Path(__file__).parent
         self.project_root = self.test_dir.parent.parent
-        self.translator = self.project_root / "tools" / "intent-compiler" / "translate.py"
+        self.translator = (
+            self.project_root / "tools" / "intent-compiler" / "translate.py"
+        )
         self.output_dir = tempfile.mkdtemp(prefix="test-krm-")
 
     def tearDown(self):
         """Clean up test files."""
         import shutil
+
         if os.path.exists(self.output_dir):
             shutil.rmtree(self.output_dir)
 
@@ -39,15 +44,11 @@ class TestIntentToKRM(unittest.TestCase):
             "serviceType": "ultra-reliable-low-latency",
             "targetSite": "edge2",
             "resourceProfile": "premium",
-            "sla": {
-                "availability": 99.999,
-                "latency": 1,
-                "throughput": 5000
-            }
+            "sla": {"availability": 99.999, "latency": 1, "throughput": 5000},
         }
 
         intent_file = Path(self.output_dir) / "intent_edge2.json"
-        with open(intent_file, 'w') as f:
+        with open(intent_file, "w") as f:
             json.dump(edge2_intent, f, indent=2)
 
         self._run_translation_test(intent_file, ["edge2"])
@@ -61,9 +62,15 @@ class TestIntentToKRM(unittest.TestCase):
         """Run translation and validate output."""
         # Run translator
         result = subprocess.run(
-            [sys.executable, str(self.translator), str(intent_file), "-o", self.output_dir],
+            [
+                sys.executable,
+                str(self.translator),
+                str(intent_file),
+                "-o",
+                self.output_dir,
+            ],
             capture_output=True,
-            text=True
+            text=True,
         )
 
         self.assertEqual(result.returncode, 0, f"Translation failed: {result.stderr}")
@@ -82,7 +89,7 @@ class TestIntentToKRM(unittest.TestCase):
         pr_files = list(site_dir.glob("*-provisioning-request.yaml"))
         self.assertGreater(len(pr_files), 0, f"No ProvisioningRequest found for {site}")
 
-        with open(pr_files[0], 'r') as f:
+        with open(pr_files[0], "r") as f:
             pr = yaml.safe_load(f)
             self._validate_provisioning_request(pr, site)
 
@@ -90,7 +97,7 @@ class TestIntentToKRM(unittest.TestCase):
         cm_files = list(site_dir.glob("*-configmap.yaml"))
         self.assertGreater(len(cm_files), 0, f"No ConfigMap found for {site}")
 
-        with open(cm_files[0], 'r') as f:
+        with open(cm_files[0], "r") as f:
             cm = yaml.safe_load(f)
             self._validate_configmap(cm, site)
 
@@ -98,15 +105,17 @@ class TestIntentToKRM(unittest.TestCase):
         ns_files = list(site_dir.glob("*-networkslice.yaml"))
         self.assertGreater(len(ns_files), 0, f"No NetworkSlice found for {site}")
 
-        with open(ns_files[0], 'r') as f:
+        with open(ns_files[0], "r") as f:
             ns = yaml.safe_load(f)
             self._validate_network_slice(ns, site)
 
         # Validate Kustomization
         kustomization_file = site_dir / "kustomization.yaml"
-        self.assertTrue(kustomization_file.exists(), f"No kustomization.yaml for {site}")
+        self.assertTrue(
+            kustomization_file.exists(), f"No kustomization.yaml for {site}"
+        )
 
-        with open(kustomization_file, 'r') as f:
+        with open(kustomization_file, "r") as f:
             kustomization = yaml.safe_load(f)
             self._validate_kustomization(kustomization, site)
 
@@ -152,10 +161,10 @@ class TestKubeconformValidation(unittest.TestCase):
 
     def setUp(self):
         """Check if kubeconform is available."""
-        self.kubeconform_available = subprocess.run(
-            ["which", "kubeconform"],
-            capture_output=True
-        ).returncode == 0
+        self.kubeconform_available = (
+            subprocess.run(["which", "kubeconform"], capture_output=True).returncode
+            == 0
+        )
 
     def test_validate_generated_resources(self):
         """Validate all generated YAML files with kubeconform."""
@@ -174,7 +183,7 @@ class TestKubeconformValidation(unittest.TestCase):
             result = subprocess.run(
                 [sys.executable, str(translator), str(intent_file), "-o", output_dir],
                 capture_output=True,
-                text=True
+                text=True,
             )
             self.assertEqual(result.returncode, 0)
 
@@ -186,16 +195,25 @@ class TestKubeconformValidation(unittest.TestCase):
                     continue
 
                 result = subprocess.run(
-                    ["kubeconform", "-skip-kinds", "NetworkSlice,ProvisioningRequest", str(yaml_file)],
+                    [
+                        "kubeconform",
+                        "-skip-kinds",
+                        "NetworkSlice,ProvisioningRequest",
+                        str(yaml_file),
+                    ],
                     capture_output=True,
-                    text=True
+                    text=True,
                 )
 
-                self.assertIn("PASS", result.stdout + result.stderr,
-                             f"Validation failed for {yaml_file}: {result.stderr}")
+                self.assertIn(
+                    "PASS",
+                    result.stdout + result.stderr,
+                    f"Validation failed for {yaml_file}: {result.stderr}",
+                )
 
         finally:
             import shutil
+
             if os.path.exists(output_dir):
                 shutil.rmtree(output_dir)
 

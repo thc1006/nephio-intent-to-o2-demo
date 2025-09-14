@@ -4,12 +4,13 @@ Tests for Intent JSON schema validation including targetSite field
 """
 
 import json
-import pytest
-import jsonschema
-from jsonschema import validate, ValidationError
-from typing import Dict, Any
 import uuid
 from datetime import datetime
+from typing import Any, Dict
+
+import jsonschema
+import pytest
+from jsonschema import ValidationError, validate
 
 
 class TestIntentSchema:
@@ -30,54 +31,77 @@ class TestIntentSchema:
                 "intentPriority",
                 "targetSite",
                 "intentExpectations",
-                "intentMetadata"
+                "intentMetadata",
             ],
             "properties": {
                 "intentId": {
                     "type": "string",
-                    "description": "Unique intent identifier"
+                    "description": "Unique intent identifier",
                 },
                 "intentName": {
                     "type": "string",
-                    "description": "Human-readable intent name"
+                    "description": "Human-readable intent name",
                 },
                 "intentDescription": {
                     "type": ["string", "null"],
-                    "description": "Optional intent description"
+                    "description": "Optional intent description",
                 },
                 "intentType": {
                     "type": "string",
-                    "enum": ["SERVICE_INTENT", "RESOURCE_INTENT", "NETWORK_SLICE_INTENT"],
-                    "description": "Type of intent"
+                    "enum": [
+                        "SERVICE_INTENT",
+                        "RESOURCE_INTENT",
+                        "NETWORK_SLICE_INTENT",
+                    ],
+                    "description": "Type of intent",
                 },
                 "intentState": {
                     "type": "string",
-                    "enum": ["CREATED", "VALIDATED", "DEPLOYED", "ACTIVE", "SUSPENDED", "TERMINATED"],
-                    "description": "Current state of the intent"
+                    "enum": [
+                        "CREATED",
+                        "VALIDATED",
+                        "DEPLOYED",
+                        "ACTIVE",
+                        "SUSPENDED",
+                        "TERMINATED",
+                    ],
+                    "description": "Current state of the intent",
                 },
                 "intentPriority": {
                     "type": "integer",
                     "minimum": 1,
                     "maximum": 10,
-                    "description": "Intent priority level"
+                    "description": "Intent priority level",
                 },
                 "targetSite": {
                     "type": "string",
                     "enum": ["edge1", "edge2", "both"],
-                    "description": "Target deployment site for the intent"
+                    "description": "Target deployment site for the intent",
                 },
                 "intentExpectations": {
                     "type": "array",
                     "minItems": 0,
                     "items": {
                         "type": "object",
-                        "required": ["expectationId", "expectationName", "expectationType", "expectationTargets"],
+                        "required": [
+                            "expectationId",
+                            "expectationName",
+                            "expectationType",
+                            "expectationTargets",
+                        ],
                         "properties": {
                             "expectationId": {"type": "string"},
                             "expectationName": {"type": "string"},
                             "expectationType": {
                                 "type": "string",
-                                "enum": ["PERFORMANCE", "CAPACITY", "COVERAGE", "AVAILABILITY", "LATENCY", "THROUGHPUT"]
+                                "enum": [
+                                    "PERFORMANCE",
+                                    "CAPACITY",
+                                    "COVERAGE",
+                                    "AVAILABILITY",
+                                    "LATENCY",
+                                    "THROUGHPUT",
+                                ],
                             },
                             "expectationTargets": {
                                 "type": "array",
@@ -86,19 +110,21 @@ class TestIntentSchema:
                                     "required": ["targetName", "targetValue"],
                                     "properties": {
                                         "targetName": {"type": "string"},
-                                        "targetValue": {"type": ["number", "string", "boolean"]},
+                                        "targetValue": {
+                                            "type": ["number", "string", "boolean"]
+                                        },
                                         "targetUnit": {"type": ["string", "null"]},
-                                        "targetOperator": {"type": ["string", "null"]}
-                                    }
-                                }
+                                        "targetOperator": {"type": ["string", "null"]},
+                                    },
+                                },
                             },
                             "priority": {
                                 "type": ["integer", "null"],
                                 "minimum": 1,
-                                "maximum": 10
-                            }
-                        }
-                    }
+                                "maximum": 10,
+                            },
+                        },
+                    },
                 },
                 "intentMetadata": {
                     "type": "object",
@@ -108,11 +134,11 @@ class TestIntentSchema:
                         "createdBy": {"type": ["string", "null"]},
                         "version": {"type": ["string", "null"]},
                         "source": {"type": ["string", "null"]},
-                        "additionalInfo": {"type": ["object", "null"]}
-                    }
-                }
+                        "additionalInfo": {"type": ["object", "null"]},
+                    },
+                },
             },
-            "additionalProperties": True
+            "additionalProperties": True,
         }
 
     def create_valid_intent(self, target_site: str = "edge1") -> Dict[str, Any]:
@@ -135,18 +161,18 @@ class TestIntentSchema:
                             "targetName": "end-to-end-latency",
                             "targetValue": 10,
                             "targetUnit": "ms",
-                            "targetOperator": "<="
+                            "targetOperator": "<=",
                         }
                     ],
-                    "priority": 8
+                    "priority": 8,
                 }
             ],
             "intentMetadata": {
                 "createdAt": datetime.utcnow().isoformat(),
                 "createdBy": "test-user",
                 "version": "1.0",
-                "source": "unit-test"
-            }
+                "source": "unit-test",
+            },
         }
 
     def test_valid_intent_edge1(self):
@@ -186,11 +212,7 @@ class TestIntentSchema:
 
     def test_target_site_service_type_mapping(self):
         """Test different service types with appropriate targetSite defaults"""
-        test_cases = [
-            ("eMBB", "edge1"),
-            ("URLLC", "edge2"),
-            ("mMTC", "both")
-        ]
+        test_cases = [("eMBB", "edge1"), ("URLLC", "edge2"), ("mMTC", "both")]
 
         for service_type, expected_target in test_cases:
             intent = self.create_valid_intent(expected_target)
@@ -241,10 +263,10 @@ class TestIntentSchema:
                             "targetName": "end-to-end-latency",
                             "targetValue": 5,
                             "targetUnit": "ms",
-                            "targetOperator": "<="
+                            "targetOperator": "<=",
                         }
                     ],
-                    "priority": 10
+                    "priority": 10,
                 },
                 {
                     "expectationId": str(uuid.uuid4()),
@@ -255,17 +277,17 @@ class TestIntentSchema:
                             "targetName": "downlink-speed",
                             "targetValue": 1000,
                             "targetUnit": "Mbps",
-                            "targetOperator": ">="
+                            "targetOperator": ">=",
                         },
                         {
                             "targetName": "uplink-speed",
                             "targetValue": 100,
                             "targetUnit": "Mbps",
-                            "targetOperator": ">="
-                        }
+                            "targetOperator": ">=",
+                        },
                     ],
-                    "priority": 8
-                }
+                    "priority": 8,
+                },
             ],
             "intentMetadata": {
                 "createdAt": datetime.utcnow().isoformat(),
@@ -275,9 +297,9 @@ class TestIntentSchema:
                 "additionalInfo": {
                     "targetSite": "both",
                     "serviceType": "URLLC",
-                    "multiSite": True
-                }
-            }
+                    "multiSite": True,
+                },
+            },
         }
 
         validate(intent, self.tmf921_schema)  # Should not raise

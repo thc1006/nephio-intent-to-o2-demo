@@ -1,0 +1,11 @@
+{
+  "intentId": "edge1-basic-001",
+  "serviceType": "enhanced-mobile-broadband",
+  "targetSite": "edge1",
+  "resourceProfile": "basic",
+  "description": "Basic enhanced mobile broadband service without SLA requirements",
+  "metadata": {
+    "customer": "basic-customer-001",
+    "priority": "low"
+  }
+}

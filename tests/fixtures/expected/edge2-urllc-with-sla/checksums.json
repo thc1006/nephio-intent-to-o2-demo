@@ -1,0 +1,6 @@
+{
+  "edge2/ConfigMap/intent-edge2-urllc-001-edge2": "edba1fbdcccad1a376babd96afdbd84fac42425a00fbe0d3c8a73dbc3d585a6e",
+  "edge2/Kustomization/kustomization-edge2": "963720121dfc7d521a45f64344ebf4410f2be7713057600932a429e8f664048f",
+  "edge2/NetworkSlice/slice-edge2-urllc-001-edge2": "74e0fbb77bd3d6f16931871c50838e7787b0a1964ab840b2e4a7fd4d1de4e641",
+  "edge2/ProvisioningRequest/edge2-urllc-001-edge2": "678a0e6fd65e09dd6b599dfa1858570ad3107542a7504b9bb8247b188aba2958"
+}

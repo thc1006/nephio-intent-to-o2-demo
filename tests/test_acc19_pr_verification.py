@@ -17,13 +17,14 @@ TDD Benefits implemented here:
 - Documentation through executable specifications
 """
 
-import unittest
-import subprocess
 import json
+import subprocess
 import time
-import yaml
+import unittest
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import Any, Dict, List
+
+import yaml
 
 
 class TestACC19O2IMSProvisioningRequest(unittest.TestCase):
@@ -53,7 +54,7 @@ class TestACC19O2IMSProvisioningRequest(unittest.TestCase):
             "provisioningrequest",
             "provisioningrequests",
             "pr",
-            "o2ims-provisioningrequest"
+            "o2ims-provisioningrequest",
         ]
 
         discovered_crds = []
@@ -62,8 +63,19 @@ class TestACC19O2IMSProvisioningRequest(unittest.TestCase):
             try:
                 # Try to get CRD resources matching pattern
                 result = subprocess.run(
-                    ["kubectl", "--context", self.context, "get", pattern, "-A", "-o", "json"],
-                    capture_output=True, text=True, timeout=30
+                    [
+                        "kubectl",
+                        "--context",
+                        self.context,
+                        "get",
+                        pattern,
+                        "-A",
+                        "-o",
+                        "json",
+                    ],
+                    capture_output=True,
+                    text=True,
+                    timeout=30,
                 )
 
                 if result.returncode == 0:
@@ -75,8 +87,11 @@ class TestACC19O2IMSProvisioningRequest(unittest.TestCase):
                 print(f"Warning: Failed to query pattern {pattern}: {e}")
 
         # Validation: Assert that we found PR CRDs
-        self.assertGreater(len(discovered_crds), 0,
-                          "Should discover at least one ProvisioningRequest CRD resource")
+        self.assertGreater(
+            len(discovered_crds),
+            0,
+            "Should discover at least one ProvisioningRequest CRD resource",
+        )
 
         # Store for use in other tests
         self.pr_crds = discovered_crds
@@ -89,20 +104,23 @@ class TestACC19O2IMSProvisioningRequest(unittest.TestCase):
         # Execution: Check if PR CRD is registered in the cluster
         result = subprocess.run(
             ["kubectl", "--context", self.context, "get", "crd", "-o", "json"],
-            capture_output=True, text=True
+            capture_output=True,
+            text=True,
         )
 
         self.assertEqual(result.returncode, 0, "Should be able to query CRDs")
 
         crds_data = json.loads(result.stdout)
         pr_crds = [
-            crd for crd in crds_data.get("items", [])
+            crd
+            for crd in crds_data.get("items", [])
             if "provisioningrequest" in crd.get("metadata", {}).get("name", "").lower()
         ]
 
         # Validation: Assert PR CRD exists
-        self.assertGreater(len(pr_crds), 0,
-                          "ProvisioningRequest CRD should be registered in cluster")
+        self.assertGreater(
+            len(pr_crds), 0, "ProvisioningRequest CRD should be registered in cluster"
+        )
 
     def test_pr_resources_have_ready_status(self):
         """
@@ -127,27 +145,34 @@ class TestACC19O2IMSProvisioningRequest(unittest.TestCase):
             state = pr_status.get("state", "")
 
             is_ready = (
-                phase.upper() in self.required_pr_states or
-                state.upper() in self.required_pr_states or
-                any(condition.get("type", "") == "Ready" and
-                    condition.get("status", "") == "True"
-                    for condition in status_conditions)
+                phase.upper() in self.required_pr_states
+                or state.upper() in self.required_pr_states
+                or any(
+                    condition.get("type", "") == "Ready"
+                    and condition.get("status", "") == "True"
+                    for condition in status_conditions
+                )
             )
 
             if is_ready:
                 ready_prs.append(pr)
             else:
-                non_ready_prs.append({
-                    "name": pr_name,
-                    "namespace": pr_namespace,
-                    "phase": phase,
-                    "state": state,
-                    "conditions": status_conditions
-                })
+                non_ready_prs.append(
+                    {
+                        "name": pr_name,
+                        "namespace": pr_namespace,
+                        "phase": phase,
+                        "state": state,
+                        "conditions": status_conditions,
+                    }
+                )
 
         # Validation: Assert that at least some PRs are ready
-        self.assertGreater(len(ready_prs), 0,
-                          f"At least one PR should be READY. Found {len(non_ready_prs)} non-ready PRs")
+        self.assertGreater(
+            len(ready_prs),
+            0,
+            f"At least one PR should be READY. Found {len(non_ready_prs)} non-ready PRs",
+        )
 
     def test_pr_services_are_reachable(self):
         """
@@ -156,8 +181,18 @@ class TestACC19O2IMSProvisioningRequest(unittest.TestCase):
         """
         # Setup: Discover services related to PRs
         result = subprocess.run(
-            ["kubectl", "--context", self.context, "get", "services", "-A", "-o", "json"],
-            capture_output=True, text=True
+            [
+                "kubectl",
+                "--context",
+                self.context,
+                "get",
+                "services",
+                "-A",
+                "-o",
+                "json",
+            ],
+            capture_output=True,
+            text=True,
         )
 
         self.assertEqual(result.returncode, 0, "Should be able to get services")
@@ -168,8 +203,10 @@ class TestACC19O2IMSProvisioningRequest(unittest.TestCase):
         # Execution: Find services related to O2IMS/PR functionality
         for service in services_data.get("items", []):
             service_name = service.get("metadata", {}).get("name", "").lower()
-            if any(keyword in service_name for keyword in
-                   ["o2ims", "provisioningrequest", "pr-", "o2-"]):
+            if any(
+                keyword in service_name
+                for keyword in ["o2ims", "provisioningrequest", "pr-", "o2-"]
+            ):
                 pr_related_services.append(service)
 
         # Test service reachability by checking endpoints
@@ -180,9 +217,20 @@ class TestACC19O2IMSProvisioningRequest(unittest.TestCase):
 
             # Check if service has endpoints
             endpoints_result = subprocess.run(
-                ["kubectl", "--context", self.context, "get", "endpoints",
-                 service_name, "-n", service_namespace, "-o", "json"],
-                capture_output=True, text=True
+                [
+                    "kubectl",
+                    "--context",
+                    self.context,
+                    "get",
+                    "endpoints",
+                    service_name,
+                    "-n",
+                    service_namespace,
+                    "-o",
+                    "json",
+                ],
+                capture_output=True,
+                text=True,
             )
 
             if endpoints_result.returncode == 0:
@@ -192,8 +240,11 @@ class TestACC19O2IMSProvisioningRequest(unittest.TestCase):
 
         # Validation: Assert service reachability
         if pr_related_services:
-            self.assertGreater(len(reachable_services), 0,
-                              "At least one PR-related service should be reachable")
+            self.assertGreater(
+                len(reachable_services),
+                0,
+                "At least one PR-related service should be reachable",
+            )
 
     def test_pr_resource_validation_schema(self):
         """
@@ -213,16 +264,21 @@ class TestACC19O2IMSProvisioningRequest(unittest.TestCase):
             if validation_results["is_valid"]:
                 valid_prs.append(pr)
             else:
-                invalid_prs.append({
-                    "name": pr.get("metadata", {}).get("name", "unknown"),
-                    "errors": validation_results["errors"]
-                })
+                invalid_prs.append(
+                    {
+                        "name": pr.get("metadata", {}).get("name", "unknown"),
+                        "errors": validation_results["errors"],
+                    }
+                )
 
         # Validation: Assert schema compliance
         if self.pr_crds:  # Only validate if we have PRs
-            self.assertGreater(len(valid_prs), 0,
-                              f"At least one PR should have valid schema. "
-                              f"Found {len(invalid_prs)} invalid PRs")
+            self.assertGreater(
+                len(valid_prs),
+                0,
+                f"At least one PR should have valid schema. "
+                f"Found {len(invalid_prs)} invalid PRs",
+            )
 
     def _validate_pr_schema(self, pr: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -248,10 +304,7 @@ class TestACC19O2IMSProvisioningRequest(unittest.TestCase):
         if not status:
             errors.append("Missing status section")
 
-        return {
-            "is_valid": len(errors) == 0,
-            "errors": errors
-        }
+        return {"is_valid": len(errors) == 0, "errors": errors}
 
     def test_pr_resource_lifecycle_state(self):
         """
@@ -265,7 +318,7 @@ class TestACC19O2IMSProvisioningRequest(unittest.TestCase):
             "total_prs": len(self.pr_crds),
             "state_distribution": {},
             "ready_count": 0,
-            "failed_count": 0
+            "failed_count": 0,
         }
 
         # Execution: Analyze PR states
@@ -276,8 +329,9 @@ class TestACC19O2IMSProvisioningRequest(unittest.TestCase):
 
             # Count state distribution
             primary_state = phase if phase != "Unknown" else state
-            state_analysis["state_distribution"][primary_state] = \
+            state_analysis["state_distribution"][primary_state] = (
                 state_analysis["state_distribution"].get(primary_state, 0) + 1
+            )
 
             # Count ready and failed states
             if primary_state.upper() in self.required_pr_states:
@@ -287,12 +341,16 @@ class TestACC19O2IMSProvisioningRequest(unittest.TestCase):
 
         # Validation: Assert healthy state distribution
         if state_analysis["total_prs"] > 0:
-            ready_percentage = (state_analysis["ready_count"] /
-                              state_analysis["total_prs"]) * 100
+            ready_percentage = (
+                state_analysis["ready_count"] / state_analysis["total_prs"]
+            ) * 100
 
-            self.assertGreater(ready_percentage, 50,
-                              f"At least 50% of PRs should be in ready state. "
-                              f"Currently {ready_percentage:.1f}% ready")
+            self.assertGreater(
+                ready_percentage,
+                50,
+                f"At least 50% of PRs should be in ready state. "
+                f"Currently {ready_percentage:.1f}% ready",
+            )
 
     def test_generate_acc19_artifacts(self):
         """
@@ -307,15 +365,17 @@ class TestACC19O2IMSProvisioningRequest(unittest.TestCase):
             "phase": "ACC-19",
             "test_name": "O2IMS PR Verification",
             "context": self.context,
-            "timestamp": subprocess.check_output(["date", "-Iseconds"]).decode().strip(),
+            "timestamp": subprocess.check_output(["date", "-Iseconds"])
+            .decode()
+            .strip(),
             "status": "COMPLETED",
             "pr_verification": {
                 "total_prs_discovered": len(self.pr_crds),
                 "pr_resources": [],
                 "service_reachability": {},
                 "crd_status": {},
-                "compliance_summary": {}
-            }
+                "compliance_summary": {},
+            },
         }
 
         # Analyze each discovered PR
@@ -327,14 +387,16 @@ class TestACC19O2IMSProvisioningRequest(unittest.TestCase):
                 "phase": pr.get("status", {}).get("phase", "Unknown"),
                 "state": pr.get("status", {}).get("state", "Unknown"),
                 "ready": False,
-                "last_updated": pr.get("metadata", {}).get("creationTimestamp", "Unknown")
+                "last_updated": pr.get("metadata", {}).get(
+                    "creationTimestamp", "Unknown"
+                ),
             }
 
             # Check if PR is ready
             status = pr.get("status", {})
             is_ready = (
-                status.get("phase", "").upper() in self.required_pr_states or
-                status.get("state", "").upper() in self.required_pr_states
+                status.get("phase", "").upper() in self.required_pr_states
+                or status.get("state", "").upper() in self.required_pr_states
             )
 
             pr_summary["ready"] = is_ready
@@ -347,8 +409,10 @@ class TestACC19O2IMSProvisioningRequest(unittest.TestCase):
         verification_data["pr_verification"]["compliance_summary"] = {
             "ready_prs": ready_count,
             "total_prs": len(self.pr_crds),
-            "ready_percentage": (ready_count / len(self.pr_crds) * 100) if self.pr_crds else 0,
-            "overall_status": "PASS" if ready_count > 0 else "FAIL"
+            "ready_percentage": (
+                (ready_count / len(self.pr_crds) * 100) if self.pr_crds else 0
+            ),
+            "overall_status": "PASS" if ready_count > 0 else "FAIL",
         }
 
         # Write artifact
@@ -379,7 +443,9 @@ class TestACC19Integration(unittest.TestCase):
         # This test orchestrates the complete verification workflow
         # and validates that all components work together correctly
 
-        test_suite = unittest.TestLoader().loadTestsFromTestCase(TestACC19O2IMSProvisioningRequest)
+        test_suite = unittest.TestLoader().loadTestsFromTestCase(
+            TestACC19O2IMSProvisioningRequest
+        )
         test_runner = unittest.TextTestRunner(verbosity=0)
         result = test_runner.run(test_suite)
 

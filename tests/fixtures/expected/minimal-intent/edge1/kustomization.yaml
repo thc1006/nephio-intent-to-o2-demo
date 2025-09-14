@@ -1,0 +1,13 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+commonLabels:
+  intent-id: minimal-001
+  target-site: edge1
+kind: Kustomization
+metadata:
+  annotations:
+    config.kubernetes.io/local-config: 'true'
+  name: kustomization-edge1
+namespace: edge1
+resources:
+- intent-minimal-001-edge1-configmap.yaml
+- minimal-001-edge1-provisioning-request.yaml

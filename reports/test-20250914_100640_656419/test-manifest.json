@@ -1,0 +1,15 @@
+{
+  "test": {
+    "execution_id": "20250914_100640_656419",
+    "timestamp": "2025-09-14T10:06:40.761Z",
+    "mode": "basic",
+    "dry_run": true,
+    "target_site": "edge1",
+    "simulate_failure": false
+  },
+  "scripts": {
+    "postcheck": "./scripts/postcheck.sh",
+    "rollback": "./scripts/rollback.sh",
+    "demo_llm": "./scripts/demo_llm.sh"
+  }
+}

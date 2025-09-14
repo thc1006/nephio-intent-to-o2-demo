@@ -1,0 +1,10 @@
+{
+  "edge1/ConfigMap/intent-both-mmt-001-edge1": "4b5fdadc262c9bd7fd832bcbb7dd4e1894ec564e345683f8748793ce5e3a19a9",
+  "edge1/Kustomization/kustomization-edge1": "0a16bb1fdc24aadd4ea6b4245c949c525042327714cd890d51434c6b4a1fbfab",
+  "edge1/NetworkSlice/slice-both-mmt-001-edge1": "e4bb00c384ff84039bc8a0dfefcc3d880397e677a5089f200bc9bd2cabab3c95",
+  "edge1/ProvisioningRequest/both-mmt-001-edge1": "798f9a638edd0bd4436a933fafdd2753251f898c0b137295a5ca80b553b6eed4",
+  "edge2/ConfigMap/intent-both-mmt-001-edge2": "c5c51851abc6d3cd913d99d6881d929106c480d85cef32142e34cab8a9f29b6b",
+  "edge2/Kustomization/kustomization-edge2": "772df3937d3ee995a9494e245ab09dd1f40699dd6b0435dabd9407d5d0c24c66",
+  "edge2/NetworkSlice/slice-both-mmt-001-edge2": "520dcb5dc18c8c4fa0b7e6bd73ccf67535621fb8772b48642589a040ad54dd67",
+  "edge2/ProvisioningRequest/both-mmt-001-edge2": "9009194ece3e7f4c25f6400cd1e2e958b06a5ae00ed2bce812fa68c2e5ae7fef"
+}

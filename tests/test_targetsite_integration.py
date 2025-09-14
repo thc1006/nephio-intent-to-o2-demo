@@ -3,14 +3,16 @@
 Integration tests for targetSite functionality across the LLM adapter stack
 """
 
-import pytest
-import sys
 import os
+import sys
+
+import pytest
 
 # Add the llm-adapter to the path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../llm-adapter'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../llm-adapter"))
 
 from adapters.llm_client import get_llm_client
+
 from tests.test_intent_schema import validate_intent_json
 
 
@@ -81,7 +83,7 @@ class TestTargetSiteIntegration:
         test_cases = [
             "Deploy service across both edge1 and edge2",
             "Setup network in multiple sites",
-            "Create service for both edge nodes"
+            "Create service for both edge nodes",
         ]
 
         for request in test_cases:
@@ -99,7 +101,7 @@ class TestTargetSiteIntegration:
             "Create URLLC service for autonomous vehicles",
             "Setup mMTC network for smart city sensors",
             "Deploy gaming service in edge2",
-            "Create IoT network across both sites"
+            "Create IoT network across both sites",
         ]
 
         for request in test_requests:
@@ -111,7 +113,9 @@ class TestTargetSiteIntegration:
             assert tmf921_intent["targetSite"] in ["edge1", "edge2", "both"]
 
             # Check schema compliance
-            assert validate_intent_json(tmf921_intent), f"Schema validation failed for: {request}"
+            assert validate_intent_json(
+                tmf921_intent
+            ), f"Schema validation failed for: {request}"
 
             # Check metadata includes targetSite info
             assert "additionalInfo" in tmf921_intent["intentMetadata"]
@@ -121,11 +125,7 @@ class TestTargetSiteIntegration:
         """Test that the API maintains backward compatibility"""
         # Even without explicit targetSite handling in requests,
         # the system should assign reasonable defaults
-        basic_requests = [
-            "Deploy network slice",
-            "Create 5G service",
-            "Setup network"
-        ]
+        basic_requests = ["Deploy network slice", "Create 5G service", "Setup network"]
 
         for request in basic_requests:
             intent_dict = self.llm_client.parse_text(request)
