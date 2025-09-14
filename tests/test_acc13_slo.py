@@ -307,13 +307,15 @@ class TestACC13SLOEndpoints(unittest.TestCase):
                     "avg_ms": statistics.mean(load_times) if load_times else 0,
                     "raw_times": load_times[:5],  # Sample of raw times
                 },
-                "p95_change_percent": ((load_p95 - baseline_p95) / baseline_p95 * 100)
-                if baseline_p95 > 0
-                else 0,
+                "p95_change_percent": (
+                    ((load_p95 - baseline_p95) / baseline_p95 * 100)
+                    if baseline_p95 > 0
+                    else 0
+                ),
             },
-            "endpoints_discovered": self.slo_endpoints[:3]
-            if hasattr(self, "slo_endpoints")
-            else [],
+            "endpoints_discovered": (
+                self.slo_endpoints[:3] if hasattr(self, "slo_endpoints") else []
+            ),
         }
 
         # Write artifact

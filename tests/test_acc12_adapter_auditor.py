@@ -406,12 +406,18 @@ class TestACC12AdapterAuditor:
                 "failed": len(
                     [r for r in validation_results.values() if r["status"] == "FAIL"]
                 ),
-                "success_rate": len(
-                    [r for r in validation_results.values() if r["status"] == "PASS"]
-                )
-                / len(validation_results)
-                if validation_results
-                else 0,
+                "success_rate": (
+                    len(
+                        [
+                            r
+                            for r in validation_results.values()
+                            if r["status"] == "PASS"
+                        ]
+                    )
+                    / len(validation_results)
+                    if validation_results
+                    else 0
+                ),
             },
             "natural_language_examples": self.get_nl_test_examples(),
             "schema_requirements": {

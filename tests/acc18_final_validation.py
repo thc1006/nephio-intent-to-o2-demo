@@ -508,12 +508,12 @@ class ACC18FinalValidator:
                 "sla_requirements_mapping": True,
             },
         }
-        self.final_report["tmf921_v5_compliance"][
-            "specification_adherence"
-        ] = tmf921_compliance["schema_adherence"]
-        self.final_report["tmf921_v5_compliance"][
-            "o2ims_mapping_accuracy"
-        ] = tmf921_compliance["o2ims_mapping"]
+        self.final_report["tmf921_v5_compliance"]["specification_adherence"] = (
+            tmf921_compliance["schema_adherence"]
+        )
+        self.final_report["tmf921_v5_compliance"]["o2ims_mapping_accuracy"] = (
+            tmf921_compliance["o2ims_mapping"]
+        )
 
         # Save final report
         final_report_file = self.artifacts_dir / "final_contract_validation_report.json"

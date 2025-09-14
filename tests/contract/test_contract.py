@@ -58,9 +58,11 @@ class ContractTestBase(unittest.TestCase):
                     result[key] = self.normalize_timestamp(value)
                 elif isinstance(value, list):
                     result[key] = [
-                        self.normalize_timestamp(item)
-                        if isinstance(item, dict)
-                        else item
+                        (
+                            self.normalize_timestamp(item)
+                            if isinstance(item, dict)
+                            else item
+                        )
                         for item in value
                     ]
                 else:

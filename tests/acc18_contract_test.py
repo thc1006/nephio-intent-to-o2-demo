@@ -528,19 +528,19 @@ class TMF921ContractTest:
                             mapping_detail["success"] = True
                             mapping_result["successful_mappings"] += 1
                         else:
-                            mapping_detail[
-                                "error"
-                            ] = f"Value mismatch: expected {expected_value}, got {target_value}"
+                            mapping_detail["error"] = (
+                                f"Value mismatch: expected {expected_value}, got {target_value}"
+                            )
                             mapping_result["failed_mappings"] += 1
                     else:
-                        mapping_detail[
-                            "error"
-                        ] = f"Target resource {mapping['target_resource']} not found"
+                        mapping_detail["error"] = (
+                            f"Target resource {mapping['target_resource']} not found"
+                        )
                         mapping_result["failed_mappings"] += 1
                 else:
-                    mapping_detail[
-                        "error"
-                    ] = f"Source value not found at {mapping['source_path']}"
+                    mapping_detail["error"] = (
+                        f"Source value not found at {mapping['source_path']}"
+                    )
                     mapping_result["failed_mappings"] += 1
 
             except Exception as e:
@@ -588,7 +588,9 @@ class TMF921ContractTest:
         intent_files = self.create_test_intent_files(golden_intents)
 
         # GREEN: Execute tests and validate existing implementation
-        print("\n📍 TDD Phase 2: GREEN - Validating existing translation implementation")
+        print(
+            "\n📍 TDD Phase 2: GREEN - Validating existing translation implementation"
+        )
 
         for intent_name, intent_file in intent_files.items():
             print(f"  Testing {intent_name} intent...")

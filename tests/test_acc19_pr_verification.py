@@ -409,9 +409,9 @@ class TestACC19O2IMSProvisioningRequest(unittest.TestCase):
         verification_data["pr_verification"]["compliance_summary"] = {
             "ready_prs": ready_count,
             "total_prs": len(self.pr_crds),
-            "ready_percentage": (ready_count / len(self.pr_crds) * 100)
-            if self.pr_crds
-            else 0,
+            "ready_percentage": (
+                (ready_count / len(self.pr_crds) * 100) if self.pr_crds else 0
+            ),
             "overall_status": "PASS" if ready_count > 0 else "FAIL",
         }
 
