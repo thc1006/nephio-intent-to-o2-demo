@@ -1,0 +1,135 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "TMF921 Intent Schema",
+  "type": "object",
+  "required": ["intentId", "intentName", "intentType", "intentState", "intentPriority", "targetSite", "intentParameters"],
+  "properties": {
+    "intentId": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9-]+$",
+      "minLength": 1,
+      "description": "Unique identifier for the intent"
+    },
+    "intentName": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255,
+      "description": "Human-readable name for the intent"
+    },
+    "intentType": {
+      "type": "string",
+      "enum": ["NETWORK_SLICE_INTENT", "SERVICE_INTENT", "RESOURCE_INTENT"],
+      "description": "Type of intent"
+    },
+    "intentState": {
+      "type": "string",
+      "enum": ["CREATED", "ACTIVE", "SUSPENDED", "TERMINATED"],
+      "default": "CREATED",
+      "description": "Current state of the intent"
+    },
+    "intentPriority": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 10,
+      "description": "Priority level (0=lowest, 10=highest)"
+    },
+    "targetSite": {
+      "type": "string",
+      "enum": ["edge1", "edge2", "both"],
+      "description": "Target deployment site"
+    },
+    "intentParameters": {
+      "type": "object",
+      "required": ["serviceType"],
+      "properties": {
+        "serviceType": {
+          "type": "string",
+          "enum": ["eMBB", "URLLC", "mMTC"],
+          "description": "5G service type"
+        },
+        "location": {
+          "type": "string",
+          "description": "Deployment location"
+        },
+        "qosParameters": {
+          "type": "object",
+          "properties": {
+            "downlinkMbps": {
+              "type": ["integer", "null"],
+              "minimum": 0,
+              "maximum": 10000
+            },
+            "uplinkMbps": {
+              "type": ["integer", "null"],
+              "minimum": 0,
+              "maximum": 10000
+            },
+            "latencyMs": {
+              "type": ["integer", "null"],
+              "minimum": 0,
+              "maximum": 1000
+            }
+          }
+        },
+        "originalRequest": {
+          "type": "string",
+          "description": "Original natural language request"
+        }
+      }
+    },
+    "constraints": {
+      "type": "object",
+      "properties": {
+        "resourceConstraints": {
+          "type": "object"
+        }
+      }
+    },
+    "targetEntities": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "entityType": {
+            "type": "string"
+          },
+          "entityId": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "expectedOutcome": {
+      "type": "string",
+      "description": "Expected outcome description"
+    },
+    "intentExpectations": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "intentMetadata": {
+      "type": "object",
+      "properties": {
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "createdBy": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "additionalInfo": {
+          "type": "object"
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

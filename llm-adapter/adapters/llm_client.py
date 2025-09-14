@@ -7,20 +7,32 @@ import re
 import json
 import subprocess
 import logging
+import time
+import hashlib
 from typing import Dict, Any, Optional
+from datetime import datetime
+from pathlib import Path
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Cache for repeated inputs
+CACHE = {}
+CACHE_TTL = 300  # 5 minutes
+
 
 class LLMClient:
     """Pluggable LLM client with Claude CLI support"""
-    
+
     def __init__(self):
         self.use_claude = os.getenv('CLAUDE_CLI', '0') == '1'
         self.claude_available = self._check_claude_availability()
         self.timeout = int(os.getenv('LLM_TIMEOUT', '30'))
-        
+        self.max_retries = int(os.getenv('LLM_MAX_RETRIES', '3'))
+        self.retry_backoff = float(os.getenv('LLM_RETRY_BACKOFF', '1.5'))
+        self.artifacts_dir = Path('/home/ubuntu/nephio-intent-to-o2-demo/artifacts/adapter')
+        self.artifacts_dir.mkdir(parents=True, exist_ok=True)
+
         if self.use_claude and self.claude_available:
             logger.info("LLM Client: Using Claude CLI")
         else:
@@ -37,28 +49,100 @@ class LLMClient:
             return False
     
     def parse_text(self, text: str) -> Dict[str, Any]:
-        """Parse natural language text to extract intent"""
+        """Parse natural language text to extract intent with caching and retry"""
+        # Check cache first
+        cache_key = hashlib.md5(text.encode()).hexdigest()
+        if cache_key in CACHE:
+            cached_time, cached_result = CACHE[cache_key]
+            if time.time() - cached_time < CACHE_TTL:
+                logger.info(f"Cache hit for text: {text[:50]}...")
+                self._log_artifact("cache_hit", {"text": text, "result": cached_result})
+                return cached_result
+
+        # Try with retries
+        result = None
+        attempt = 0
+
         if self.use_claude and self.claude_available:
-            try:
-                return self._parse_with_claude(text)
-            except Exception as e:
-                logger.warning(f"Claude parsing failed: {e}, falling back to rules")
-        
-        return self._parse_with_rules(text)
+            while attempt < self.max_retries:
+                try:
+                    result = self._parse_with_claude(text)
+                    break
+                except Exception as e:
+                    attempt += 1
+                    if attempt >= self.max_retries:
+                        logger.warning(f"Claude parsing failed after {self.max_retries} attempts: {e}, falling back to rules")
+                        self._log_artifact("llm_failure", {"text": text, "error": str(e), "attempts": attempt})
+                    else:
+                        wait_time = self.retry_backoff ** attempt
+                        logger.info(f"Retry {attempt}/{self.max_retries} after {wait_time}s...")
+                        time.sleep(wait_time)
+
+        if result is None:
+            result = self._parse_with_rules(text)
+            self._log_artifact("fallback_used", {"text": text, "result": result})
+        else:
+            self._log_artifact("llm_success", {"text": text, "result": result})
+
+        # Cache the result
+        CACHE[cache_key] = (time.time(), result)
+
+        return result
     
     def _parse_with_claude(self, text: str) -> Dict[str, Any]:
-        """Parse using Claude CLI"""
-        prompt = f"""Convert this 5G network request to JSON with ONLY this structure (no other text):
-{{"service": "eMBB/URLLC/mMTC", "location": "edge1/zone1/etc", "targetSite": "edge1/edge2/both", "qos": {{"downlink_mbps": int, "uplink_mbps": int, "latency_ms": int}}}}
+        """Parse using Claude CLI with optimized deterministic prompt"""
+        prompt = f"""<system>
+You are a TMF921-compliant 5G network intent parser. You must output ONLY valid JSON matching the exact schema below. Any non-JSON text will cause system failure.
+</system>
 
-Rules for targetSite selection:
-- eMBB (enhanced mobile broadband) → typically "edge1"
-- URLLC (ultra-reliable low latency) → typically "edge2"
-- mMTC (massive machine type) → typically "both"
-- If explicit site is mentioned (edge1/edge2), use that site
-- If both sites or multi-site mentioned, use "both"
+<constitutional-rules>
+1. CRITICAL: Output must be pure JSON - no explanations, no markdown, no additional text
+2. Self-check: Verify all required fields are present before outputting
+3. Self-correct: If ambiguous, choose the most conservative/safe option
+4. Validation: Ensure all numeric values are positive integers
+</constitutional-rules>
 
-Request: {text}"""
+<chain-of-thought>
+Step 1: Identify service type by keywords
+- "video", "streaming", "bandwidth", "throughput" → eMBB
+- "reliable", "critical", "latency", "real-time", "mission" → URLLC
+- "iot", "sensor", "machine", "device", "massive" → mMTC
+- Default if unclear → eMBB
+
+Step 2: Extract location
+- Look for: edge1, edge2, zone1-9, core1-9
+- Default if not specified → edge1
+
+Step 3: Determine targetSite
+- Explicit "edge1" mentioned → edge1
+- Explicit "edge2" mentioned → edge2
+- "both", "multi", "multiple" sites → both
+- Service defaults: eMBB→edge1, URLLC→edge2, mMTC→both
+
+Step 4: Extract QoS parameters
+- downlink: Mbps/Gbps with "down"/"DL" (Gbps=value*1000)
+- uplink: Mbps/Gbps with "up"/"UL" (default: 50% of downlink)
+- latency: ms values (defaults: eMBB=50, URLLC=1, mMTC=100)
+</chain-of-thought>
+
+<few-shot-examples>
+Input: "Deploy high-bandwidth video streaming service at edge1 with 1Gbps downlink"
+Output: {{"service":"eMBB","location":"edge1","targetSite":"edge1","qos":{{"downlink_mbps":1000,"uplink_mbps":500,"latency_ms":50}}}}
+
+Input: "Need ultra-reliable service for autonomous vehicles with 1ms latency"
+Output: {{"service":"URLLC","location":"edge1","targetSite":"edge2","qos":{{"downlink_mbps":100,"uplink_mbps":50,"latency_ms":1}}}}
+
+Input: "Setup massive IoT sensor network across both sites, 100 Mbps"
+Output: {{"service":"mMTC","location":"edge1","targetSite":"both","qos":{{"downlink_mbps":100,"uplink_mbps":50,"latency_ms":100}}}}
+</few-shot-examples>
+
+<request>
+{text}
+</request>
+
+<instruction>
+Apply the chain-of-thought steps to the request above and output ONLY the JSON result:
+</instruction>"""
         
         result = subprocess.run(
             ['claude', '-p', prompt],
@@ -139,6 +223,34 @@ Request: {text}"""
     def get_model_info(self) -> str:
         """Get current model being used"""
         return "claude-cli" if (self.use_claude and self.claude_available) else "rule-based"
+
+    def _log_artifact(self, event_type: str, data: Dict[str, Any]):
+        """Log artifacts to artifacts/adapter directory"""
+        try:
+            timestamp = datetime.utcnow().isoformat()
+            log_entry = {
+                "timestamp": timestamp,
+                "event_type": event_type,
+                "model": self.get_model_info(),
+                "data": data
+            }
+
+            # Scrub any potential secrets
+            log_entry_str = json.dumps(log_entry, indent=2)
+            for pattern in ['password', 'secret', 'token', 'key', 'credential']:
+                if pattern in log_entry_str.lower():
+                    logger.warning(f"Potential secret detected in log, skipping artifact for {event_type}")
+                    return
+
+            # Write to daily log file
+            date_str = datetime.utcnow().strftime('%Y%m%d')
+            log_file = self.artifacts_dir / f"adapter_log_{date_str}.jsonl"
+
+            with open(log_file, 'a') as f:
+                f.write(json.dumps(log_entry) + '\n')
+
+        except Exception as e:
+            logger.warning(f"Failed to log artifact: {e}")
     
     def convert_to_tmf921(self, intent_dict: Dict[str, Any], original_text: str, override_target_site: Optional[str] = None) -> Dict[str, Any]:
         """Convert internal format to TMF921-compliant Intent"""

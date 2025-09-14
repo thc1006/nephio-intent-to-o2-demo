@@ -1,0 +1,104 @@
+{
+  "golden_cases": [
+    {
+      "id": "golden-001",
+      "name": "eMBB Service at Edge1",
+      "input": "Deploy eMBB slice in edge1 with 200Mbps DL, 30ms latency",
+      "expected_output": {
+        "serviceType": "eMBB",
+        "targetSite": "edge1",
+        "location": "edge1",
+        "qosParameters": {
+          "downlinkMbps": 200,
+          "uplinkMbps": null,
+          "latencyMs": 30
+        }
+      },
+      "validation_rules": {
+        "must_have_fields": ["intentId", "intentName", "intentType", "targetSite", "intentParameters"],
+        "intent_type": "NETWORK_SLICE_INTENT",
+        "priority_range": [4, 6]
+      }
+    },
+    {
+      "id": "golden-002",
+      "name": "URLLC Service at Edge2",
+      "input": "Create URLLC service in edge2 with 10ms latency and 100Mbps downlink",
+      "expected_output": {
+        "serviceType": "URLLC",
+        "targetSite": "edge2",
+        "location": "edge2",
+        "qosParameters": {
+          "downlinkMbps": 100,
+          "uplinkMbps": null,
+          "latencyMs": 10
+        }
+      },
+      "validation_rules": {
+        "must_have_fields": ["intentId", "intentName", "intentType", "targetSite", "intentParameters"],
+        "intent_type": "NETWORK_SLICE_INTENT",
+        "priority_range": [8, 10]
+      }
+    },
+    {
+      "id": "golden-003",
+      "name": "mMTC Service at Both Sites",
+      "input": "Setup mMTC network in zone3 for IoT devices with 50Mbps capacity",
+      "expected_output": {
+        "serviceType": "mMTC",
+        "targetSite": "both",
+        "location": "zone3",
+        "qosParameters": {
+          "downlinkMbps": 50,
+          "uplinkMbps": null,
+          "latencyMs": null
+        }
+      },
+      "validation_rules": {
+        "must_have_fields": ["intentId", "intentName", "intentType", "targetSite", "intentParameters"],
+        "intent_type": "NETWORK_SLICE_INTENT",
+        "priority_range": [3, 6]
+      }
+    },
+    {
+      "id": "golden-004",
+      "name": "High-priority URLLC with explicit site",
+      "input": "Deploy ultra-reliable low latency service at edge2 with 5ms latency requirement",
+      "expected_output": {
+        "serviceType": "URLLC",
+        "targetSite": "edge2",
+        "location": "edge2",
+        "qosParameters": {
+          "downlinkMbps": null,
+          "uplinkMbps": null,
+          "latencyMs": 5
+        }
+      },
+      "validation_rules": {
+        "must_have_fields": ["intentId", "intentName", "intentType", "targetSite", "intentParameters"],
+        "intent_type": "NETWORK_SLICE_INTENT",
+        "priority_range": [9, 10]
+      }
+    },
+    {
+      "id": "golden-005",
+      "name": "IoT deployment across multiple sites",
+      "input": "Deploy IoT network for massive machine type communication across both edge sites",
+      "expected_output": {
+        "serviceType": "mMTC",
+        "targetSite": "both",
+        "location": "edge1",
+        "qosParameters": {
+          "downlinkMbps": null,
+          "uplinkMbps": null,
+          "latencyMs": null
+        }
+      },
+      "validation_rules": {
+        "must_have_fields": ["intentId", "intentName", "intentType", "targetSite", "intentParameters"],
+        "intent_type": "NETWORK_SLICE_INTENT",
+        "priority_range": [4, 6]
+      }
+    }
+  ]
+}

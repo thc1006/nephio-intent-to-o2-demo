@@ -4,16 +4,33 @@ LLM Adapter Service for VM-3
 Converts natural language requests to structured intents
 """
 
+import json
+import logging
 from datetime import datetime
 from typing import Dict, Any, Optional
+from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel, Field, validator
 import uvicorn
+import jsonschema
 
 # Import the LLM client
 from adapters.llm_client import get_llm_client
+
+# Setup logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Load JSON schema
+SCHEMA_PATH = Path(__file__).parent / "schema.json"
+if SCHEMA_PATH.exists():
+    with open(SCHEMA_PATH) as f:
+        TMF921_SCHEMA = json.load(f)
+else:
+    TMF921_SCHEMA = None
+    logger.warning("TMF921 schema not found, validation disabled")
 
 
 app = FastAPI(
@@ -121,9 +138,47 @@ async def generate_tmf921_intent(request: IntentRequest) -> TMF921Intent:
         intent_dict = llm_client.parse_text(text)
 
         # Convert to TMF921 format
-        return llm_client.convert_to_tmf921(intent_dict, text, request.target_site)
+        tmf921_dict = llm_client.convert_to_tmf921(intent_dict, text, request.target_site)
+
+        # Validate against schema if available
+        if TMF921_SCHEMA:
+            try:
+                jsonschema.validate(tmf921_dict, TMF921_SCHEMA)
+                logger.info("TMF921 intent validated successfully")
+            except jsonschema.ValidationError as ve:
+                logger.error(f"Schema validation failed: {ve.message}")
+                # Log to artifacts for debugging
+                _log_validation_error(text, tmf921_dict, str(ve))
+                raise HTTPException(status_code=400, detail=f"Schema validation failed: {ve.message}")
+
+        return TMF921Intent(**tmf921_dict)
+    except HTTPException:
+        raise
     except Exception as e:
+        logger.error(f"TMF921 intent generation failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"TMF921 intent generation failed: {str(e)}")
+
+
+def _log_validation_error(text: str, intent_dict: Dict[str, Any], error: str):
+    """Log validation errors to artifacts"""
+    try:
+        artifacts_dir = Path('/home/ubuntu/nephio-intent-to-o2-demo/artifacts/adapter')
+        artifacts_dir.mkdir(parents=True, exist_ok=True)
+
+        timestamp = datetime.utcnow().isoformat()
+        error_log = {
+            "timestamp": timestamp,
+            "event": "validation_error",
+            "input_text": text,
+            "generated_intent": intent_dict,
+            "error": error
+        }
+
+        error_file = artifacts_dir / f"validation_errors_{datetime.utcnow().strftime('%Y%m%d')}.jsonl"
+        with open(error_file, 'a') as f:
+            f.write(json.dumps(error_log) + '\n')
+    except Exception as e:
+        logger.warning(f"Failed to log validation error: {e}")
 
 
 @app.get("/health")
@@ -142,6 +197,7 @@ async def generate_intent(request: IntentRequest):
     """
     Generate TMF921-compliant Intent from natural language text.
     Returns pure JSON TMF921/3GPP Intent format.
+    Validates against TMF921 schema and returns 400 on invalid.
     """
     return await generate_tmf921_intent(request)
 
