@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: o2ims-mock
+  namespace: edge2-workloads
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: o2ims
+  template:
+    metadata:
+      labels:
+        app: o2ims
+    spec:
+      containers:
+      - name: o2ims
+        image: nginx:alpine
+        ports:
+        - containerPort: 80
+        env:
+        - name: SITE_NAME
+          value: "edge2"
+        volumeMounts:
+        - name: config
+          mountPath: /usr/share/nginx/html
+      volumes:
+      - name: config
+        configMap:
+          name: o2ims-response
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: o2ims-response
+  namespace: edge2-workloads
+data:
+  healthz: |
+    {"status":"healthy","site":"edge2","timestamp":"2025-09-15T15:00:00Z"}
+  index.html: |
+    {"version":"1.0.0","site":"edge2","endpoints":["/healthz","/o2ims/v1"]}

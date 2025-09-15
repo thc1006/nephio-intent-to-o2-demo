@@ -1,0 +1,29 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: load-generator
+  namespace: edge2-workloads
+spec:
+  ttlSecondsAfterFinished: 300
+  template:
+    spec:
+      containers:
+      - name: load-gen
+        image: curlimages/curl:latest
+        command:
+        - sh
+        - -c
+        - |
+          echo "Generating load for 60 seconds..."
+          END=$(($(date +%s) + 60))
+          COUNT=0
+          SUCCESS=0
+          while [ $(date +%s) -lt $END ]; do
+            if curl -sS -o /dev/null -w "%{http_code}" http://o2ims-service/healthz | grep -q "200"; then
+              SUCCESS=$((SUCCESS + 1))
+            fi
+            COUNT=$((COUNT + 1))
+            sleep 0.2
+          done
+          echo "Completed $COUNT requests, $SUCCESS successful"
+      restartPolicy: Never

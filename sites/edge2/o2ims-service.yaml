@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: o2ims-service
+  namespace: edge2-workloads
+spec:
+  type: NodePort
+  ports:
+  - port: 80
+    targetPort: 80
+    nodePort: 31280
+  selector:
+    app: o2ims
