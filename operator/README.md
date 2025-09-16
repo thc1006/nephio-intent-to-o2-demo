@@ -1,128 +1,134 @@
 # Nephio Intent Operator
 
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Version](https://img.shields.io/badge/version-v0.1.0--alpha-orange)](https://github.com/thc1006/nephio-intent-operator/releases)
+A Kubernetes operator for managing intent-based deployments in the Nephio ecosystem.
 
-A Kubernetes operator for managing intent-based network configurations in Nephio environments.
+## Description
 
-## 📍 Repository Structure
+The Nephio Intent Operator orchestrates the complete lifecycle of intent-based deployments, from natural language or JSON intents to deployed Kubernetes resources with SLO validation and automatic rollback capabilities.
 
-This operator can be used in two modes:
+## Features
 
-### 1. **Standalone Mode** (Independent Repository)
-- Repository: https://github.com/thc1006/nephio-intent-operator
-- Clone and build independently
-- Self-contained with all dependencies
+- **Intent Compilation**: Convert natural language or JSON intents to Kubernetes manifests
+- **Multi-Engine Support**: kpt, kustomize, and Helm rendering engines
+- **GitOps Integration**: Automatic synchronization with GitOps repositories
+- **SLO Validation**: Built-in gates for service level objectives
+- **Automatic Rollback**: Smart rollback on validation failures
+- **Multi-Site Delivery**: Deploy to edge1, edge2, or both sites
 
-### 2. **Embedded Mode** (Git Subtree)
-- Embedded in: https://github.com/thc1006/nephio-intent-to-o2-demo
-- Path: `/operator` directory
-- Synchronized via git subtree
-
-## 🚀 Quick Start
-
-### Standalone Development
-```bash
-git clone https://github.com/thc1006/nephio-intent-operator.git
-cd nephio-intent-operator
-make build
-```
-
-### Embedded Development
-```bash
-cd nephio-intent-to-o2-demo/operator
-# Work normally, commits go to main repo
-# Sync changes using SYNC.md instructions
-```
-
-## 📦 Features
-
-- **Intent Translation**: Converts high-level intents to Kubernetes resources
-- **Network Slice Management**: Manages network slices for edge deployments
-- **SLA Enforcement**: Monitors and enforces Service Level Agreements
-- **GitOps Integration**: Native integration with Config Sync and Flux
-
-## 🏗️ Architecture
-
-The operator follows the standard Kubebuilder layout:
-
-```
-operator/
-├── api/              # API definitions
-│   └── v1alpha1/     # IntentConfig CRD
-├── controllers/      # Reconciliation logic
-├── config/          # Kustomize manifests
-├── docs/            # Documentation
-│   └── design/      # Design documents
-├── hack/            # Build and deploy scripts
-└── test/            # Test suites
-```
-
-## 🔧 Development
+## Getting Started
 
 ### Prerequisites
-- Go 1.22+
-- Kubebuilder v4.8+
-- Kubernetes 1.28+
-- Kustomize v5.0+
 
-### Building
+- Go 1.22+ (tests run with 1.24+)
+- Docker
+- kubectl
+- Access to a Kubernetes cluster
+
+### Installation
+
+1. Install the CRDs:
 ```bash
-make build
+make install
 ```
 
-### Testing
+2. Deploy the controller:
+```bash
+make deploy
+```
+
+### Running Tests
+
+Run unit tests with envtest:
 ```bash
 make test
-make test-integration
 ```
 
-### Deployment
+Run end-to-end tests:
 ```bash
-make deploy IMG=nephio-intent-operator:v0.1.0-alpha
+make test-e2e
 ```
 
-## 📋 Versioning
+### Development
 
-- **Operator Version**: `v0.1.0-alpha` (follows semver)
-- **API Version**: `intent.nephio.io/v1alpha1`
-- **Shell Pipeline**: Remains at `v1.1.x` (independent versioning)
+1. Install dependencies:
+```bash
+make generate
+make manifests
+```
 
-## 🔄 Synchronization
+2. Run locally against your cluster:
+```bash
+make run
+```
 
-This repository is maintained as a git subtree in the main demo repository.
-For synchronization instructions, see [SYNC.md](./SYNC.md).
+3. Build the operator image:
+```bash
+make docker-build docker-push IMG=<your-registry>/nephio-intent-operator:tag
+```
 
-## 📝 Contributing
+## Configuration
 
-Please read [CONTRIBUTING.md](./CONTRIBUTING.md) for details on:
-- Code of conduct
-- Development process
-- Submitting pull requests
+### Environment Variables
 
-## 👥 Maintainers
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `GITOPS_REPO_URL` | - | Default GitOps repository URL |
+| `RENDER_TIMEOUT` | `5m` | Default timeout for rendering operations |
+| `SYNC_WAIT_TIMEOUT` | `10m` | Default timeout for GitOps sync |
+| `SLO_CHECK_INTERVAL` | `30s` | Frequency of SLO validation checks |
+| `ROLLBACK_ENABLED` | `true` | Global toggle for automatic rollback |
 
-See [CODEOWNERS](./CODEOWNERS) for the list of maintainers.
+### Example IntentDeployment
 
-## 📄 License
+```yaml
+apiVersion: tna.tna.ai/v1alpha1
+kind: IntentDeployment
+metadata:
+  name: example-deployment
+  namespace: default
+spec:
+  intent: |
+    {
+      "service": "edge-app",
+      "replicas": 3,
+      "resources": {
+        "cpu": "100m",
+        "memory": "128Mi"
+      }
+    }
 
-This project is licensed under the Apache License 2.0 - see the [LICENSE](./LICENSE) file for details.
+  compileConfig:
+    engine: kpt
+    renderTimeout: 5m
 
-## 🔗 Related Projects
+  deliveryConfig:
+    targetSite: both
+    gitOpsRepo: https://github.com/your-org/gitops
+    syncWaitTimeout: 10m
 
-- [Nephio](https://nephio.org/) - Cloud-native automation for telco workloads
-- [nephio-intent-to-o2-demo](https://github.com/thc1006/nephio-intent-to-o2-demo) - Main demo repository
+  gatesConfig:
+    enabled: true
+    sloThresholds:
+      error_rate: "0.01"
+      latency_p99: "200ms"
 
-## 📊 Status
+  rollbackConfig:
+    autoRollback: true
+    maxRetries: 3
+```
 
-**Alpha Release** - Not recommended for production use
+## API Documentation
 
-Current focus:
-- [ ] Basic intent reconciliation
-- [ ] Network slice lifecycle management
-- [ ] SLA monitoring integration
-- [ ] Multi-cluster support
+See [docs/design/crd.md](docs/design/crd.md) for detailed CRD specifications.
 
----
+## Architecture
 
-*This operator is part of the Nephio Intent-to-O2 demonstration project.*
+See [docs/design/phase-machine.md](docs/design/phase-machine.md) for the phase state machine design.
+
+## Contributing
+
+Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
+
+## License
+
+This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
