@@ -148,7 +148,7 @@ func TestIntentDeployment_ValidateCreate(t *testing.T) {
 			if tt.wantErr && err != nil && err.Error() != tt.errString {
 				t.Errorf("IntentDeployment.ValidateCreate() error = %v, want %v", err.Error(), tt.errString)
 			}
-			if warnings != nil && len(warnings) > 0 {
+			if len(warnings) > 0 {
 				t.Logf("ValidateCreate warnings: %v", warnings)
 			}
 		})
@@ -304,7 +304,7 @@ func TestIntentDeployment_ValidateUpdate(t *testing.T) {
 			if tt.wantErr && err != nil && err.Error() != tt.errString {
 				t.Errorf("IntentDeployment.ValidateUpdate() error = %v, want %v", err.Error(), tt.errString)
 			}
-			if warnings != nil && len(warnings) > 0 {
+			if len(warnings) > 0 {
 				t.Logf("ValidateUpdate warnings: %v", warnings)
 			}
 		})
@@ -373,7 +373,7 @@ func TestIntentDeployment_ValidateDelete(t *testing.T) {
 			if (err != nil) != tt.wantErr {
 				t.Errorf("IntentDeployment.ValidateDelete() error = %v, wantErr %v", err, tt.wantErr)
 			}
-			if warnings != nil && len(warnings) > 0 {
+			if len(warnings) > 0 {
 				t.Logf("ValidateDelete warnings: %v", warnings)
 			}
 		})
