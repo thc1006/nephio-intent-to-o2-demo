@@ -27,14 +27,16 @@ class LLMClient:
     def __init__(self):
         self.use_claude = os.getenv('CLAUDE_CLI', '0') == '1'
         self.claude_available = self._check_claude_availability()
-        self.timeout = int(os.getenv('LLM_TIMEOUT', '30'))
-        self.max_retries = int(os.getenv('LLM_MAX_RETRIES', '3'))
+        self.timeout = int(os.getenv('LLM_TIMEOUT', '10'))  # Reduced from 30s to 10s for faster fallback
+        self.max_retries = int(os.getenv('LLM_MAX_RETRIES', '2'))  # Reduced from 3 to 2
         self.retry_backoff = float(os.getenv('LLM_RETRY_BACKOFF', '1.5'))
         self.artifacts_dir = Path('/home/ubuntu/nephio-intent-to-o2-demo/artifacts/adapter')
         self.artifacts_dir.mkdir(parents=True, exist_ok=True)
+        self.fallback_count = 0  # Track fallback usage
+        self.llm_success_count = 0  # Track successful LLM calls
 
         if self.use_claude and self.claude_available:
-            logger.info("LLM Client: Using Claude CLI")
+            logger.info("LLM Client: Using Claude CLI with aggressive timeout (10s)")
         else:
             logger.info("LLM Client: Using rule-based parser")
     
@@ -50,6 +52,8 @@ class LLMClient:
     
     def parse_text(self, text: str) -> Dict[str, Any]:
         """Parse natural language text to extract intent with caching and retry"""
+        start_time = time.time()
+
         # Check cache first
         cache_key = hashlib.md5(text.encode()).hexdigest()
         if cache_key in CACHE:
@@ -80,9 +84,20 @@ class LLMClient:
 
         if result is None:
             result = self._parse_with_rules(text)
-            self._log_artifact("fallback_used", {"text": text, "result": result})
+            self.fallback_count += 1
+            self._log_artifact("fallback_used", {
+                "text": text,
+                "result": result,
+                "fallback_count": self.fallback_count,
+                "success_rate": f"{self.llm_success_count}/{self.llm_success_count + self.fallback_count}"
+            })
         else:
-            self._log_artifact("llm_success", {"text": text, "result": result})
+            self.llm_success_count += 1
+            self._log_artifact("llm_success", {
+                "text": text,
+                "result": result,
+                "response_time_ms": int((time.time() - start_time) * 1000)
+            })
 
         # Cache the result
         CACHE[cache_key] = (time.time(), result)
@@ -91,58 +106,43 @@ class LLMClient:
     
     def _parse_with_claude(self, text: str) -> Dict[str, Any]:
         """Parse using Claude CLI with optimized deterministic prompt"""
-        prompt = f"""<system>
-You are a TMF921-compliant 5G network intent parser. You must output ONLY valid JSON matching the exact schema below. Any non-JSON text will cause system failure.
-</system>
+        prompt = f"""You are a TMF921 5G network intent parser. Output ONLY valid JSON.
 
-<constitutional-rules>
-1. CRITICAL: Output must be pure JSON - no explanations, no markdown, no additional text
-2. Self-check: Verify all required fields are present before outputting
-3. Self-correct: If ambiguous, choose the most conservative/safe option
-4. Validation: Ensure all numeric values are positive integers
-</constitutional-rules>
+DETERMINISTIC PARSING RULES:
+1. Service Type (check in order):
+   - Contains "urllc" or "ultra-reliable" or "critical" or "real-time" → URLLC
+   - Contains "mmtc" or "iot" or "sensor" or "machine" or "massive" → mMTC
+   - Default or contains "embb" or "video" or "streaming" → eMBB
 
-<chain-of-thought>
-Step 1: Identify service type by keywords
-- "video", "streaming", "bandwidth", "throughput" → eMBB
-- "reliable", "critical", "latency", "real-time", "mission" → URLLC
-- "iot", "sensor", "machine", "device", "massive" → mMTC
-- Default if unclear → eMBB
+2. Location:
+   - Extract: edge1, edge2, zone1-9, core1-9
+   - Default: edge1
 
-Step 2: Extract location
-- Look for: edge1, edge2, zone1-9, core1-9
-- Default if not specified → edge1
+3. Target Site:
+   - Text contains "edge2" → edge2
+   - Text contains "edge1" → edge1
+   - Text contains "both" or "multi" → both
+   - Service defaults: URLLC→edge2, mMTC→both, eMBB→edge1
 
-Step 3: Determine targetSite
-- Explicit "edge1" mentioned → edge1
-- Explicit "edge2" mentioned → edge2
-- "both", "multi", "multiple" sites → both
-- Service defaults: eMBB→edge1, URLLC→edge2, mMTC→both
+4. QoS Parameters:
+   - Downlink: Extract number before "mbps"/"gbps" + optional "dl"/"downlink"
+   - Uplink: Extract number before "mbps"/"gbps" + "ul"/"uplink" (or null)
+   - Latency: Extract number before "ms" (or null)
+   - Convert Gbps to Mbps (*1000)
 
-Step 4: Extract QoS parameters
-- downlink: Mbps/Gbps with "down"/"DL" (Gbps=value*1000)
-- uplink: Mbps/Gbps with "up"/"UL" (default: 50% of downlink)
-- latency: ms values (defaults: eMBB=50, URLLC=1, mMTC=100)
-</chain-of-thought>
+GOLDEN EXAMPLES (exact outputs for these inputs):
+"Deploy eMBB slice in edge1 with 200Mbps DL, 30ms latency"
+→ {{"service":"eMBB","location":"edge1","targetSite":"edge1","qos":{{"downlink_mbps":200,"uplink_mbps":null,"latency_ms":30}}}}
 
-<few-shot-examples>
-Input: "Deploy high-bandwidth video streaming service at edge1 with 1Gbps downlink"
-Output: {{"service":"eMBB","location":"edge1","targetSite":"edge1","qos":{{"downlink_mbps":1000,"uplink_mbps":500,"latency_ms":50}}}}
+"Create URLLC service in edge2 with 10ms latency and 100Mbps downlink"
+→ {{"service":"URLLC","location":"edge2","targetSite":"edge2","qos":{{"downlink_mbps":100,"uplink_mbps":null,"latency_ms":10}}}}
 
-Input: "Need ultra-reliable service for autonomous vehicles with 1ms latency"
-Output: {{"service":"URLLC","location":"edge1","targetSite":"edge2","qos":{{"downlink_mbps":100,"uplink_mbps":50,"latency_ms":1}}}}
+"Setup mMTC network in zone3 for IoT devices with 50Mbps capacity"
+→ {{"service":"mMTC","location":"zone3","targetSite":"both","qos":{{"downlink_mbps":50,"uplink_mbps":null,"latency_ms":null}}}}
 
-Input: "Setup massive IoT sensor network across both sites, 100 Mbps"
-Output: {{"service":"mMTC","location":"edge1","targetSite":"both","qos":{{"downlink_mbps":100,"uplink_mbps":50,"latency_ms":100}}}}
-</few-shot-examples>
+REQUEST: {text}
 
-<request>
-{text}
-</request>
-
-<instruction>
-Apply the chain-of-thought steps to the request above and output ONLY the JSON result:
-</instruction>"""
+JSON:"""
         
         result = subprocess.run(
             ['claude', '-p', prompt],
@@ -161,7 +161,7 @@ Apply the chain-of-thought steps to the request above and output ONLY the JSON r
         raise Exception("Failed to parse Claude response")
     
     def _parse_with_rules(self, text: str) -> Dict[str, Any]:
-        """Parse using rule-based extraction"""
+        """Parse using rule-based extraction with improved pattern matching"""
         text_lower = text.lower()
         
         # Extract service type
@@ -195,23 +195,43 @@ Apply the chain-of-thought steps to the request above and output ONLY the JSON r
             else:  # eMBB
                 targetSite = "edge1"  # eMBB typically uses edge1
 
-        # Extract QoS
+        # Extract QoS with improved pattern matching
         qos = {"downlink_mbps": None, "uplink_mbps": None, "latency_ms": None}
-        
-        # Downlink
-        dl_match = re.search(r'(\d+)\s*(?:mbps|gbps).*?(?:dl|downlink)', text_lower)
-        if not dl_match:
-            dl_match = re.search(r'(\d+)\s*(?:mbps|gbps)', text_lower)
-        if dl_match:
-            value = int(dl_match.group(1))
-            if 'gbps' in text_lower:
+
+        # Downlink - more flexible pattern
+        dl_patterns = [
+            r'(\d+)\s*(?:mbps|gbps)\s*(?:dl|downlink|down)',
+            r'(?:dl|downlink|down)\s*(?:of\s*)?(\d+)\s*(?:mbps|gbps)',
+            r'(\d+)\s*(?:mbps|gbps)\s*(?:bandwidth|capacity|throughput)?'
+        ]
+        for pattern in dl_patterns:
+            dl_match = re.search(pattern, text_lower)
+            if dl_match:
+                value = int(dl_match.group(1) if '(' in pattern else dl_match.group(1))
+                if 'gbps' in text_lower[max(0, dl_match.start()-10):dl_match.end()+10]:
+                    value *= 1000
+                qos['downlink_mbps'] = value
+                break
+
+        # Uplink - explicit pattern
+        ul_match = re.search(r'(\d+)\s*(?:mbps|gbps)\s*(?:ul|uplink|up)', text_lower)
+        if ul_match:
+            value = int(ul_match.group(1))
+            if 'gbps' in text_lower[max(0, ul_match.start()-10):ul_match.end()+10]:
                 value *= 1000
-            qos['downlink_mbps'] = value
-        
-        # Latency
-        lat_match = re.search(r'(\d+)\s*ms', text_lower)
-        if lat_match:
-            qos['latency_ms'] = int(lat_match.group(1))
+            qos['uplink_mbps'] = value
+
+        # Latency - improved pattern
+        lat_patterns = [
+            r'(\d+)\s*ms\s*(?:latency)?',
+            r'(?:latency|delay)\s*(?:of\s*)?(\d+)\s*ms',
+            r'(?:max|maximum)?\s*(?:latency|delay)\s*[:=]?\s*(\d+)\s*ms'
+        ]
+        for pattern in lat_patterns:
+            lat_match = re.search(pattern, text_lower)
+            if lat_match:
+                qos['latency_ms'] = int(lat_match.group(1) if '(' in pattern else lat_match.group(1))
+                break
         
         return {
             "service": service,
