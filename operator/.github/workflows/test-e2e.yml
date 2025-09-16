@@ -1,12 +1,12 @@
-name: E2E Tests
+name: Minimal E2E Tests
 
 on:
   push:
   pull_request:
 
 jobs:
-  test-e2e:
-    name: Run on Ubuntu
+  minimal-e2e:
+    name: Run Minimal E2E on Ubuntu
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -66,8 +66,8 @@ jobs:
       - name: Running Test e2e
         run: |
           go mod tidy
-          # Run only minimal tests that don't require Docker image build
-          go test -tags=e2e ./test/e2e/minimal_e2e_test.go ./test/e2e/minimal_suite_test.go ./test/e2e/minimal_deploy_test.go -v
+          # Run ONLY the minimal tests to avoid conflicts
+          go test -tags=e2e -run TestMinimalE2E ./test/e2e/minimal_e2e_test.go ./test/e2e/minimal_suite_test.go ./test/e2e/minimal_deploy_test.go -v
 
       - name: Collect debug information
         if: failure()
