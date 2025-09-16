@@ -2,10 +2,12 @@ run:
   timeout: 5m
   issues-exit-code: 1
   tests: false
-  skip-dirs:
-    - test
-  skip-files:
-    - ".*_test.go"
+
+skip-dirs:
+  - test
+
+skip-files:
+  - ".*_test.go"
 
 linters:
   enable:
