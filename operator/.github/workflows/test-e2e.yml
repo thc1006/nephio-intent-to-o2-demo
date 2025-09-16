@@ -43,13 +43,25 @@ jobs:
           docker ps
           sudo systemctl status docker --no-pager
 
-      - name: Create test namespace
+      - name: Create Kind cluster
         run: |
-          kubectl create namespace nephio-intent-operator-system-e2e || true
+          # Create a Kind cluster for E2E tests
+          kind create cluster --name e2e-test --wait 300s
+
+      - name: Verify cluster connectivity
+        run: |
+          # Wait for API server to be fully ready
+          kubectl cluster-info
+          kubectl get nodes
+          kubectl wait --for=condition=ready nodes --all --timeout=300s
 
       - name: Install CRDs
         run: |
-          make install || true
+          make install
+
+      - name: Create test namespace
+        run: |
+          kubectl create namespace nephio-intent-operator-system-e2e || true
 
       - name: Running Test e2e
         run: |
@@ -57,11 +69,22 @@ jobs:
           # Run only minimal tests that don't require Docker image build
           go test -tags=e2e ./test/e2e/minimal_e2e_test.go ./test/e2e/minimal_suite_test.go ./test/e2e/minimal_deploy_test.go -v
 
-      - name: Cleanup on failure
+      - name: Collect debug information
         if: failure()
         run: |
-          echo "Cleaning up Kind cluster on failure..."
-          kind get clusters || true
+          echo "=== Cluster Info ==="
           kubectl cluster-info || true
+          echo "=== Node Status ==="
           kubectl get nodes || true
-          make cleanup-test-e2e || true
+          echo "=== Pod Status ==="
+          kubectl get pods -A || true
+          echo "=== Events ==="
+          kubectl get events -A || true
+          echo "=== Kind clusters ==="
+          kind get clusters || true
+
+      - name: Cleanup Kind cluster
+        if: always()
+        run: |
+          echo "Cleaning up Kind cluster..."
+          kind delete cluster --name e2e-test || true
