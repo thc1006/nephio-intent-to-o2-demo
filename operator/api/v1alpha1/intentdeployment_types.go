@@ -115,8 +115,12 @@ type IntentDeploymentStatus struct {
 	// Important: Run "make" to regenerate code after modifying this file
 
 	// Phase represents the current lifecycle phase
-	// +kubebuilder:validation:Enum=Pending;Compiling;Rendering;Delivering;Validating;Succeeded;Failed;RollingBack
+	// +kubebuilder:validation:Enum=Pending;Compiling;Rendering;Delivering;Reconciling;Verifying;Succeeded;Failed;RollingBack
 	Phase string `json:"phase,omitempty"`
+
+	// Message provides human-readable status information
+	// +optional
+	Message string `json:"message,omitempty"`
 
 	// CompiledManifests contains the generated KRM manifests
 	// +optional
