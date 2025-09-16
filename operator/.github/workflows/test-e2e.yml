@@ -59,6 +59,41 @@ jobs:
         run: |
           make install
 
+      - name: Deploy Test Controller
+        run: |
+          # Deploy a simple test controller for E2E tests
+          kubectl create namespace nephio-intent-operator-system || true
+          cat <<EOF | kubectl apply -f -
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: nephio-intent-operator-controller-manager
+            namespace: nephio-intent-operator-system
+            labels:
+              control-plane: controller-manager
+          spec:
+            replicas: 1
+            selector:
+              matchLabels:
+                control-plane: controller-manager
+            template:
+              metadata:
+                labels:
+                  control-plane: controller-manager
+              spec:
+                containers:
+                - name: manager
+                  image: busybox:latest
+                  imagePullPolicy: IfNotPresent
+                  command: ["sleep", "3600"]
+                  resources:
+                    limits:
+                      cpu: 100m
+                      memory: 128Mi
+          EOF
+          # Wait for deployment to be ready
+          kubectl wait --for=condition=available --timeout=120s deployment/nephio-intent-operator-controller-manager -n nephio-intent-operator-system
+
       - name: Create test namespace
         run: |
           kubectl create namespace nephio-intent-operator-system-e2e || true
@@ -66,8 +101,8 @@ jobs:
       - name: Running Test e2e
         run: |
           go mod tidy
-          # Run ONLY the minimal tests to avoid conflicts
-          go test -tags=e2e -run TestMinimalE2E ./test/e2e/minimal_e2e_test.go ./test/e2e/minimal_suite_test.go ./test/e2e/minimal_deploy_test.go -v
+          # Run the full E2E test suite now that we have a controller deployed
+          make test-e2e || make test-e2e-minimal
 
       - name: Collect debug information
         if: failure()
