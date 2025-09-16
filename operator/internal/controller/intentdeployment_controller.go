@@ -18,6 +18,7 @@ package controller
 
 import (
 	"context"
+	"time"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -76,27 +77,86 @@ func (r *IntentDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	case "Pending":
 		// Validate and transition to Compiling
 		log.Info("IntentDeployment is pending", "Name", intentDeployment.Name)
+		// Transition to Compiling after validation
+		intentDeployment.Status.Phase = "Compiling"
+		if err := r.Status().Update(ctx, intentDeployment); err != nil {
+			log.Error(err, "Failed to update status to Compiling")
+			return ctrl.Result{}, err
+		}
+		return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
+
 	case "Compiling":
 		// Compile intent to manifests
 		log.Info("Compiling intent", "Name", intentDeployment.Name)
+		// Simulate compilation
+		intentDeployment.Status.Phase = "Rendering"
+		if err := r.Status().Update(ctx, intentDeployment); err != nil {
+			log.Error(err, "Failed to update status to Rendering")
+			return ctrl.Result{}, err
+		}
+		return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
+
 	case "Rendering":
 		// Render manifests through kpt/kustomize
 		log.Info("Rendering manifests", "Name", intentDeployment.Name)
+		// Simulate rendering
+		intentDeployment.Status.Phase = "Delivering"
+		if err := r.Status().Update(ctx, intentDeployment); err != nil {
+			log.Error(err, "Failed to update status to Delivering")
+			return ctrl.Result{}, err
+		}
+		return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
+
 	case "Delivering":
 		// Push to GitOps and sync
 		log.Info("Delivering to GitOps", "Name", intentDeployment.Name)
+		// Simulate delivery
+		intentDeployment.Status.Phase = "Validating"
+		if err := r.Status().Update(ctx, intentDeployment); err != nil {
+			log.Error(err, "Failed to update status to Validating")
+			return ctrl.Result{}, err
+		}
+		return ctrl.Result{RequeueAfter: 10 * time.Second}, nil
+
 	case "Validating":
 		// Run SLO checks
 		log.Info("Validating deployment", "Name", intentDeployment.Name)
+		// Simulate validation success
+		intentDeployment.Status.Phase = "Succeeded"
+		if err := r.Status().Update(ctx, intentDeployment); err != nil {
+			log.Error(err, "Failed to update status to Succeeded")
+			return ctrl.Result{}, err
+		}
+		return ctrl.Result{}, nil
+
 	case "Succeeded":
 		// Terminal success state
 		log.Info("Deployment succeeded", "Name", intentDeployment.Name)
+		return ctrl.Result{}, nil
+
 	case "Failed":
 		// Handle failure, potentially trigger rollback
 		log.Info("Deployment failed", "Name", intentDeployment.Name)
+		if intentDeployment.Spec.RollbackConfig.AutoRollback {
+			intentDeployment.Status.Phase = "RollingBack"
+			if err := r.Status().Update(ctx, intentDeployment); err != nil {
+				log.Error(err, "Failed to update status to RollingBack")
+				return ctrl.Result{}, err
+			}
+			return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
+		}
+		return ctrl.Result{}, nil
+
 	case "RollingBack":
 		// Execute rollback
 		log.Info("Rolling back deployment", "Name", intentDeployment.Name)
+		// Simulate rollback
+		intentDeployment.Status.Phase = "Succeeded"
+		if err := r.Status().Update(ctx, intentDeployment); err != nil {
+			log.Error(err, "Failed to update status after rollback")
+			return ctrl.Result{}, err
+		}
+		return ctrl.Result{}, nil
 	}
 
 	return ctrl.Result{}, nil

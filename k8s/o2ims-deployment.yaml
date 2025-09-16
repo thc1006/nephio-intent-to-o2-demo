@@ -1,0 +1,82 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: o2ims
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: o2ims-api
+  namespace: o2ims
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: o2ims
+  template:
+    metadata:
+      labels:
+        app: o2ims
+    spec:
+      containers:
+      - name: o2ims
+        image: nginx:alpine
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: config
+          mountPath: /usr/share/nginx/html
+        - name: nginx-config
+          mountPath: /etc/nginx/conf.d
+      volumes:
+      - name: config
+        configMap:
+          name: o2ims-response
+      - name: nginx-config
+        configMap:
+          name: nginx-config
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: o2ims-response
+  namespace: o2ims
+data:
+  index.html: |
+    {"name":"O2IMS API","status":"operational","version":"1.0.0","timestamp":"TIMESTAMP_PLACEHOLDER"}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config
+  namespace: o2ims
+data:
+  default.conf: |
+    server {
+        listen 80;
+        location / {
+            default_type application/json;
+            root /usr/share/nginx/html;
+            sub_filter 'TIMESTAMP_PLACEHOLDER' '$date_gmt';
+            sub_filter_once off;
+        }
+        location /health {
+            access_log off;
+            return 200 '{"status":"healthy"}\n';
+            add_header Content-Type application/json;
+        }
+    }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: o2ims-service
+  namespace: o2ims
+spec:
+  type: NodePort
+  ports:
+  - port: 80
+    targetPort: 80
+    nodePort: 31280
+  selector:
+    app: o2ims

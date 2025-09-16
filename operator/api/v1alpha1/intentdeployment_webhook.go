@@ -21,7 +21,8 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
+	// "sigs.k8s.io/controller-runtime/pkg/webhook"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
 // log is for logging in this package.
@@ -35,15 +36,16 @@ func (r *IntentDeployment) SetupWebhookWithManager(mgr ctrl.Manager) error {
 
 // +kubebuilder:webhook:path=/validate-tna-tna-ai-v1alpha1-intentdeployment,mutating=false,failurePolicy=fail,sideEffects=None,groups=tna.tna.ai,resources=intentdeployments,verbs=create;update,versions=v1alpha1,name=vintentdeployment.kb.io,admissionReviewVersions=v1
 
-var _ webhook.Validator = &IntentDeployment{}
+// Webhook temporarily disabled for compatibility
+// var _ webhook.Validator = &IntentDeployment{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *IntentDeployment) ValidateCreate() error {
+func (r *IntentDeployment) ValidateCreate() (admission.Warnings, error) {
 	intentdeploymentlog.Info("validate create", "name", r.Name)
 
 	// Validate intent is not empty
 	if r.Spec.Intent == "" {
-		return fmt.Errorf("spec.intent cannot be empty")
+		return nil, fmt.Errorf("spec.intent cannot be empty")
 	}
 
 	// Validate target site
@@ -52,32 +54,32 @@ func (r *IntentDeployment) ValidateCreate() error {
 		case "edge1", "edge2", "both":
 			// Valid sites
 		default:
-			return fmt.Errorf("invalid target site: %s", r.Spec.DeliveryConfig.TargetSite)
+			return nil, fmt.Errorf("invalid target site: %s", r.Spec.DeliveryConfig.TargetSite)
 		}
 	}
 
-	return nil
+	return nil, nil
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *IntentDeployment) ValidateUpdate(old runtime.Object) error {
+func (r *IntentDeployment) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
 	intentdeploymentlog.Info("validate update", "name", r.Name)
 
 	// Cannot change intent once deployment has started
 	oldID := old.(*IntentDeployment)
 	if oldID.Status.Phase != "" && oldID.Status.Phase != "Pending" {
 		if r.Spec.Intent != oldID.Spec.Intent {
-			return fmt.Errorf("cannot modify intent after deployment has started")
+			return nil, fmt.Errorf("cannot modify intent after deployment has started")
 		}
 	}
 
-	return nil
+	return nil, nil
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *IntentDeployment) ValidateDelete() error {
+func (r *IntentDeployment) ValidateDelete() (admission.Warnings, error) {
 	intentdeploymentlog.Info("validate delete", "name", r.Name)
 
 	// Add cleanup validation if needed
-	return nil
+	return nil, nil
 }
