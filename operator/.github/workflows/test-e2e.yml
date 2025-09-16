@@ -129,6 +129,22 @@ jobs:
           # Wait for e2e namespace deployment to be ready
           kubectl wait --for=condition=available --timeout=120s deployment/nephio-intent-operator-controller-manager -n nephio-intent-operator-system-e2e
 
+      - name: Verify controller pods are running
+        run: |
+          echo "=== Checking pods in nephio-intent-operator-system ==="
+          kubectl get pods -n nephio-intent-operator-system
+          echo ""
+          echo "=== Checking pods in nephio-intent-operator-system-e2e ==="
+          kubectl get pods -n nephio-intent-operator-system-e2e
+          echo ""
+          echo "=== Checking all resources in e2e namespace ==="
+          kubectl get all -n nephio-intent-operator-system-e2e
+          echo ""
+          echo "=== Verifying controller pod is Running ==="
+          kubectl get pods -n nephio-intent-operator-system-e2e -l control-plane=controller-manager -o wide
+          # Ensure pod is actually running
+          kubectl wait --for=condition=ready --timeout=60s pod -l control-plane=controller-manager -n nephio-intent-operator-system-e2e
+
       - name: Running Test e2e
         run: |
           go mod tidy
