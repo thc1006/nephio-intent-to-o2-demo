@@ -18,20 +18,30 @@ package controller
 
 import (
 	"context"
-	"fmt"
 	"os"
-	"os/exec"
-	"path/filepath"
 	"time"
 
 	"k8s.io/apimachinery/pkg/api/meta"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	tnav1alpha1 "github.com/thc1006/nephio-intent-operator/api/v1alpha1"
+)
+
+const (
+	// IntentDeployment phases
+	PhasePending     = "Pending"
+	PhaseCompiling   = "Compiling"
+	PhaseRendering   = "Rendering"
+	PhaseDelivering  = "Delivering"
+	PhaseReconciling = "Reconciling"
+	PhaseVerifying   = "Verifying"
+	PhaseSucceeded   = "Succeeded"
+	PhaseFailed      = "Failed"
+	PhaseRollingBack = "RollingBack"
 )
 
 // IntentDeploymentReconciler reconciles a IntentDeployment object
@@ -73,7 +83,7 @@ func (r *IntentDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 
 	// Initialize phase if not set
 	if intentDeployment.Status.Phase == "" {
-		intentDeployment.Status.Phase = "Pending"
+		intentDeployment.Status.Phase = PhasePending
 		intentDeployment.Status.Message = "Intent deployment initialized"
 		r.setCondition(intentDeployment, "Ready", metav1.ConditionFalse, "Initializing", "Intent deployment is initializing")
 		if err := r.Status().Update(ctx, intentDeployment); err != nil {
@@ -85,10 +95,10 @@ func (r *IntentDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 
 	// Handle different phases
 	switch intentDeployment.Status.Phase {
-	case "Pending":
+	case PhasePending:
 		// Validate and transition to Compiling
 		log.Info("IntentDeployment is pending", "Name", intentDeployment.Name)
-		intentDeployment.Status.Phase = "Compiling"
+		intentDeployment.Status.Phase = PhaseCompiling
 		intentDeployment.Status.Message = "Starting intent compilation"
 		r.setCondition(intentDeployment, "Compiling", metav1.ConditionTrue, "InProgress", "Compiling intent to KRM")
 		if err := r.Status().Update(ctx, intentDeployment); err != nil {
@@ -97,32 +107,32 @@ func (r *IntentDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		}
 		return ctrl.Result{RequeueAfter: 2 * time.Second}, nil
 
-	case "Compiling":
+	case PhaseCompiling:
 		// Compile intent to manifests
 		log.Info("Compiling intent", "Name", intentDeployment.Name)
 		// Simulate compilation
-		intentDeployment.Status.Phase = "Rendering"
+		intentDeployment.Status.Phase = PhaseRendering
 		if err := r.Status().Update(ctx, intentDeployment); err != nil {
 			log.Error(err, "Failed to update status to Rendering")
 			return ctrl.Result{}, err
 		}
 		return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
 
-	case "Rendering":
+	case PhaseRendering:
 		// Render manifests through kpt/kustomize
 		log.Info("Rendering manifests", "Name", intentDeployment.Name)
 		// Simulate rendering
-		intentDeployment.Status.Phase = "Delivering"
+		intentDeployment.Status.Phase = PhaseDelivering
 		if err := r.Status().Update(ctx, intentDeployment); err != nil {
 			log.Error(err, "Failed to update status to Delivering")
 			return ctrl.Result{}, err
 		}
 		return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
 
-	case "Delivering":
+	case PhaseDelivering:
 		// Push to GitOps and sync
 		log.Info("Delivering to GitOps", "Name", intentDeployment.Name)
-		intentDeployment.Status.Phase = "Reconciling"
+		intentDeployment.Status.Phase = PhaseReconciling
 		intentDeployment.Status.Message = "GitOps reconciliation in progress"
 		r.setCondition(intentDeployment, "GitOpsSync", metav1.ConditionTrue, "Syncing", "Waiting for Config Sync")
 		if err := r.Status().Update(ctx, intentDeployment); err != nil {
@@ -131,10 +141,10 @@ func (r *IntentDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		}
 		return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
 
-	case "Reconciling":
+	case PhaseReconciling:
 		// Wait for Config Sync to complete
 		log.Info("Waiting for GitOps reconciliation", "Name", intentDeployment.Name)
-		intentDeployment.Status.Phase = "Verifying"
+		intentDeployment.Status.Phase = PhaseVerifying
 		intentDeployment.Status.Message = "Verifying deployment against SLOs"
 		r.setCondition(intentDeployment, "Reconciled", metav1.ConditionTrue, "Complete", "GitOps sync completed")
 		if err := r.Status().Update(ctx, intentDeployment); err != nil {
@@ -143,10 +153,10 @@ func (r *IntentDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		}
 		return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
 
-	case "Verifying":
+	case PhaseVerifying:
 		// Run SLO checks
 		log.Info("Verifying deployment against SLOs", "Name", intentDeployment.Name)
-		intentDeployment.Status.Phase = "Succeeded"
+		intentDeployment.Status.Phase = PhaseSucceeded
 		intentDeployment.Status.Message = "Deployment verified and succeeded"
 		r.setCondition(intentDeployment, "Ready", metav1.ConditionTrue, "Succeeded", "All SLO checks passed")
 		if err := r.Status().Update(ctx, intentDeployment); err != nil {
@@ -155,16 +165,16 @@ func (r *IntentDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		}
 		return ctrl.Result{}, nil
 
-	case "Succeeded":
+	case PhaseSucceeded:
 		// Terminal success state
 		log.Info("Deployment succeeded", "Name", intentDeployment.Name)
 		return ctrl.Result{}, nil
 
-	case "Failed":
+	case PhaseFailed:
 		// Handle failure, potentially trigger rollback
 		log.Info("Deployment failed", "Name", intentDeployment.Name)
-		if intentDeployment.Spec.RollbackConfig.AutoRollback {
-			intentDeployment.Status.Phase = "RollingBack"
+		if intentDeployment.Spec.RollbackConfig != nil && intentDeployment.Spec.RollbackConfig.AutoRollback {
+			intentDeployment.Status.Phase = PhaseRollingBack
 			if err := r.Status().Update(ctx, intentDeployment); err != nil {
 				log.Error(err, "Failed to update status to RollingBack")
 				return ctrl.Result{}, err
@@ -173,11 +183,11 @@ func (r *IntentDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		}
 		return ctrl.Result{}, nil
 
-	case "RollingBack":
+	case PhaseRollingBack:
 		// Execute rollback
 		log.Info("Rolling back deployment", "Name", intentDeployment.Name)
 		// Simulate rollback
-		intentDeployment.Status.Phase = "Succeeded"
+		intentDeployment.Status.Phase = PhaseSucceeded
 		if err := r.Status().Update(ctx, intentDeployment); err != nil {
 			log.Error(err, "Failed to update status after rollback")
 			return ctrl.Result{}, err
@@ -189,7 +199,12 @@ func (r *IntentDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 }
 
 // setCondition updates or adds a condition to the IntentDeployment status
-func (r *IntentDeploymentReconciler) setCondition(deployment *tnav1alpha1.IntentDeployment, conditionType string, status metav1.ConditionStatus, reason, message string) {
+func (r *IntentDeploymentReconciler) setCondition(
+	deployment *tnav1alpha1.IntentDeployment,
+	conditionType string,
+	status metav1.ConditionStatus,
+	reason, message string,
+) {
 	condition := metav1.Condition{
 		Type:               conditionType,
 		Status:             status,

@@ -34,7 +34,7 @@ import (
 )
 
 // namespace where the project is deployed in
-const namespace = "nephio-intent-operator-system"
+const namespace = "nephio-intent-operator-system-e2e"
 
 // serviceAccountName created for the project
 const serviceAccountName = "nephio-intent-operator-controller-manager"

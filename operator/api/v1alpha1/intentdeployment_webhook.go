@@ -18,17 +18,27 @@ package v1alpha1
 
 import (
 	"fmt"
+
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
+
 	// "sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
+)
+
+const (
+	// IntentDeployment phases
+	PhasePending = "Pending"
 )
 
 // log is for logging in this package.
 var intentdeploymentlog = logf.Log.WithName("intentdeployment-resource")
 
 func (r *IntentDeployment) SetupWebhookWithManager(mgr ctrl.Manager) error {
+	if mgr == nil {
+		return fmt.Errorf("manager cannot be nil")
+	}
 	return ctrl.NewWebhookManagedBy(mgr).
 		For(r).
 		Complete()
@@ -41,7 +51,7 @@ func (r *IntentDeployment) SetupWebhookWithManager(mgr ctrl.Manager) error {
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
 func (r *IntentDeployment) ValidateCreate() (admission.Warnings, error) {
-	intentdeploymentlog.Info("validate create", "name", r.Name)
+	intentdeploymentlog.Info("validate create", "name", r.ObjectMeta.Name)
 
 	// Validate intent is not empty
 	if r.Spec.Intent == "" {
@@ -49,7 +59,7 @@ func (r *IntentDeployment) ValidateCreate() (admission.Warnings, error) {
 	}
 
 	// Validate target site
-	if r.Spec.DeliveryConfig != nil {
+	if r.Spec.DeliveryConfig != nil && r.Spec.DeliveryConfig.TargetSite != "" {
 		switch r.Spec.DeliveryConfig.TargetSite {
 		case "edge1", "edge2", "both":
 			// Valid sites
@@ -63,11 +73,14 @@ func (r *IntentDeployment) ValidateCreate() (admission.Warnings, error) {
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
 func (r *IntentDeployment) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
-	intentdeploymentlog.Info("validate update", "name", r.Name)
+	intentdeploymentlog.Info("validate update", "name", r.ObjectMeta.Name)
 
 	// Cannot change intent once deployment has started
-	oldID := old.(*IntentDeployment)
-	if oldID.Status.Phase != "" && oldID.Status.Phase != "Pending" {
+	oldID, ok := old.(*IntentDeployment)
+	if !ok {
+		return nil, fmt.Errorf("expected old object to be IntentDeployment")
+	}
+	if oldID.Status.Phase != "" && oldID.Status.Phase != PhasePending {
 		if r.Spec.Intent != oldID.Spec.Intent {
 			return nil, fmt.Errorf("cannot modify intent after deployment has started")
 		}
@@ -78,7 +91,7 @@ func (r *IntentDeployment) ValidateUpdate(old runtime.Object) (admission.Warning
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
 func (r *IntentDeployment) ValidateDelete() (admission.Warnings, error) {
-	intentdeploymentlog.Info("validate delete", "name", r.Name)
+	intentdeploymentlog.Info("validate delete", "name", r.ObjectMeta.Name)
 
 	// Add cleanup validation if needed
 	return nil, nil
