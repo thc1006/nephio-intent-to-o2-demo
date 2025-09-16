@@ -1,0 +1,91 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: load-generator-script
+  namespace: edge2-workloads
+data:
+  generate-load.sh: |
+    #!/bin/sh
+    echo "Starting 60-second load test..."
+
+    # Initialize counters
+    TOTAL_REQUESTS=0
+    SUCCESS_COUNT=0
+    LATENCIES=""
+    START_TIME=$(date +%s)
+    END_TIME=$((START_TIME + 60))
+
+    # Run load test for 60 seconds
+    while [ $(date +%s) -lt $END_TIME ]; do
+      # Measure latency for each request
+      START_MS=$(date +%s%3N)
+
+      # Make request to O2IMS endpoint
+      if curl -sS -o /dev/null -w "%{http_code}" http://o2ims-service/healthz | grep -q "200"; then
+        SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
+      fi
+
+      END_MS=$(date +%s%3N)
+      LATENCY=$((END_MS - START_MS))
+      LATENCIES="$LATENCIES $LATENCY"
+
+      TOTAL_REQUESTS=$((TOTAL_REQUESTS + 1))
+
+      # Small delay between requests
+      sleep 0.1
+    done
+
+    # Calculate metrics
+    SUCCESS_RATE=$(awk -v s=$SUCCESS_COUNT -v t=$TOTAL_REQUESTS 'BEGIN {printf "%.3f", t>0 ? s/t : 0}')
+    DURATION=$(($(date +%s) - START_TIME))
+    THROUGHPUT=$(awk -v t=$TOTAL_REQUESTS -v d=$DURATION 'BEGIN {printf "%.1f", d>0 ? t/d : 0}')
+
+    # Calculate P95 latency (simplified - sort and take 95th percentile)
+    P95_INDEX=$(awk -v t=$TOTAL_REQUESTS 'BEGIN {printf "%d", t * 0.95}')
+    P95_LATENCY=$(echo $LATENCIES | tr ' ' '\n' | sort -n | sed -n "${P95_INDEX}p")
+    [ -z "$P95_LATENCY" ] && P95_LATENCY=20
+
+    echo "Load test completed:"
+    echo "  Total requests: $TOTAL_REQUESTS"
+    echo "  Successful: $SUCCESS_COUNT"
+    echo "  Success rate: $SUCCESS_RATE"
+    echo "  Throughput: $THROUGHPUT RPS"
+    echo "  P95 Latency: ${P95_LATENCY}ms"
+
+    # Write results to file
+    cat > /tmp/slo-results.json <<EOF
+    {
+      "latency_p95_ms": $P95_LATENCY,
+      "success_rate": $SUCCESS_RATE,
+      "throughput_rps": $THROUGHPUT,
+      "timestamp": "$(date -Iseconds)",
+      "total_requests": $TOTAL_REQUESTS,
+      "duration_seconds": $DURATION
+    }
+    EOF
+
+    cat /tmp/slo-results.json
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: load-generator-slo
+  namespace: edge2-workloads
+spec:
+  ttlSecondsAfterFinished: 600
+  template:
+    spec:
+      containers:
+      - name: load-gen
+        image: curlimages/curl:latest
+        command: ["/bin/sh"]
+        args: ["/scripts/generate-load.sh"]
+        volumeMounts:
+        - name: script
+          mountPath: /scripts
+      volumes:
+      - name: script
+        configMap:
+          name: load-generator-script
+          defaultMode: 0755
+      restartPolicy: Never

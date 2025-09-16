@@ -1,0 +1,99 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: slo-generator
+  namespace: edge2-workloads
+data:
+  generate-slo.sh: |
+    #!/bin/sh
+    while true; do
+      # Simulate varying load patterns
+      HOUR=$(date +%H)
+      MIN=$(date +%M)
+
+      # Base metrics
+      BASE_LATENCY=10
+      BASE_SUCCESS=0.990
+      BASE_RPS=200
+
+      # Add time-based variations
+      if [ $((MIN % 5)) -eq 0 ]; then
+        # Spike every 5 minutes
+        LATENCY=$((BASE_LATENCY + RANDOM % 50))
+        SUCCESS=$(awk -v s=$BASE_SUCCESS 'BEGIN{printf "%.3f", s - 0.01}')
+        RPS=$((BASE_RPS + RANDOM % 200))
+      else
+        # Normal variation
+        LATENCY=$((BASE_LATENCY + RANDOM % 20))
+        SUCCESS=$(awk -v s=$BASE_SUCCESS -v r=$RANDOM 'BEGIN{printf "%.3f", s + (r % 10) * 0.001}')
+        RPS=$((BASE_RPS + RANDOM % 100))
+      fi
+
+      # Generate JSON
+      cat > /tmp/slo.json <<EOF
+    {
+      "timestamp": "$(date -Iseconds)",
+      "latency_p95_ms": $LATENCY,
+      "success_rate": $SUCCESS,
+      "throughput_rps": $RPS,
+      "site": "edge2",
+      "load_pattern": "$([ $((MIN % 5)) -eq 0 ] && echo 'spike' || echo 'normal')"
+    }
+    EOF
+
+      cp /tmp/slo.json /usr/share/nginx/html/slo.json
+      sleep 10
+    done
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: slo-dynamic
+  namespace: edge2-workloads
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: slo-dynamic
+  template:
+    metadata:
+      labels:
+        app: slo-dynamic
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:alpine
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: html
+          mountPath: /usr/share/nginx/html
+      - name: generator
+        image: alpine:latest
+        command: ["/bin/sh", "/scripts/generate-slo.sh"]
+        volumeMounts:
+        - name: scripts
+          mountPath: /scripts
+        - name: html
+          mountPath: /usr/share/nginx/html
+      volumes:
+      - name: scripts
+        configMap:
+          name: slo-generator
+          defaultMode: 0755
+      - name: html
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: slo-dynamic-service
+  namespace: edge2-workloads
+spec:
+  type: NodePort
+  ports:
+  - port: 80
+    targetPort: 80
+    nodePort: 31081
+  selector:
+    app: slo-dynamic

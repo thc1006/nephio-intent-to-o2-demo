@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: edge2-sync-test
+  namespace: default
+data:
+  site: "edge2"
+  sync_status: "testing"
+  timestamp: "2025-09-15T15:31:00Z"
