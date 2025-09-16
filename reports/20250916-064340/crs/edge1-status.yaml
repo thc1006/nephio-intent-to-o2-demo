@@ -1,0 +1,46 @@
+apiVersion: tna.tna.ai/v1alpha1
+kind: IntentDeployment
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"tna.tna.ai/v1alpha1","kind":"IntentDeployment","metadata":{"annotations":{},"name":"edge1-deployment","namespace":"default"},"spec":{"compileConfig":{"engine":"kpt","renderTimeout":"5m"},"deliveryConfig":{"gitOpsRepo":"https://github.com/thc1006/nephio-intent-to-o2-demo","syncWaitTimeout":"10m","targetSite":"edge1"},"gatesConfig":{"enabled":true,"sloThresholds":{"availability":"99.0","error_rate":"0.05","latency_p99":"500ms"}},"intent":"{\n  \"service\": \"edge-analytics\",\n  \"site\": \"edge1\",\n  \"replicas\": 3,\n  \"resources\": {\n    \"cpu\": \"500m\",\n    \"memory\": \"1Gi\"\n  },\n  \"endpoints\": {\n    \"o2ims\": \"http://172.16.4.45:31280\",\n    \"monitoring\": \"http://172.16.4.45:30090\"\n  }\n}\n","rollbackConfig":{"autoRollback":true,"maxRetries":3,"retainFailedArtifacts":true}}}
+  creationTimestamp: "2025-09-16T04:40:29Z"
+  generation: 1
+  name: edge1-deployment
+  namespace: default
+  resourceVersion: "408385"
+  uid: 4c4e31a4-6e24-4af9-98a1-7d844bee2846
+spec:
+  compileConfig:
+    engine: kpt
+    renderTimeout: 5m
+  deliveryConfig:
+    gitOpsRepo: https://github.com/thc1006/nephio-intent-to-o2-demo
+    syncWaitTimeout: 10m
+    targetSite: edge1
+  gatesConfig:
+    enabled: true
+    sloThresholds:
+      availability: "99.0"
+      error_rate: "0.05"
+      latency_p99: 500ms
+  intent: |
+    {
+      "service": "edge-analytics",
+      "site": "edge1",
+      "replicas": 3,
+      "resources": {
+        "cpu": "500m",
+        "memory": "1Gi"
+      },
+      "endpoints": {
+        "o2ims": "http://172.16.4.45:31280",
+        "monitoring": "http://172.16.4.45:30090"
+      }
+    }
+  rollbackConfig:
+    autoRollback: true
+    maxRetries: 3
+    retainFailedArtifacts: true
+status:
+  phase: Pending

@@ -1,0 +1,84 @@
+{
+  "metadata": {
+    "name": "edge1-analytics-golden",
+    "version": "v1.0",
+    "site": "edge1",
+    "timestamp": "2025-09-16T05:00:00Z"
+  },
+  "intent": {
+    "service": "real-time-analytics",
+    "description": "Deploy real-time analytics service to Edge-1 with high availability",
+    "site": "edge1",
+    "deployment": {
+      "replicas": 3,
+      "strategy": "RollingUpdate",
+      "maxUnavailable": 1
+    },
+    "resources": {
+      "requests": {
+        "cpu": "500m",
+        "memory": "1Gi"
+      },
+      "limits": {
+        "cpu": "1000m",
+        "memory": "2Gi"
+      }
+    },
+    "network": {
+      "endpoints": {
+        "o2ims": "http://172.16.4.45:31280",
+        "monitoring": "http://172.16.4.45:30090"
+      },
+      "ingress": {
+        "enabled": true,
+        "host": "analytics.edge1.nephio.demo"
+      }
+    },
+    "observability": {
+      "metrics": true,
+      "logging": true,
+      "tracing": false
+    }
+  },
+  "kpis": {
+    "availability": {
+      "target": "99.9%",
+      "measurement": "uptime_ratio",
+      "window": "30d"
+    },
+    "latency": {
+      "p50": "10ms",
+      "p95": "50ms",
+      "p99": "100ms",
+      "measurement": "http_request_duration_seconds"
+    },
+    "throughput": {
+      "target": "1000 req/s",
+      "measurement": "http_requests_per_second"
+    },
+    "error_rate": {
+      "target": "< 0.1%",
+      "measurement": "http_errors_ratio"
+    },
+    "resource_efficiency": {
+      "cpu_utilization": "< 70%",
+      "memory_utilization": "< 80%"
+    }
+  },
+  "expected_results": {
+    "deployment": {
+      "pods_ready": 3,
+      "service_endpoints": ["analytics-svc.default.svc.cluster.local"],
+      "nodeport": 30180
+    },
+    "gitops": {
+      "rootsync_status": "SYNCED",
+      "commit_applied": true,
+      "sync_time": "< 2m"
+    },
+    "validation": {
+      "health_check": "http://172.16.4.45:30180/health",
+      "expected_response": {"status": "healthy", "version": "1.0.0"}
+    }
+  }
+}

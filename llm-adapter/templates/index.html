@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Nephio Intent LLM Adapter</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        h1 {
+            color: #2e7d32;
+            border-bottom: 2px solid #2e7d32;
+            padding-bottom: 10px;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            resize: vertical;
+        }
+        button {
+            background: #2e7d32;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #1b5e20;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .pipeline {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
+            padding: 15px;
+            background: #e8f5e9;
+            border-radius: 8px;
+        }
+        .pipeline-stage {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            margin: 0 5px;
+            background: white;
+            border-radius: 4px;
+            border: 2px solid #ddd;
+            transition: all 0.3s;
+        }
+        .pipeline-stage.active {
+            border-color: #2e7d32;
+            background: #c8e6c9;
+        }
+        .pipeline-stage.completed {
+            border-color: #2e7d32;
+            background: #a5d6a7;
+        }
+        .pipeline-stage.failed {
+            border-color: #d32f2f;
+            background: #ffcdd2;
+        }
+        .results {
+            margin-top: 20px;
+        }
+        .result-section {
+            margin: 10px 0;
+            padding: 10px;
+            background: #f9f9f9;
+            border-left: 4px solid #2e7d32;
+        }
+        .result-section h3 {
+            margin-top: 0;
+            color: #2e7d32;
+        }
+        pre {
+            background: #263238;
+            color: #aed581;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        .status {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status.pending { background: #fff3e0; color: #e65100; }
+        .status.compiling { background: #e3f2fd; color: #0277bd; }
+        .status.rendering { background: #f3e5f5; color: #6a1b9a; }
+        .status.delivering { background: #e8eaf6; color: #283593; }
+        .status.validating { background: #fff9c4; color: #f57f17; }
+        .status.succeeded { background: #c8e6c9; color: #1b5e20; }
+        .status.failed { background: #ffcdd2; color: #b71c1c; }
+        .examples {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .example {
+            cursor: pointer;
+            padding: 5px;
+            margin: 2px 0;
+            background: white;
+            border-radius: 3px;
+            transition: background 0.2s;
+        }
+        .example:hover {
+            background: #e8f5e9;
+        }
+    </style>
+</head>
+<body>
+    <h1>🚀 Nephio Intent-to-O2 LLM Adapter</h1>
+
+    <div class="container">
+        <h2>Natural Language Input</h2>
+        <textarea id="nl-input" rows="4" placeholder="Example: Deploy edge analytics service with high availability on edge1 site"></textarea>
+
+        <div class="examples">
+            <strong>Quick Examples:</strong>
+            <div class="example" onclick="setExample('Deploy edge analytics service on edge1')">
+                📊 Deploy edge analytics service on edge1
+            </div>
+            <div class="example" onclick="setExample('Deploy ML inference with GPU on edge2')">
+                🤖 Deploy ML inference with GPU on edge2
+            </div>
+            <div class="example" onclick="setExample('Deploy O2IMS API on both edge sites with high availability')">
+                🌐 Deploy O2IMS API on both edge sites with HA
+            </div>
+            <div class="example" onclick="setExample('Deploy test environment on edge1 with minimal resources')">
+                🧪 Deploy test environment on edge1
+            </div>
+        </div>
+
+        <button id="process-btn" onclick="processNL()">🎯 Process & Deploy</button>
+    </div>
+
+    <div class="pipeline" id="pipeline">
+        <div class="pipeline-stage" id="stage-nl">
+            <strong>1. Natural Language</strong>
+            <div>📝 Input</div>
+        </div>
+        <div class="pipeline-stage" id="stage-intent">
+            <strong>2. Intent</strong>
+            <div>🎯 JSON</div>
+        </div>
+        <div class="pipeline-stage" id="stage-krm">
+            <strong>3. KRM</strong>
+            <div>📦 Manifests</div>
+        </div>
+        <div class="pipeline-stage" id="stage-gitops">
+            <strong>4. GitOps</strong>
+            <div>🔄 Sync</div>
+        </div>
+        <div class="pipeline-stage" id="stage-o2ims">
+            <strong>5. O2IMS</strong>
+            <div>☁️ Deploy</div>
+        </div>
+        <div class="pipeline-stage" id="stage-slo">
+            <strong>6. SLO Gate</strong>
+            <div>✅ Validate</div>
+        </div>
+    </div>
+
+    <div class="container results" id="results" style="display: none;">
+        <h2>Processing Results</h2>
+
+        <div class="result-section">
+            <h3>📝 Natural Language</h3>
+            <div id="result-nl"></div>
+        </div>
+
+        <div class="result-section">
+            <h3>🎯 Generated Intent</h3>
+            <pre id="result-intent"></pre>
+        </div>
+
+        <div class="result-section">
+            <h3>📦 KRM Manifests</h3>
+            <pre id="result-krm"></pre>
+        </div>
+
+        <div class="result-section">
+            <h3>🚀 Deployment Status</h3>
+            <div id="result-deployment"></div>
+        </div>
+
+        <div class="result-section">
+            <h3>📊 Phase Transitions</h3>
+            <div id="phase-monitor"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentDeployment = null;
+        let monitorInterval = null;
+
+        function setExample(text) {
+            document.getElementById('nl-input').value = text;
+        }
+
+        function updatePipeline(stage) {
+            const stages = ['nl', 'intent', 'krm', 'gitops', 'o2ims', 'slo'];
+            const currentIndex = stages.indexOf(stage);
+
+            stages.forEach((s, i) => {
+                const elem = document.getElementById(`stage-${s}`);
+                elem.className = 'pipeline-stage';
+
+                if (i < currentIndex) {
+                    elem.classList.add('completed');
+                } else if (i === currentIndex) {
+                    elem.classList.add('active');
+                }
+            });
+        }
+
+        async function processNL() {
+            const nlInput = document.getElementById('nl-input').value;
+            if (!nlInput.trim()) {
+                alert('Please enter a natural language description');
+                return;
+            }
+
+            const btn = document.getElementById('process-btn');
+            btn.disabled = true;
+            btn.textContent = '⏳ Processing...';
+
+            // Reset pipeline
+            document.querySelectorAll('.pipeline-stage').forEach(s => s.className = 'pipeline-stage');
+
+            // Show results container
+            document.getElementById('results').style.display = 'block';
+
+            try {
+                // Stage 1: NL
+                updatePipeline('nl');
+                document.getElementById('result-nl').textContent = nlInput;
+
+                // Process via API
+                const response = await fetch('/api/process', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({natural_language: nlInput})
+                });
+
+                const data = await response.json();
+
+                // Stage 2: Intent
+                updatePipeline('intent');
+                document.getElementById('result-intent').textContent = JSON.stringify(data.intent, null, 2);
+
+                // Stage 3: KRM
+                if (data.krm) {
+                    updatePipeline('krm');
+                    document.getElementById('result-krm').textContent = data.krm;
+                }
+
+                // Stage 4-6: GitOps, O2IMS, SLO
+                updatePipeline('gitops');
+
+                // Display deployment status
+                const deploymentDiv = document.getElementById('result-deployment');
+                if (data.deployment_status === 'success') {
+                    deploymentDiv.innerHTML = `
+                        <span class="status succeeded">✓ Deployment Created</span>
+                        <p>${data.message}</p>
+                    `;
+
+                    // Extract deployment name from intent
+                    currentDeployment = `${data.intent.service}-${data.intent.site}-deployment`;
+
+                    // Start monitoring
+                    startPhaseMonitoring();
+                } else {
+                    deploymentDiv.innerHTML = `
+                        <span class="status failed">✗ Deployment Failed</span>
+                        <p>${data.message}</p>
+                    `;
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error processing request: ' + error.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '🎯 Process & Deploy';
+            }
+        }
+
+        function startPhaseMonitoring() {
+            if (!currentDeployment) return;
+
+            const monitorDiv = document.getElementById('phase-monitor');
+            monitorDiv.innerHTML = '<em>Monitoring deployment phases...</em>';
+
+            let phaseHistory = [];
+
+            monitorInterval = setInterval(async () => {
+                try {
+                    const response = await fetch(`/api/status/${currentDeployment}`);
+                    if (!response.ok) {
+                        clearInterval(monitorInterval);
+                        return;
+                    }
+
+                    const status = await response.json();
+                    const phase = status.phase || 'Unknown';
+                    const message = status.message || '';
+
+                    // Update pipeline visualization
+                    switch(phase) {
+                        case 'Compiling':
+                        case 'Rendering':
+                            updatePipeline('krm');
+                            break;
+                        case 'Delivering':
+                            updatePipeline('gitops');
+                            break;
+                        case 'Validating':
+                            updatePipeline('slo');
+                            break;
+                        case 'Succeeded':
+                            updatePipeline('slo');
+                            document.getElementById('stage-slo').classList.add('completed');
+                            clearInterval(monitorInterval);
+                            break;
+                        case 'Failed':
+                        case 'RollingBack':
+                            document.getElementById('stage-slo').classList.add('failed');
+                            break;
+                    }
+
+                    // Add to history
+                    const timestamp = new Date().toLocaleTimeString();
+                    phaseHistory.push(`[${timestamp}] <span class="status ${phase.toLowerCase()}">${phase}</span> - ${message}`);
+
+                    // Update display (show last 10)
+                    monitorDiv.innerHTML = phaseHistory.slice(-10).join('<br>');
+
+                    // Stop monitoring if in terminal state
+                    if (phase === 'Succeeded' || phase === 'Failed') {
+                        clearInterval(monitorInterval);
+                    }
+
+                } catch (error) {
+                    console.error('Monitoring error:', error);
+                }
+            }, 2000); // Check every 2 seconds
+        }
+
+        // Stop monitoring on page unload
+        window.addEventListener('beforeunload', () => {
+            if (monitorInterval) {
+                clearInterval(monitorInterval);
+            }
+        });
+    </script>
+</body>
+</html>

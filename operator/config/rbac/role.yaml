@@ -1,0 +1,32 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: manager-role
+rules:
+- apiGroups:
+  - tna.tna.ai
+  resources:
+  - intentdeployments
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - tna.tna.ai
+  resources:
+  - intentdeployments/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - tna.tna.ai
+  resources:
+  - intentdeployments/status
+  verbs:
+  - get
+  - patch
+  - update

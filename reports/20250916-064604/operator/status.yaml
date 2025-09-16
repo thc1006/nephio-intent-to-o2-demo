@@ -1,0 +1,413 @@
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: Pod
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/default-container: manager
+    creationTimestamp: "2025-09-16T04:39:37Z"
+    generateName: nephio-intent-operator-controller-manager-7475f7bc46-
+    labels:
+      app.kubernetes.io/name: nephio-intent-operator
+      control-plane: controller-manager
+      pod-template-hash: 7475f7bc46
+    name: nephio-intent-operator-controller-manager-7475f7bc46-kfkhw
+    namespace: nephio-intent-operator-system
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: ReplicaSet
+      name: nephio-intent-operator-controller-manager-7475f7bc46
+      uid: e1e9dec9-41ec-400a-a00d-e3fde075aa57
+    resourceVersion: "408284"
+    uid: 2f88346c-0bf3-4ab6-9ae0-7feaa2177316
+  spec:
+    containers:
+    - args:
+      - --metrics-bind-address=:8443
+      - --leader-elect
+      - --health-probe-bind-address=:8081
+      command:
+      - /manager
+      image: intent-operator:v0.1.0-alpha
+      imagePullPolicy: IfNotPresent
+      livenessProbe:
+        failureThreshold: 3
+        httpGet:
+          path: /healthz
+          port: 8081
+          scheme: HTTP
+        initialDelaySeconds: 15
+        periodSeconds: 20
+        successThreshold: 1
+        timeoutSeconds: 1
+      name: manager
+      readinessProbe:
+        failureThreshold: 3
+        httpGet:
+          path: /readyz
+          port: 8081
+          scheme: HTTP
+        initialDelaySeconds: 5
+        periodSeconds: 10
+        successThreshold: 1
+        timeoutSeconds: 1
+      resources:
+        limits:
+          cpu: 500m
+          memory: 128Mi
+        requests:
+          cpu: 10m
+          memory: 64Mi
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+          - ALL
+        readOnlyRootFilesystem: true
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: kube-api-access-ghvqx
+        readOnly: true
+    dnsPolicy: ClusterFirst
+    enableServiceLinks: true
+    nodeName: nephio-demo-worker
+    preemptionPolicy: PreemptLowerPriority
+    priority: 0
+    restartPolicy: Always
+    schedulerName: default-scheduler
+    securityContext:
+      runAsNonRoot: true
+      seccompProfile:
+        type: RuntimeDefault
+    serviceAccount: nephio-intent-operator-controller-manager
+    serviceAccountName: nephio-intent-operator-controller-manager
+    terminationGracePeriodSeconds: 10
+    tolerations:
+    - effect: NoExecute
+      key: node.kubernetes.io/not-ready
+      operator: Exists
+      tolerationSeconds: 300
+    - effect: NoExecute
+      key: node.kubernetes.io/unreachable
+      operator: Exists
+      tolerationSeconds: 300
+    volumes:
+    - name: kube-api-access-ghvqx
+      projected:
+        defaultMode: 420
+        sources:
+        - serviceAccountToken:
+            expirationSeconds: 3607
+            path: token
+        - configMap:
+            items:
+            - key: ca.crt
+              path: ca.crt
+            name: kube-root-ca.crt
+        - downwardAPI:
+            items:
+            - fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.namespace
+              path: namespace
+  status:
+    conditions:
+    - lastProbeTime: null
+      lastTransitionTime: "2025-09-16T04:39:39Z"
+      status: "True"
+      type: PodReadyToStartContainers
+    - lastProbeTime: null
+      lastTransitionTime: "2025-09-16T04:39:37Z"
+      status: "True"
+      type: Initialized
+    - lastProbeTime: null
+      lastTransitionTime: "2025-09-16T04:39:47Z"
+      status: "True"
+      type: Ready
+    - lastProbeTime: null
+      lastTransitionTime: "2025-09-16T04:39:47Z"
+      status: "True"
+      type: ContainersReady
+    - lastProbeTime: null
+      lastTransitionTime: "2025-09-16T04:39:37Z"
+      status: "True"
+      type: PodScheduled
+    containerStatuses:
+    - containerID: containerd://553e9e2453a4d05667bc8c6f5f125670f3de624c9ec0636e6156a417e723cdd3
+      image: docker.io/library/intent-operator:v0.1.0-alpha
+      imageID: docker.io/library/import-2025-09-16@sha256:730d0e52cd70eb318bd241c2c24b255c55ca45a49192f7eeb77ad196212d80a6
+      lastState: {}
+      name: manager
+      ready: true
+      restartCount: 0
+      started: true
+      state:
+        running:
+          startedAt: "2025-09-16T04:39:38Z"
+    hostIP: 172.18.0.3
+    hostIPs:
+    - ip: 172.18.0.3
+    phase: Running
+    podIP: 10.244.1.8
+    podIPs:
+    - ip: 10.244.1.8
+    qosClass: Burstable
+    startTime: "2025-09-16T04:39:37Z"
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{},"labels":{"app.kubernetes.io/managed-by":"kustomize","app.kubernetes.io/name":"nephio-intent-operator","control-plane":"controller-manager"},"name":"nephio-intent-operator-controller-manager-metrics-service","namespace":"nephio-intent-operator-system"},"spec":{"ports":[{"name":"https","port":8443,"protocol":"TCP","targetPort":8443}],"selector":{"app.kubernetes.io/name":"nephio-intent-operator","control-plane":"controller-manager"}}}
+    creationTimestamp: "2025-09-16T04:39:36Z"
+    labels:
+      app.kubernetes.io/managed-by: kustomize
+      app.kubernetes.io/name: nephio-intent-operator
+      control-plane: controller-manager
+    name: nephio-intent-operator-controller-manager-metrics-service
+    namespace: nephio-intent-operator-system
+    resourceVersion: "408238"
+    uid: 305ffedc-459b-495f-b75b-bc91cbba9d17
+  spec:
+    clusterIP: 10.96.164.82
+    clusterIPs:
+    - 10.96.164.82
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    ports:
+    - name: https
+      port: 8443
+      protocol: TCP
+      targetPort: 8443
+    selector:
+      app.kubernetes.io/name: nephio-intent-operator
+      control-plane: controller-manager
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    annotations:
+      deployment.kubernetes.io/revision: "1"
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{},"labels":{"app.kubernetes.io/managed-by":"kustomize","app.kubernetes.io/name":"nephio-intent-operator","control-plane":"controller-manager"},"name":"nephio-intent-operator-controller-manager","namespace":"nephio-intent-operator-system"},"spec":{"replicas":1,"selector":{"matchLabels":{"app.kubernetes.io/name":"nephio-intent-operator","control-plane":"controller-manager"}},"template":{"metadata":{"annotations":{"kubectl.kubernetes.io/default-container":"manager"},"labels":{"app.kubernetes.io/name":"nephio-intent-operator","control-plane":"controller-manager"}},"spec":{"containers":[{"args":["--metrics-bind-address=:8443","--leader-elect","--health-probe-bind-address=:8081"],"command":["/manager"],"image":"intent-operator:v0.1.0-alpha","livenessProbe":{"httpGet":{"path":"/healthz","port":8081},"initialDelaySeconds":15,"periodSeconds":20},"name":"manager","ports":[],"readinessProbe":{"httpGet":{"path":"/readyz","port":8081},"initialDelaySeconds":5,"periodSeconds":10},"resources":{"limits":{"cpu":"500m","memory":"128Mi"},"requests":{"cpu":"10m","memory":"64Mi"}},"securityContext":{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true},"volumeMounts":[]}],"securityContext":{"runAsNonRoot":true,"seccompProfile":{"type":"RuntimeDefault"}},"serviceAccountName":"nephio-intent-operator-controller-manager","terminationGracePeriodSeconds":10,"volumes":[]}}}}
+    creationTimestamp: "2025-09-16T04:39:36Z"
+    generation: 1
+    labels:
+      app.kubernetes.io/managed-by: kustomize
+      app.kubernetes.io/name: nephio-intent-operator
+      control-plane: controller-manager
+    name: nephio-intent-operator-controller-manager
+    namespace: nephio-intent-operator-system
+    resourceVersion: "408289"
+    uid: 9c43ec1e-732d-486b-a655-be19de6028ab
+  spec:
+    progressDeadlineSeconds: 600
+    replicas: 1
+    revisionHistoryLimit: 10
+    selector:
+      matchLabels:
+        app.kubernetes.io/name: nephio-intent-operator
+        control-plane: controller-manager
+    strategy:
+      rollingUpdate:
+        maxSurge: 25%
+        maxUnavailable: 25%
+      type: RollingUpdate
+    template:
+      metadata:
+        annotations:
+          kubectl.kubernetes.io/default-container: manager
+        creationTimestamp: null
+        labels:
+          app.kubernetes.io/name: nephio-intent-operator
+          control-plane: controller-manager
+      spec:
+        containers:
+        - args:
+          - --metrics-bind-address=:8443
+          - --leader-elect
+          - --health-probe-bind-address=:8081
+          command:
+          - /manager
+          image: intent-operator:v0.1.0-alpha
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /healthz
+              port: 8081
+              scheme: HTTP
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            successThreshold: 1
+            timeoutSeconds: 1
+          name: manager
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /readyz
+              port: 8081
+              scheme: HTTP
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          resources:
+            limits:
+              cpu: 500m
+              memory: 128Mi
+            requests:
+              cpu: 10m
+              memory: 64Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            readOnlyRootFilesystem: true
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext:
+          runAsNonRoot: true
+          seccompProfile:
+            type: RuntimeDefault
+        serviceAccount: nephio-intent-operator-controller-manager
+        serviceAccountName: nephio-intent-operator-controller-manager
+        terminationGracePeriodSeconds: 10
+  status:
+    availableReplicas: 1
+    conditions:
+    - lastTransitionTime: "2025-09-16T04:39:48Z"
+      lastUpdateTime: "2025-09-16T04:39:48Z"
+      message: Deployment has minimum availability.
+      reason: MinimumReplicasAvailable
+      status: "True"
+      type: Available
+    - lastTransitionTime: "2025-09-16T04:39:36Z"
+      lastUpdateTime: "2025-09-16T04:39:48Z"
+      message: ReplicaSet "nephio-intent-operator-controller-manager-7475f7bc46" has
+        successfully progressed.
+      reason: NewReplicaSetAvailable
+      status: "True"
+      type: Progressing
+    observedGeneration: 1
+    readyReplicas: 1
+    replicas: 1
+    updatedReplicas: 1
+- apiVersion: apps/v1
+  kind: ReplicaSet
+  metadata:
+    annotations:
+      deployment.kubernetes.io/desired-replicas: "1"
+      deployment.kubernetes.io/max-replicas: "2"
+      deployment.kubernetes.io/revision: "1"
+    creationTimestamp: "2025-09-16T04:39:36Z"
+    generation: 1
+    labels:
+      app.kubernetes.io/name: nephio-intent-operator
+      control-plane: controller-manager
+      pod-template-hash: 7475f7bc46
+    name: nephio-intent-operator-controller-manager-7475f7bc46
+    namespace: nephio-intent-operator-system
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: Deployment
+      name: nephio-intent-operator-controller-manager
+      uid: 9c43ec1e-732d-486b-a655-be19de6028ab
+    resourceVersion: "408288"
+    uid: e1e9dec9-41ec-400a-a00d-e3fde075aa57
+  spec:
+    replicas: 1
+    selector:
+      matchLabels:
+        app.kubernetes.io/name: nephio-intent-operator
+        control-plane: controller-manager
+        pod-template-hash: 7475f7bc46
+    template:
+      metadata:
+        annotations:
+          kubectl.kubernetes.io/default-container: manager
+        creationTimestamp: null
+        labels:
+          app.kubernetes.io/name: nephio-intent-operator
+          control-plane: controller-manager
+          pod-template-hash: 7475f7bc46
+      spec:
+        containers:
+        - args:
+          - --metrics-bind-address=:8443
+          - --leader-elect
+          - --health-probe-bind-address=:8081
+          command:
+          - /manager
+          image: intent-operator:v0.1.0-alpha
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /healthz
+              port: 8081
+              scheme: HTTP
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            successThreshold: 1
+            timeoutSeconds: 1
+          name: manager
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /readyz
+              port: 8081
+              scheme: HTTP
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          resources:
+            limits:
+              cpu: 500m
+              memory: 128Mi
+            requests:
+              cpu: 10m
+              memory: 64Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            readOnlyRootFilesystem: true
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext:
+          runAsNonRoot: true
+          seccompProfile:
+            type: RuntimeDefault
+        serviceAccount: nephio-intent-operator-controller-manager
+        serviceAccountName: nephio-intent-operator-controller-manager
+        terminationGracePeriodSeconds: 10
+  status:
+    availableReplicas: 1
+    fullyLabeledReplicas: 1
+    observedGeneration: 1
+    readyReplicas: 1
+    replicas: 1
+kind: List
+metadata:
+  resourceVersion: ""

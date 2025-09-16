@@ -1,0 +1,122 @@
+{
+  "metadata": {
+    "name": "both-sites-federated-learning",
+    "version": "v1.0",
+    "sites": ["edge1", "edge2"],
+    "timestamp": "2025-09-16T05:00:00Z"
+  },
+  "intent": {
+    "service": "federated-learning-platform",
+    "description": "Deploy federated learning across both edge sites with model aggregation",
+    "sites": ["edge1", "edge2"],
+    "deployment": {
+      "edge1": {
+        "replicas": 2,
+        "role": "aggregator"
+      },
+      "edge2": {
+        "replicas": 2,
+        "role": "trainer"
+      },
+      "strategy": "RollingUpdate"
+    },
+    "resources": {
+      "edge1": {
+        "cpu": "1000m",
+        "memory": "2Gi"
+      },
+      "edge2": {
+        "cpu": "2000m",
+        "memory": "4Gi",
+        "gpu": "1"
+      }
+    },
+    "network": {
+      "edge1": {
+        "endpoints": {
+          "o2ims": "http://172.16.4.45:31280",
+          "monitoring": "http://172.16.4.45:30090"
+        },
+        "service_port": 30380
+      },
+      "edge2": {
+        "endpoints": {
+          "o2ims": "http://172.16.4.176:31280",
+          "monitoring": "http://172.16.4.176:30090"
+        },
+        "service_port": 30380
+      },
+      "federation": {
+        "protocol": "gRPC",
+        "sync_interval": "30s",
+        "encryption": true
+      }
+    },
+    "fl_config": {
+      "rounds": 10,
+      "min_clients": 2,
+      "aggregation_strategy": "FedAvg",
+      "differential_privacy": true,
+      "epsilon": 1.0
+    }
+  },
+  "kpis": {
+    "model_convergence": {
+      "target_accuracy": "90%",
+      "max_rounds": 10,
+      "measurement": "fl_model_accuracy"
+    },
+    "training_time": {
+      "per_round": "< 5m",
+      "total": "< 60m",
+      "measurement": "fl_round_duration_seconds"
+    },
+    "cross_site_latency": {
+      "p50": "50ms",
+      "p95": "100ms",
+      "p99": "200ms",
+      "measurement": "cross_site_rtt_milliseconds"
+    },
+    "data_transfer": {
+      "bandwidth": "< 100 Mbps",
+      "model_size": "< 100 MB",
+      "measurement": "fl_bytes_transferred"
+    },
+    "availability": {
+      "site_uptime": "99.5%",
+      "federation_health": "100%",
+      "measurement": "fl_federation_status"
+    }
+  },
+  "expected_results": {
+    "deployment": {
+      "edge1": {
+        "pods_ready": 2,
+        "role": "aggregator",
+        "nodeport": 30380
+      },
+      "edge2": {
+        "pods_ready": 2,
+        "role": "trainer",
+        "nodeport": 30380,
+        "gpu_allocated": true
+      }
+    },
+    "federation": {
+      "sites_connected": 2,
+      "sync_status": "ACTIVE",
+      "last_aggregation": "< 1m ago",
+      "model_version": "synchronized"
+    },
+    "validation": {
+      "edge1_health": "http://172.16.4.45:30380/health",
+      "edge2_health": "http://172.16.4.176:30380/health",
+      "federation_status": "http://172.16.4.45:30380/federation/status",
+      "expected_response": {
+        "federation": "active",
+        "sites": 2,
+        "current_round": "in_progress"
+      }
+    }
+  }
+}
