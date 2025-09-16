@@ -169,7 +169,13 @@ func GetProjectDir() (string, error) {
 	if err != nil {
 		return wd, fmt.Errorf("failed to get current working directory: %w", err)
 	}
-	wd = strings.ReplaceAll(wd, "/test/e2e", "")
+	// Remove test subdirectories to get back to project root
+	// Handle e2e-minimal first to avoid substring conflicts
+	if strings.Contains(wd, "/test/e2e-minimal") {
+		wd = strings.ReplaceAll(wd, "/test/e2e-minimal", "")
+	} else if strings.Contains(wd, "/test/e2e") {
+		wd = strings.ReplaceAll(wd, "/test/e2e", "")
+	}
 	return wd, nil
 }
 

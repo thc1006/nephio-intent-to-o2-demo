@@ -119,3 +119,6 @@ gitea-secret.yaml
 .DS_Store
 CLAUDE.md
 .claude*
+
+# CI Fix Loop tracker
+CI_FIX_LOOP.md

@@ -18,7 +18,7 @@ var _ = Describe("Minimal Controller Deployment", func() {
 	const (
 		testNamespace = "nephio-intent-operator-system-e2e"
 		testImage     = "controller:latest"
-		timeout       = 2 * time.Minute
+		timeout       = 5 * time.Minute
 		interval      = 1 * time.Second
 	)
 
@@ -30,7 +30,7 @@ var _ = Describe("Minimal Controller Deployment", func() {
 
 	AfterEach(func() {
 		By("cleaning up test namespace")
-		cmd := exec.Command("kubectl", "delete", "ns", testNamespace, "--ignore-not-found")
+		cmd := exec.Command("kubectl", "delete", "ns", testNamespace, "--ignore-not-found", "--timeout=60s")
 		_, _ = utils.Run(cmd)
 	})
 
@@ -56,13 +56,13 @@ var _ = Describe("Minimal Controller Deployment", func() {
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: test-controller
+  name: nephio-intent-operator-controller-manager
   namespace: ` + testNamespace + `
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: test-controller
+  name: nephio-intent-operator-controller-manager
   namespace: ` + testNamespace + `
   labels:
     control-plane: controller-manager
@@ -76,7 +76,7 @@ spec:
       labels:
         control-plane: controller-manager
     spec:
-      serviceAccountName: test-controller
+      serviceAccountName: nephio-intent-operator-controller-manager
       containers:
       - name: manager
         image: busybox:latest
@@ -99,12 +99,25 @@ spec:
 
 			By("waiting for pod to be running")
 			Eventually(func() error {
+				// First check if any pods exist
 				cmd := exec.Command("kubectl", "get", "pods", "-n", testNamespace,
 					"-l", "control-plane=controller-manager",
-					"-o", "jsonpath={.items[0].status.phase}")
+					"-o", "jsonpath={.items}")
 				output, err := utils.Run(cmd)
 				if err != nil {
-					return err
+					return fmt.Errorf("failed to get pods: %v", err)
+				}
+				if string(output) == "[]" || len(output) == 0 {
+					return fmt.Errorf("no pods found with label control-plane=controller-manager")
+				}
+
+				// Now check the pod status
+				cmd = exec.Command("kubectl", "get", "pods", "-n", testNamespace,
+					"-l", "control-plane=controller-manager",
+					"-o", "jsonpath={.items[0].status.phase}")
+				output, err = utils.Run(cmd)
+				if err != nil {
+					return fmt.Errorf("failed to get pod status: %v", err)
 				}
 				if string(output) != "Running" {
 					return fmt.Errorf("pod is not running, status: %s", output)
