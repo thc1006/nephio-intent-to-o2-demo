@@ -16,8 +16,9 @@ jobs:
       - name: Free up disk space
         run: |
           # Remove unused packages BEFORE installing Kind to avoid breaking dependencies
-          sudo apt-get remove -y '^dotnet-.*' '^llvm-.*' '^mongodb-.*' '^mysql-.*' azure-cli google-cloud-sdk hhvm google-chrome-stable firefox powershell mono-devel
-          sudo apt-get autoremove -y
+          # Use || true to ignore errors from removing non-existent packages
+          sudo apt-get remove -y '^dotnet-.*' '^llvm-.*' '^mongodb-.*' '^mysql-.*' azure-cli google-cloud-sdk hhvm google-chrome-stable firefox powershell mono-devel || true
+          sudo apt-get autoremove -y || true
           sudo apt-get clean
           # Show available disk space after cleanup
           df -h

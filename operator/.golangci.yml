@@ -1,13 +1,29 @@
 run:
   timeout: 5m
-  issues-exit-code: 1
   tests: false
 
-skip-dirs:
-  - test
+issues:
+  exclude-dirs:
+    - test
+    - vendor
+    - third_party
 
-skip-files:
-  - ".*_test.go"
+  exclude-files:
+    - ".*_test\\.go$"
+
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - errcheck
+        - goconst
+        - gocyclo
+        - lll
+    - path: test/
+      linters:
+        - errcheck
+        - goconst
+        - gocyclo
+        - lll
 
 linters:
   enable:
@@ -33,18 +49,3 @@ linters-settings:
     min-complexity: 25
   lll:
     line-length: 280
-
-issues:
-  exclude-rules:
-    - path: _test\.go
-      linters:
-        - errcheck
-        - goconst
-        - gocyclo
-        - lll
-    - path: test/
-      linters:
-        - errcheck
-        - goconst
-        - gocyclo
-        - lll
