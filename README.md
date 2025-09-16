@@ -1,5 +1,7 @@
 # Nephio Intent Operator
 
+**Version: v0.1.1-alpha**
+
 A Kubernetes operator for managing intent-based deployments in the Nephio ecosystem.
 
 ## Description
