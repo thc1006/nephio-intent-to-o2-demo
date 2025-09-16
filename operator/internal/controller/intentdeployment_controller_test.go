@@ -112,7 +112,9 @@ var _ = Describe("IntentDeployment Controller", func() {
 				},
 			}
 			Expect(k8sClient.Create(ctx, resource)).To(Succeed())
-			defer k8sClient.Delete(ctx, resource)
+			defer func() {
+				_ = k8sClient.Delete(ctx, resource)
+			}()
 		})
 
 		It("should support rollback configuration", func() {
@@ -132,7 +134,9 @@ var _ = Describe("IntentDeployment Controller", func() {
 				},
 			}
 			Expect(k8sClient.Create(ctx, resource)).To(Succeed())
-			defer k8sClient.Delete(ctx, resource)
+			defer func() {
+				_ = k8sClient.Delete(ctx, resource)
+			}()
 		})
 	})
 
