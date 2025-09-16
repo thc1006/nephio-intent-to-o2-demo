@@ -88,7 +88,7 @@ test-e2e: setup-test-e2e manifests generate fmt vet ## Run the e2e tests. Expect
 
 .PHONY: test-e2e-minimal
 test-e2e-minimal: setup-test-e2e manifests generate fmt vet ## Run minimal e2e tests suitable for CI.
-	KIND=$(KIND) KIND_CLUSTER=$(KIND_CLUSTER) go test -tags=e2e ./test/e2e/minimal_e2e_test.go ./test/e2e/minimal_suite_test.go -v -ginkgo.v
+	KIND=$(KIND) KIND_CLUSTER=$(KIND_CLUSTER) go test -tags=e2e ./test/e2e/minimal_e2e_test.go ./test/e2e/minimal_suite_test.go ./test/e2e/minimal_deploy_test.go -v -ginkgo.v
 
 .PHONY: cleanup-test-e2e
 cleanup-test-e2e: ## Tear down the Kind cluster used for e2e tests
