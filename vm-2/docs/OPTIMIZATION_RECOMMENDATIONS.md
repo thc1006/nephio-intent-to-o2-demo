@@ -18,13 +18,13 @@
 **最佳化行動**:
 ```bash
 # 在 VM-1 上立即執行
-scp ubuntu@172.16.0.89:~/nephio-intent-to-o2-demo/scripts/test_bidirectional_connectivity.sh ~/
+scp ubuntu@172.16.4.176:~/nephio-intent-to-o2-demo/scripts/test_bidirectional_connectivity.sh ~/
 chmod +x ~/test_bidirectional_connectivity.sh
 ./test_bidirectional_connectivity.sh
 
 # 預期結果確認
-curl http://172.16.0.89:30090/health                   # 應返回 "OK"
-curl http://172.16.0.89:30090/metrics/api/v1/slo | jq  # 應返回完整 edge2 數據
+curl http://172.16.4.176:30090/health                   # 應返回 "OK"
+curl http://172.16.4.176:30090/metrics/api/v1/slo | jq  # 應返回完整 edge2 數據
 ```
 
 ---
@@ -83,12 +83,12 @@ cat > /tmp/postcheck_update.patch << 'EOF'
 # 在 scripts/postcheck.sh 中添加或更新
 declare -A SITES=(
     [edge1]="172.16.4.45:30090/metrics/api/v1/slo"  # 如果 edge1 存在
-    [edge2]="172.16.0.89:30090/metrics/api/v1/slo"  # 新增 VM-4 Edge2
+    [edge2]="172.16.4.176:30090/metrics/api/v1/slo"  # 新增 VM-4 Edge2
 )
 
 declare -A O2IMS_SITES=(
     [edge1]="http://172.16.4.45:31280/o2ims/measurement/v1/slo"
-    [edge2]="http://172.16.0.89:31280/o2ims/measurement/v1/slo"  # 新增 VM-4
+    [edge2]="http://172.16.4.176:31280/o2ims/measurement/v1/slo"  # 新增 VM-4
 )
 EOF
 

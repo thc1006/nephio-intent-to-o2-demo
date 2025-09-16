@@ -10,7 +10,7 @@
 
 ### VM-4 (Edge2) 網路狀態
 ```bash
-# 內網 IP: 172.16.0.89 (ens3 介面)
+# 內網 IP: 172.16.4.176 (ens3 介面)
 # 外網 IP: 147.251.115.193 (透過 OpenStack 浮動 IP)
 # 狀態: HTTP 服務正常，ICMP 被阻擋
 ```
@@ -126,7 +126,7 @@ openstack router show <router-id>
 sudo ip netns list
 
 # 在網路命名空間中測試連通性
-sudo ip netns exec <netns> ping 172.16.0.89
+sudo ip netns exec <netns> ping 172.16.4.176
 ```
 
 ---
@@ -181,7 +181,7 @@ sudo sysctl -p
 ```bash
 # 測試本地服務
 curl -s http://localhost:30090/health
-curl -s http://172.16.0.89:30090/health
+curl -s http://172.16.4.176:30090/health
 
 # 測試網路連接
 ping -c 3 172.16.0.1  # 網關
@@ -191,14 +191,14 @@ ping -c 3 172.16.0.78  # VM-1
 ### 2. 從 VM-1 測試
 ```bash
 # 基本連通性
-ping -c 3 172.16.0.89
+ping -c 3 172.16.4.176
 
 # 服務端點測試
-curl -s http://172.16.0.89:30090/health
-curl -s http://172.16.0.89:30090/metrics/api/v1/slo
+curl -s http://172.16.4.176:30090/health
+curl -s http://172.16.4.176:30090/metrics/api/v1/slo
 
 # 端口掃描
-nmap -p 30090,31280,6443 172.16.0.89
+nmap -p 30090,31280,6443 172.16.4.176
 ```
 
 ### 3. 從外部測試 (如果需要)
@@ -217,7 +217,7 @@ curl -s http://147.251.115.193:30090/health
 OpenStack 環境
 ├── 租戶網路 (172.16.0.0/16)
 │   ├── VM-1 (SMO): 172.16.0.78
-│   └── VM-4 (Edge2): 172.16.0.89
+│   └── VM-4 (Edge2): 172.16.4.176
 ├── 浮動 IP 池
 │   └── VM-4 浮動 IP: 147.251.115.193
 └── 安全群組
@@ -264,9 +264,9 @@ openstack server add security group "VM-4（edge2）" nephio-cluster-sg
 ### 1. 連通性問題診斷
 ```bash
 # 逐步測試連通性
-traceroute 172.16.0.89         # 路由追蹤
-mtr -c 10 172.16.0.89          # 網路質量測試
-nc -zv 172.16.0.89 30090       # 端口測試
+traceroute 172.16.4.176         # 路由追蹤
+mtr -c 10 172.16.4.176          # 網路質量測試
+nc -zv 172.16.4.176 30090       # 端口測試
 ```
 
 ### 2. OpenStack 組件檢查
@@ -290,7 +290,7 @@ sudo iptables -L -n | grep -E "(30090|31280|ICMP)"
 ip route show table all
 
 # 檢查網路命名空間
-sudo ip netns exec $(sudo ip netns list | grep -o '^[^ ]*') ping 172.16.0.89
+sudo ip netns exec $(sudo ip netns list | grep -o '^[^ ]*') ping 172.16.4.176
 ```
 
 ---

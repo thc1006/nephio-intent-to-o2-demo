@@ -16,7 +16,7 @@
 ### 📍 VM-4 網路資訊
 ```bash
 # VM-4 基本資訊
-內部 IP: 172.16.0.89
+內部 IP: 172.16.4.176
 外部 IP: 147.251.115.193 (如有安全群組限制需開放)
 集群名稱: edge2-cluster
 ```
@@ -28,7 +28,7 @@
 ### 1. SLO Metrics 端點
 ```bash
 # 直接訪問方式 (如網路允許)
-URL: http://172.16.0.89:30090/metrics/api/v1/slo
+URL: http://172.16.4.176:30090/metrics/api/v1/slo
 Method: GET
 Response Format: JSON
 
@@ -48,14 +48,14 @@ Response Format: JSON
 
 ### 2. 健康檢查端點
 ```bash
-URL: http://172.16.0.89:30090/health
+URL: http://172.16.4.176:30090/health
 Method: GET
 Response: "OK"
 ```
 
 ### 3. O2IMS 端點 (預留)
 ```bash
-URL: http://172.16.0.89:31280/o2ims/measurement/v1/slo
+URL: http://172.16.4.176:31280/o2ims/measurement/v1/slo
 Status: 準備中 (需要部署 O2IMS 服務)
 ```
 
@@ -77,13 +77,13 @@ declare -A SITES=(
 # 更新為新的 VM-4 配置
 declare -A SITES=(
     [edge1]="172.16.4.45:30090/metrics/api/v1/slo"
-    [edge2]="172.16.0.89:30090/metrics/api/v1/slo"  # 新的 VM-4 配置
+    [edge2]="172.16.4.176:30090/metrics/api/v1/slo"  # 新的 VM-4 配置
 )
 
 # O2IMS 配置更新
 declare -A O2IMS_SITES=(
     [edge1]="http://172.16.4.45:31280/o2ims/measurement/v1/slo"
-    [edge2]="http://172.16.0.89:31280/o2ims/measurement/v1/slo"  # 新的 VM-4 配置
+    [edge2]="http://172.16.4.176:31280/o2ims/measurement/v1/slo"  # 新的 VM-4 配置
 )
 ```
 
@@ -95,7 +95,7 @@ declare -A O2IMS_SITES=(
 # 創建隧道管理腳本
 cat > ~/vm4_tunnels.sh << 'EOF'
 #!/bin/bash
-VM4_IP="172.16.0.89"  # 或使用外部 IP 147.251.115.193
+VM4_IP="172.16.4.176"  # 或使用外部 IP 147.251.115.193
 
 start_tunnels() {
     echo "啟動 VM-4 Edge2 隧道..."
@@ -141,13 +141,13 @@ declare -A SITES=(
 ### 1. 基本連通性測試
 ```bash
 # 測試 VM-4 網路連通性
-ping -c 3 172.16.0.89
+ping -c 3 172.16.4.176
 
 # 測試 SLO 端點連通性
-curl -v http://172.16.0.89:30090/health
+curl -v http://172.16.4.176:30090/health
 
 # 測試 SLO 數據獲取
-curl -s http://172.16.0.89:30090/metrics/api/v1/slo | jq .
+curl -s http://172.16.4.176:30090/metrics/api/v1/slo | jq .
 ```
 
 ### 2. 多站點 postcheck 測試
@@ -164,7 +164,7 @@ cd /path/to/nephio-intent-to-o2-demo
 # 在 VM-1 上創建快速驗證腳本
 cat > ~/verify_edge2_connectivity.sh << 'EOF'
 #!/bin/bash
-EDGE2_IP="172.16.0.89"
+EDGE2_IP="172.16.4.176"
 EDGE2_SLO_PORT="30090"
 
 echo "=== VM-4 Edge2 連通性驗證 ==="
@@ -292,9 +292,9 @@ kubectl get secret git-creds -n config-management-system -o yaml
 ## 📞 支援資訊
 
 **VM-4 Edge2 端點:**
-- SLO Metrics: http://172.16.0.89:30090/metrics/api/v1/slo
-- 健康檢查: http://172.16.0.89:30090/health
-- Kubernetes API: https://172.16.0.89:6443
+- SLO Metrics: http://172.16.4.176:30090/metrics/api/v1/slo
+- 健康檢查: http://172.16.4.176:30090/health
+- Kubernetes API: https://172.16.4.176:6443
 
 **故障排除聯絡:**
 - 檢查此文檔的故障排除章節

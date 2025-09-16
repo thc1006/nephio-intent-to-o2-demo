@@ -13,7 +13,7 @@
 節點狀態: Ready
 運行時間: 3小時48分鐘
 Kubernetes版本: v1.27.3
-API Server: https://172.16.0.89:6443
+API Server: https://172.16.4.176:6443
 ```
 
 ### 2. Config Sync ✅ DEPLOYED
@@ -50,7 +50,7 @@ Ping: 100% packet loss
    openstack security group rule create \
      --protocol tcp \
      --dst-port 8888 \
-     --remote-ip 172.16.0.89/32 \
+     --remote-ip 172.16.4.176/32 \
      --ingress \
      <VM-1-SECURITY-GROUP-ID>
    ```

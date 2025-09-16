@@ -1,0 +1,86 @@
+# Gitea External Service Configuration
+# This creates a NodePort service accessible from VM-2 and VM-4
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gitea-external
+  namespace: gitea-system
+  labels:
+    app: gitea
+    service-type: external
+spec:
+  type: NodePort
+  selector:
+    app: gitea
+  ports:
+  - name: http
+    port: 8888
+    targetPort: 3000
+    nodePort: 30888  # Fixed NodePort for external access
+    protocol: TCP
+  - name: ssh
+    port: 2222
+    targetPort: 22
+    nodePort: 30222  # Fixed NodePort for git SSH
+    protocol: TCP
+---
+# Additional LoadBalancer service option (if cloud provider supports it)
+apiVersion: v1
+kind: Service
+metadata:
+  name: gitea-loadbalancer
+  namespace: gitea-system
+  labels:
+    app: gitea
+    service-type: loadbalancer
+spec:
+  type: LoadBalancer
+  selector:
+    app: gitea
+  ports:
+  - name: http
+    port: 8888
+    targetPort: 3000
+    protocol: TCP
+  - name: ssh
+    port: 2222
+    targetPort: 22
+    protocol: TCP
+  # Optional: specify external IPs if not using cloud provider
+  externalIPs:
+  - 172.16.0.78  # VM-1 IP for direct access
+---
+# Host network endpoint for direct access
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: gitea-host-endpoint
+  namespace: gitea-system
+subsets:
+- addresses:
+  - ip: 172.16.0.78  # VM-1 host IP
+  ports:
+  - name: http
+    port: 30888
+    protocol: TCP
+  - name: ssh
+    port: 30222
+    protocol: TCP
+---
+# Service for the host endpoint
+apiVersion: v1
+kind: Service
+metadata:
+  name: gitea-host-service
+  namespace: gitea-system
+spec:
+  ports:
+  - name: http
+    port: 8888
+    targetPort: 30888
+    protocol: TCP
+  - name: ssh
+    port: 2222
+    targetPort: 30222
+    protocol: TCP

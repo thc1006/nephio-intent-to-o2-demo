@@ -13,7 +13,7 @@ nodes:
     apiServer:
       certSANs:
       - "147.251.115.193"  # VM-4 external IP
-      - "172.16.0.89"      # VM-4 internal IP
+      - "172.16.4.176"      # VM-4 internal IP
       - "localhost"
       - "127.0.0.1"
   extraPortMappings:

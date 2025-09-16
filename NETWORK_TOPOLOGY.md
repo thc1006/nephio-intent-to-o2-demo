@@ -31,7 +31,7 @@ Connection to VM-3: http://192.168.0.201:8888
 ```yaml
 External IP: 147.251.115.193
 External IPv6: 2001:718:801:43b:f816:3eff:fe3e:cb45
-Internal IPv4: 172.16.0.89/16
+Internal IPv4: 172.16.4.176/16
 Group Project Network: NOT AVAILABLE
 Connection to VM-3: http://172.16.2.10:8888 (must use internal-ipv4)
 ```
@@ -45,7 +45,7 @@ Connection to VM-3: http://172.16.2.10:8888 (must use internal-ipv4)
 | VM-4 | VM-3 | internal-ipv4 | http://172.16.2.10:8888 |
 | VM-3 | VM-1 | group-project-network | 192.168.0.47 |
 | VM-3 | VM-2 | group-project-network | 192.168.0.174 |
-| VM-3 | VM-4 | internal-ipv4 | 172.16.0.89 |
+| VM-3 | VM-4 | internal-ipv4 | 172.16.4.176 |
 
 ## Important Notes
 

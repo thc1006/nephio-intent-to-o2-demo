@@ -155,7 +155,7 @@ class GitOpsOrchestrator:
         # Query SLO endpoint
         slo_url = {
             "edge1": "http://172.16.4.45:30090",
-            "edge2": "http://172.16.0.89:30090"
+            "edge2": "http://172.16.4.176:30090"
         }.get(target)
 
         if not slo_url:

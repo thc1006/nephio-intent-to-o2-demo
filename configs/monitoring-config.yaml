@@ -1,0 +1,86 @@
+# Monitoring Configuration for Nephio Intent-to-O2 Demo
+# This file configures the multi-site monitoring system
+
+edge_sites:
+  edge1:
+    ip: "172.16.4.45"
+    slo_port: 30090
+    o2ims_port: 31280
+    kubernetes_port: 6443
+    description: "Edge-1 site (VM-2)"
+
+  edge2:
+    ip: "172.16.4.176"
+    slo_port: 30090
+    o2ims_port: 31280
+    kubernetes_port: 6443
+    description: "Edge-2 site (VM-4)"
+
+gitops:
+  gitea_url: "http://172.16.0.78:8888"
+  repositories:
+    - "edge1-config"
+    - "edge2-config"
+  username: "admin1"
+  # Note: Password should be stored securely, not in config file
+
+vm1:
+  ip: "172.16.0.78"
+  prometheus_port: 31090
+  grafana_port: 31300
+  alertmanager_port: 31093
+  gitea_port: 8888
+
+monitoring:
+  collection_interval: 30  # seconds
+  metrics_port: 8000
+  scrape_timeout: 10      # seconds
+  retention_period: "30d"
+
+alerts:
+  severity_levels:
+    - critical
+    - warning
+    - info
+
+  notification_channels:
+    webhook:
+      enabled: true
+      url: "http://localhost:5001/alerts"
+
+  thresholds:
+    error_rate_percent: 5.0
+    latency_p95_seconds: 1.0
+    memory_usage_percent: 85.0
+    cpu_usage_percent: 85.0
+
+dashboards:
+  refresh_interval: "30s"
+  time_range: "1h"
+  auto_refresh: true
+
+  panels:
+    - name: "Site Overview"
+      type: "stat"
+      metrics:
+        - "edge_site_up"
+        - "slo_service_up"
+        - "o2ims_service_up"
+
+    - name: "Performance Metrics"
+      type: "graph"
+      metrics:
+        - "http_request_duration_seconds"
+        - "http_requests_total"
+
+    - name: "GitOps Status"
+      type: "table"
+      metrics:
+        - "gitops_sync_status"
+        - "gitops_sync_failures_total"
+
+logging:
+  level: "INFO"
+  file: "/var/log/monitoring.log"
+  max_size_mb: 100
+  backup_count: 5

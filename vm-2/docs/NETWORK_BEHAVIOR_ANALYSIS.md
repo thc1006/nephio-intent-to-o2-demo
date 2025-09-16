@@ -12,17 +12,17 @@
 
 ### ❌ 失敗的測試
 ```bash
-ping 172.16.0.89                    # 100% packet loss
+ping 172.16.4.176                    # 100% packet loss
 ping 147.251.115.193                # 100% packet loss
 timeout 3 bash -c "</dev/tcp/IP/PORT"  # 某些情況下超時
 ```
 
 ### ✅ 成功的測試
 ```bash
-curl http://172.16.0.89:30090/health           # 返回 "OK"
-curl http://172.16.0.89:30090/metrics/api/v1/slo  # 返回完整 JSON
-nc -z 172.16.0.89 30090                        # 連接成功
-telnet 172.16.0.89 30090                       # 連接成功
+curl http://172.16.4.176:30090/health           # 返回 "OK"
+curl http://172.16.4.176:30090/metrics/api/v1/slo  # 返回完整 JSON
+nc -z 172.16.4.176 30090                        # 連接成功
+telnet 172.16.4.176 30090                       # 連接成功
 ```
 
 ---
@@ -39,8 +39,8 @@ LISTEN 0  4096  0.0.0.0:31280  0.0.0.0:*
 
 ### 2. 路由分析 ✅
 ```bash
-$ ip route get 172.16.0.89
-local 172.16.0.89 dev lo src 172.16.0.89 uid 1000
+$ ip route get 172.16.4.176
+local 172.16.4.176 dev lo src 172.16.4.176 uid 1000
     cache <local>
 ```
 **結論**: 路由指向本地回環，這是正常的自環路由
@@ -54,7 +54,7 @@ Chain INPUT (policy DROP)
 
 ### 4. 服務可用性 ✅
 ```bash
-$ curl -s http://172.16.0.89:30090/metrics/api/v1/slo | jq .
+$ curl -s http://172.16.4.176:30090/metrics/api/v1/slo | jq .
 {
   "slo": {
     "latency_p95_ms": 11.8,
@@ -92,7 +92,7 @@ $ curl -s http://172.16.0.89:30090/metrics/api/v1/slo | jq .
 
 ### ✅ 正面影響
 - **HTTP 服務完全可用**: 這是最重要的，SLO API 正常工作
-- **內網連接穩定**: 172.16.0.89 提供可靠的內網連接
+- **內網連接穩定**: 172.16.4.176 提供可靠的內網連接
 - **防火牆保護**: ICMP 阻擋提供額外的安全保護
 
 ### ⚠️ 注意事項
@@ -105,12 +105,12 @@ $ curl -s http://172.16.0.89:30090/metrics/api/v1/slo | jq .
 # VM-1 上的正確配置
 declare -A SITES=(
     [edge1]="172.16.4.45:30090/metrics/api/v1/slo"
-    [edge2]="172.16.0.89:30090/metrics/api/v1/slo"    # 使用內網 IP
+    [edge2]="172.16.4.176:30090/metrics/api/v1/slo"    # 使用內網 IP
 )
 
 # 連通性測試應該使用 HTTP
-curl -s http://172.16.0.89:30090/health              # ✅ 推薦
-ping 172.16.0.89                                     # ❌ 不推薦
+curl -s http://172.16.4.176:30090/health              # ✅ 推薦
+ping 172.16.4.176                                     # ❌ 不推薦
 ```
 
 ---
@@ -119,7 +119,7 @@ ping 172.16.0.89                                     # ❌ 不推薦
 
 ```
 VM-1 (SMO)                    VM-4 (Edge2)
-172.16.0.78               →    172.16.0.89
+172.16.0.78               →    172.16.4.176
      │                              │
      │ HTTP (30090)                 │ Kind Cluster
      │ ✅ 可用                      │ ├── Control Plane
@@ -138,19 +138,19 @@ VM-1 (SMO)                    VM-4 (Edge2)
 ### 用於連通性檢查
 ```bash
 # ✅ 推薦的檢查方法
-curl -f http://172.16.0.89:30090/health
-nc -z 172.16.0.89 30090
-wget --spider http://172.16.0.89:30090/health
+curl -f http://172.16.4.176:30090/health
+nc -z 172.16.4.176 30090
+wget --spider http://172.16.4.176:30090/health
 
 # ❌ 不推薦的檢查方法
-ping 172.16.0.89
+ping 172.16.4.176
 ```
 
 ### 用於服務監控
 ```bash
 # ✅ 有效的監控指標
-curl http://172.16.0.89:30090/metrics/api/v1/slo | jq '.slo.success_rate'
-curl http://172.16.0.89:30090/metrics/api/v1/slo | jq '.slo.latency_p95_ms'
+curl http://172.16.4.176:30090/metrics/api/v1/slo | jq '.slo.success_rate'
+curl http://172.16.4.176:30090/metrics/api/v1/slo | jq '.slo.latency_p95_ms'
 ```
 
 ---
@@ -165,7 +165,7 @@ curl http://172.16.0.89:30090/metrics/api/v1/slo | jq '.slo.latency_p95_ms'
 
 **對 VM-1 的建議**:
 - 使用 HTTP 健康檢查代替 ping
-- 配置內網 IP (172.16.0.89) 而非外網 IP
+- 配置內網 IP (172.16.4.176) 而非外網 IP
 - 更新監控腳本以適應這種網路行為
 
 **此網路行為不會影響多站點功能的正常運作！**
