@@ -148,16 +148,15 @@ jobs:
       - name: Running Test e2e
         run: |
           go mod tidy
-          echo "=== Running ONLY minimal E2E tests (NOT full E2E suite) ==="
-          echo "Test files: minimal_e2e_test.go, minimal_suite_test.go, minimal_deploy_test.go"
+          echo "=== Running ONLY minimal E2E tests from isolated directory ==="
+          echo "Test directory: test/e2e-minimal (completely separate from test/e2e)"
           # Export KIND variables to match what test expects
           export KIND=kind
           export KIND_CLUSTER=e2e-test
-          # Run only the minimal test files directly, avoiding any package-level initialization
-          # This should NOT run e2e_test.go or e2e_suite_test.go
-          go test -v -timeout=10m -tags=e2e ./test/e2e/minimal_e2e_test.go ./test/e2e/minimal_suite_test.go ./test/e2e/minimal_deploy_test.go || {
-            echo "=== Test failed, checking which test actually ran ==="
-            echo "If you see errors from e2e_test.go, the wrong test suite is running!"
+          # Run tests from completely separate directory to avoid any cross-contamination with full E2E suite
+          go test -v -timeout=10m -tags=e2e ./test/e2e-minimal/... || {
+            echo "=== Test failed ==="
+            echo "Tests run from isolated e2e-minimal directory should NOT include e2e_test.go"
             exit 1
           }
 
