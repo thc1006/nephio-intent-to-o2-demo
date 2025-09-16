@@ -1,5 +1,9 @@
 # Git Subtree Synchronization Guide
 
+**Last Updated**: 2025-09-16
+**Operator Version**: v0.1.1-alpha
+**Last Sync**: Webhook validation features added
+
 ## Overview
 
 This directory (`/operator`) is a git subtree of the independent operator repository.

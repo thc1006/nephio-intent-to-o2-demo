@@ -1,0 +1,41 @@
+apiVersion: tna.tna.ai/v1alpha1
+kind: IntentDeployment
+metadata:
+  name: edge1-deployment
+  namespace: default
+spec:
+  intent: |
+    {
+      "service": "edge-analytics",
+      "site": "edge1",
+      "replicas": 3,
+      "resources": {
+        "cpu": "500m",
+        "memory": "1Gi"
+      },
+      "endpoints": {
+        "o2ims": "http://172.16.4.45:31280",
+        "monitoring": "http://172.16.4.45:30090"
+      }
+    }
+
+  compileConfig:
+    engine: kpt
+    renderTimeout: 5m
+
+  deliveryConfig:
+    targetSite: edge1
+    gitOpsRepo: https://github.com/thc1006/nephio-intent-to-o2-demo
+    syncWaitTimeout: 10m
+
+  gatesConfig:
+    enabled: true
+    sloThresholds:
+      error_rate: "0.05"
+      latency_p99: "500ms"
+      availability: "99.0"
+
+  rollbackConfig:
+    autoRollback: true
+    maxRetries: 3
+    retainFailedArtifacts: true
