@@ -1,0 +1,34 @@
+{
+  "validation_run": {
+    "timestamp": "2025-09-16T10:17:23+00:00",
+    "sheriff": "release-sherpa",
+    "validation_type": "e2e-summit-readiness"
+  },
+  "operator_health": {
+    "namespace": "nephio-intent-operator-system",
+    "status": "Running",
+    "image": "intent-operator:v0.1.1-alpha",
+    "pipeline_mode": "embedded"
+  },
+  "cr_validation": {
+    "samples_applied": 3,
+    "samples_succeeded": 3,
+    "samples_failed": 0,
+    "phases_validated": ["Pending", "Compiling", "Rendering", "Delivering", "Succeeded"]
+  },
+  "gitops_sync": {
+    "edge1_rootsync": "active",
+    "edge2_rootsync": "auth_required"
+  },
+  "endpoint_validation": {
+    "edge1_o2ims_31280": "healthy",
+    "edge1_slo_31080": "responding",
+    "edge2_o2ims_31280": "nginx_placeholder"
+  },
+  "slo_metrics": {
+    "collection_duration": 30,
+    "edge1_availability": "> 99%",
+    "latency_p95": "< 50ms"
+  },
+  "files": {}
+}

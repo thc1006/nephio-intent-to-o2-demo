@@ -1,0 +1,15 @@
+{
+  "timestamp": "2025-09-13T12:17:38.142745Z",
+  "service": "echo-service-v2",
+  "metrics": {
+    "total_requests": 1000,
+    "success_rate": 99.5,
+    "requests_per_second": 33.3,
+    "latency_p50_ms": 12.5,
+    "latency_p95_ms": 45.2,
+    "latency_p99_ms": 78.9
+  },
+  "test_duration_seconds": 30,
+  "concurrent_workers": 10,
+  "status": "updated"
+}

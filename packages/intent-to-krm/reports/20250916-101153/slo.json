@@ -1,0 +1,1 @@
+{"collection_start": "2025-09-16T10:17:03+00:00", "duration_seconds": 30, "endpoints": {"edge1_slo": "http://172.16.4.45:31080", "edge1_metrics": "http://172.16.4.45:30090", "edge2_o2ims": "http://172.16.4.176:31280"}, "sample_data": "slo-sample.txt"}

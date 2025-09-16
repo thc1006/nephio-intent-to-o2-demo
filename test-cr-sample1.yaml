@@ -1,0 +1,19 @@
+apiVersion: tna.tna.ai/v1alpha1
+kind: IntentDeployment
+metadata:
+  name: test-sample-1
+  namespace: default
+spec:
+  intent: |
+    {
+      "intentExpectations": [
+        {
+          "intentType": "ManagedElementIntentExpectation",
+          "targets": [{"name": "edge1"}],
+          "context": [{"contextType": "SliceContext", "sliceType": "eMBB"}],
+          "intentParameters": {"networkSliceRef": "slice-embb-001"}
+        }
+      ]
+    }
+  deliveryConfig:
+    targetSite: "edge1"
