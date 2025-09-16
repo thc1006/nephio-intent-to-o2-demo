@@ -1,3 +1,10 @@
 # More info: https://docs.docker.com/engine/reference/builder/#dockerignore-file
 # Ignore build and test binaries.
 bin/
+# Test coverage files
+*.out
+coverage.html
+# Test reports
+reports/
+# Kind cluster config (for local development)
+kind-config.yaml

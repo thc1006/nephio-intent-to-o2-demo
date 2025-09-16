@@ -73,12 +73,14 @@ setup-test-e2e: ## Set up a Kind cluster for e2e tests if it does not exist
 		echo "Kind is not installed. Please install Kind manually."; \
 		exit 1; \
 	}
-	@echo "Using existing Kind cluster '$(KIND_CLUSTER)'"
-	@$(KIND) export kubeconfig --name $(KIND_CLUSTER) || { \
-		echo "Failed to export kubeconfig for cluster '$(KIND_CLUSTER)'. Available clusters:"; \
-		$(KIND) get clusters; \
-		exit 1; \
-	}
+	@if $(KIND) get clusters | grep -q "^$(KIND_CLUSTER)$$"; then \
+		echo "Using existing Kind cluster '$(KIND_CLUSTER)'"; \
+		$(KIND) export kubeconfig --name $(KIND_CLUSTER); \
+	else \
+		echo "Creating new Kind cluster '$(KIND_CLUSTER)'"; \
+		$(KIND) create cluster --name $(KIND_CLUSTER) --config kind-config.yaml --wait 300s; \
+		$(KIND) export kubeconfig --name $(KIND_CLUSTER); \
+	fi
 
 .PHONY: test-e2e
 test-e2e: setup-test-e2e manifests generate fmt vet ## Run the e2e tests. Expected an isolated environment using Kind.
