@@ -14,12 +14,11 @@ This project demonstrates an end-to-end pipeline from natural language intent to
 ### Core References
 - **[AUTHORITATIVE_NETWORK_CONFIG.md](AUTHORITATIVE_NETWORK_CONFIG.md)** - Network configuration source of truth
 - **[SYSTEM_ARCHITECTURE_HLA.md](SYSTEM_ARCHITECTURE_HLA.md)** - System architecture overview
-- **[OPERATIONS.md](OPERATIONS.md)** - Operations manual
-- **[SECURITY.md](SECURITY.md)** - Security guidelines
-- **[RUNBOOK.md](RUNBOOK.md)** - Operational procedures
+- **[SUMMIT_DEMO_GUIDE.md](SUMMIT_DEMO_GUIDE.md)** - Summit demonstration guide
+- **[docs/operations/](docs/operations/)** - Operations documentation
 
 ### Setup & Configuration
-- **[OPENSTACK_COMPLETE_GUIDE.md](OPENSTACK_COMPLETE_GUIDE.md)** - OpenStack configuration
+- **[docs/operations/OPENSTACK_COMPLETE_GUIDE.md](docs/operations/OPENSTACK_COMPLETE_GUIDE.md)** - OpenStack configuration
 - **[docs/](docs/)** - Additional documentation
 
 ## Quick Start
@@ -56,9 +55,9 @@ Natural Language → Intent (JSON) → KRM → GitOps → Edge Deployment → SL
 - **Edge2**: Core services operational (95%)
 
 ## Version
-- **Current**: v1.1.1
+- **Current**: v1.1.1 - Production Ready
 - **Released**: 2025-09-14
-- See [RELEASE_NOTES_v1.1.1.md](RELEASE_NOTES_v1.1.1.md)
+- See [CHANGELOG.md](CHANGELOG.md) for version history
 
 ## Contributing
 Please refer to contribution guidelines in docs/
@@ -67,4 +66,4 @@ Please refer to contribution guidelines in docs/
 [License information]
 
 ---
-*Last Updated: 2025-09-14*
+*Last Updated: 2025-09-17*

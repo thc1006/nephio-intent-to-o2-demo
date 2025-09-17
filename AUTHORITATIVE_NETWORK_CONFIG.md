@@ -1,21 +1,21 @@
-# 🔐 權威網路配置文檔 - 正確的連線方式
-**最後更新**: 2025-09-14
-**版本**: v2.0.0 FINAL
-**狀態**: ✅ 經過完整測試驗證
+# Authoritative Network Configuration - Correct Connection Methods
+**Last Updated**: 2025-09-17
+**Version**: v2.0.0 FINAL
+**Status**: Fully tested and validated
 
-## ⚠️ 重要聲明
-**這是唯一正確的網路配置文檔。所有其他文檔如有衝突，以此文檔為準。**
+## Important Declaration
+**This is the only correct network configuration document. All other documents that conflict should defer to this document.**
 
 ---
 
-## 📊 網路拓撲總覽
+## Network Topology Overview
 
 ```
                      ┌──────────────────────────┐
                      │   VM-1 (SMO/GitOps)      │
-                     │   內部: 172.16.0.78      │
-                     │   外部: 147.251.115.143  │
-                     │   角色: 管理與編排       │
+                     │   Internal: 172.16.0.78   │
+                     │   External: 147.251.115.143│
+                     │   Role: Management & Orchestration │
                      └──────────┬───────────────┘
                                 │
                     ┌───────────┴───────────┐
@@ -23,39 +23,45 @@
          ┌──────────▼──────────┐  ┌────────▼──────────┐
          │   VM-2 (Edge1)      │  │   VM-4 (Edge2)    │
          │   IP: 172.16.4.45   │  │   IP: 172.16.4.176 │
-         │   角色: 邊緣站點1    │  │   角色: 邊緣站點2  │
+         │   Role: Edge Site 1 │  │   Role: Edge Site 2│
          └─────────────────────┘  └───────────────────┘
+
+                     ┌──────────────────────────┐
+                     │   VM-3 (LLM Adapter)     │
+                     │   IP: Configure via VM3_IP│
+                     │   Role: Intent Service   │
+                     └──────────────────────────┘
 ```
 
 ---
 
-## ✅ VM-1 到 Edge 站點連線狀態（2025-09-14 驗證）
+## VM-1 to Edge Sites Connection Status (Verified 2025-09-17)
 
-### 🎯 VM-1 → Edge1 (VM-2) 連線
-| 服務 | 端口 | 協議 | 狀態 | 用途 |
-|------|------|------|------|------|
-| ICMP | - | ICMP | ✅ 成功 | 基本連通性測試 |
-| SSH | 22 | TCP | ✅ 成功 | 管理訪問 |
-| Kubernetes API | 6443 | TCP | ✅ 成功 | K8s 叢集管理 |
-| SLO Service | 30090 | TCP | ✅ 成功 | SLO 監控服務 |
-| O2IMS API | 31280 | TCP | ✅ 成功 | O-RAN O2 介面 |
+### VM-1 to Edge1 (VM-2) Connection
+| Service | Port | Protocol | Status | Purpose |
+|---------|------|----------|--------|---------|
+| ICMP | - | ICMP | Success | Basic connectivity test |
+| SSH | 22 | TCP | Success | Management access |
+| Kubernetes API | 6443 | TCP | Success | K8s cluster management |
+| SLO Service | 30090 | TCP | Success | SLO monitoring service |
+| O2IMS API | 31280 | TCP | Success | O-RAN O2 interface |
 
-### 🎯 VM-1 → Edge2 (VM-4) 連線
-| 服務 | 端口 | 協議 | 狀態 | 用途 |
-|------|------|------|------|------|
-| ICMP | - | ICMP | ✅ 成功（需 OpenStack 設置） | 基本連通性測試 |
-| SSH | 22 | TCP | ❌ 超時（需額外設置） | 管理訪問 |
-| Kubernetes API | 6443 | TCP | ✅ 成功 | K8s 叢集管理 |
-| SLO Service | 30090 | TCP | ✅ 成功 | SLO 監控服務 |
-| O2IMS API | 31280 | TCP | ✅ 成功 | O-RAN O2 介面 (nginx 占位符) |
+### VM-1 to Edge2 (VM-4) Connection
+| Service | Port | Protocol | Status | Purpose |
+|---------|------|----------|--------|---------|
+| ICMP | - | ICMP | Success (requires OpenStack setup) | Basic connectivity test |
+| SSH | 22 | TCP | Timeout (requires additional setup) | Management access |
+| Kubernetes API | 6443 | TCP | Success | K8s cluster management |
+| SLO Service | 30090 | TCP | Success | SLO monitoring service |
+| O2IMS API | 31280 | TCP | Success | O-RAN O2 interface (nginx placeholder) |
 
 ---
 
-## 🔧 OpenStack Security Group 正確設置
+## OpenStack Security Group Correct Setup
 
-### 必須的規則（已驗證成功）
+### Required Rules (Verified Successfully)
 
-#### 1. ICMP 規則（允許 ping）
+#### 1. ICMP Rules (Allow ping)
 ```
 Direction: Ingress
 Protocol: ICMP
@@ -63,7 +69,7 @@ Remote: CIDR
 CIDR: 172.16.0.78/32
 ```
 
-#### 2. Kubernetes API 規則
+#### 2. Kubernetes API Rules
 ```
 Direction: Ingress
 Protocol: TCP
@@ -72,7 +78,7 @@ Remote: CIDR
 CIDR: 172.16.0.0/16
 ```
 
-#### 3. NodePort 服務範圍
+#### 3. NodePort Service Range
 ```
 Direction: Ingress
 Protocol: TCP
@@ -81,7 +87,7 @@ Remote: CIDR
 CIDR: 172.16.0.0/16
 ```
 
-#### 4. SSH 規則（可選）
+#### 4. SSH Rules (Optional)
 ```
 Direction: Ingress
 Protocol: TCP
@@ -92,21 +98,21 @@ CIDR: 172.16.0.78/32
 
 ---
 
-## 🚀 GitOps 同步配置
+## GitOps Sync Configuration
 
-### Gitea 服務狀態
+### Gitea Service Status
 ```bash
-# VM-1 上的 Gitea 服務
-服務地址: http://172.16.0.78:8888
-外部地址: http://147.251.115.143:8888
-狀態: ✅ 運行中
-容器: gitea/gitea:latest
-端口映射: 8888:3000, 2222:22
+# VM-1 Gitea Service
+Service Address: http://172.16.0.78:8888
+External Address: http://147.251.115.143:8888
+Status: Running
+Container: gitea/gitea:latest
+Port Mapping: 8888:3000, 2222:22
 ```
 
-### Edge1 GitOps 配置
+### Edge1 GitOps Configuration
 ```yaml
-# 位置: vm-2/edge1-rootsync.yaml
+# Location: vm-2/edge1-rootsync.yaml
 apiVersion: configsync.gke.io/v1beta1
 kind: RootSync
 metadata:
@@ -114,16 +120,16 @@ metadata:
   namespace: config-management-system
 spec:
   git:
-    repo: http://172.16.0.78:8888/admin1/edge1-config  # 正確：使用內部 IP
+    repo: http://172.16.0.78:8888/admin1/edge1-config  # Correct: Use internal IP
     branch: main
     auth: token
     secretRef:
       name: gitea-token
 ```
 
-### Edge2 GitOps 配置
+### Edge2 GitOps Configuration
 ```yaml
-# 位置: 待創建
+# Location: To be created
 apiVersion: configsync.gke.io/v1beta1
 kind: RootSync
 metadata:
@@ -131,9 +137,9 @@ metadata:
   namespace: config-management-system
 spec:
   git:
-    repo: http://172.16.0.78:8888/admin1/edge2-config  # 使用 VM-1 內部 IP
+    repo: http://172.16.0.78:8888/admin1/edge2-config  # Use VM-1 internal IP
     branch: main
-    directory: /edge2  # Edge2 監聽子目錄
+    directory: /edge2  # Edge2 watch subdirectory
     auth: token
     secretRef:
       name: git-creds
@@ -141,132 +147,132 @@ spec:
 
 ---
 
-## ⚠️ 常見錯誤配置（請避免）
+## Common Misconfigurations (Please Avoid)
 
-### ❌ 錯誤 1：使用外部 IP 進行內部通訊
+### Error 1: Using External IP for Internal Communication
 ```yaml
-# 錯誤
+# Incorrect
 repo: http://147.251.115.143:8888/admin1/edge1-config
 
-# 正確
+# Correct
 repo: http://172.16.0.78:8888/admin1/edge1-config
 ```
 
-### ❌ 錯誤 2：使用 SSH 隧道連接同網段機器
+### Error 2: Using SSH Tunnel for Same Network Segment
 ```bash
-# 錯誤：VM-4 在同網段不需要 SSH 隧道
+# Incorrect: VM-4 on same network doesn't need SSH tunnel
 ssh -L 6443:localhost:6443 ubuntu@172.16.4.176
 
-# 正確：直接連接
+# Correct: Direct connection
 kubectl --server=https://172.16.4.176:6443
 ```
 
-### ❌ 錯誤 3：使用過時的端口
+### Error 3: Using Outdated Ports
 ```bash
-# 錯誤：使用 30000 而非 8888
+# Incorrect: Using 30000 instead of 8888
 http://172.16.0.78:30000/admin1/edge1-config
 
-# 正確：Gitea 運行在 8888
+# Correct: Gitea runs on 8888
 http://172.16.0.78:8888/admin1/edge1-config
 ```
 
 ---
 
-## 📝 快速驗證命令
+## Quick Verification Commands
 
-### 從 VM-1 驗證所有連線
+### Verify All Connections from VM-1
 ```bash
-# 測試 Edge1
+# Test Edge1
 echo "=== Testing Edge1 (VM-2) ==="
 ping -c 2 172.16.4.45
 nc -vz -w 3 172.16.4.45 6443
 curl -s http://172.16.4.45:30090/health
 
-# 測試 Edge2
+# Test Edge2
 echo "=== Testing Edge2 (VM-4) ==="
 ping -c 2 172.16.4.176
 nc -vz -w 3 172.16.4.176 6443
 curl -s http://172.16.4.176:30090/health
 
-# 測試 Gitea
+# Test Gitea
 echo "=== Testing Gitea ==="
 curl -s http://localhost:8888 | grep -q "Gitea" && echo "Gitea: OK"
 ```
 
-### 驗證 GitOps 同步
+### Verify GitOps Sync
 ```bash
-# 在 Edge1 (VM-2) 上
+# On Edge1 (VM-2)
 kubectl -n config-management-system get rootsync
 kubectl -n config-management-system logs -l app=root-reconciler --tail=10
 
-# 在 Edge2 (VM-4) 上
+# On Edge2 (VM-4)
 kubectl -n config-management-system get rootsync
 kubectl -n config-management-system logs -l app=root-reconciler --tail=10
 ```
 
 ---
 
-## 🔄 同步能力總結
+## Sync Capability Summary
 
-### ✅ VM-1 可以成功同步到兩個 Edge 站點
+### VM-1 Can Successfully Sync to Both Edge Sites
 
 1. **Edge1 (VM-2)**:
-   - GitOps 同步: ✅ 運作中
-   - 監控數據收集: ✅ 正常
-   - 管理訪問: ✅ 完整
+   - GitOps sync: Working
+   - Monitoring data collection: Normal
+   - Management access: Complete
 
 2. **Edge2 (VM-4)**:
-   - GitOps 同步: ⚠️ 需要 Edge2 能訪問 VM-1:8888
-   - 監控數據收集: ✅ 正常（VM-1 可以主動拉取）
-   - 管理訪問: ⚠️ 部分（K8s API 可用，SSH 不可用）
+   - GitOps sync: Warning - Edge2 needs access to VM-1:8888
+   - Monitoring data collection: Normal (VM-1 can actively pull)
+   - Management access: Partial (K8s API available, SSH not available)
 
 ---
 
-## 📋 待解決問題
+## Issues to Resolve
 
-1. **Edge2 → VM-1 Gitea 連線**
-   - 問題：Edge2 無法訪問 147.251.115.143:8888
-   - 解決方案：配置網路路由或使用內部 IP
+1. **Edge2 to VM-1 Gitea Connection**
+   - Issue: Edge2 cannot access 147.251.115.143:8888
+   - Solution: Configure network routing or use internal IP
 
-2. **VM-1 → Edge2 SSH**
-   - 問題：SSH 端口 22 超時
-   - 解決方案：檢查 VM-4 SSH 服務狀態
+2. **VM-1 to Edge2 SSH**
+   - Issue: SSH port 22 timeout
+   - Solution: Check VM-4 SSH service status
 
 ---
 
-## 🚨 緊急修復程序
+## Emergency Fix Procedures
 
-如果連線失敗，請按順序執行：
+If connection fails, execute in order:
 
-1. **檢查 Gitea 服務**
+1. **Check Gitea Service**
    ```bash
    docker ps | grep gitea
-   # 如未運行，執行：
+   # If not running, execute:
    ./scripts/setup/start-gitea.sh
    ```
 
-2. **檢查 OpenStack Security Groups**
-   - 確認 ICMP 規則已添加
-   - 確認 TCP 6443, 30000-32767 規則存在
+2. **Check OpenStack Security Groups**
+   - Confirm ICMP rules are added
+   - Confirm TCP 6443, 30000-32767 rules exist
 
-3. **驗證網路路由**
+3. **Verify Network Routing**
    ```bash
    ip route | grep 172.16
    ```
 
-4. **重啟 Config Sync**
+4. **Restart Config Sync**
    ```bash
    kubectl -n config-management-system rollout restart deployment reconciler-manager
    ```
 
 ---
 
-## 📞 支援資訊
+## Support Information
 
-- **文檔維護者**: Nephio Intent-to-O2 Team
-- **最後驗證**: 2025-09-14
-- **下次審查**: 2025-10-14
+- **Document Maintainer**: Nephio Intent-to-O2 Team
+- **Last Verified**: 2025-09-17
+- **Next Review**: 2025-10-14
 
 ---
 
-**⚠️ 重要提醒：此文檔是網路配置的唯一真實來源。請定期參考此文檔，避免使用過時資訊。**
+**Important Reminder: This document is the single source of truth for network configuration. Please refer to this document regularly and avoid using outdated information.**

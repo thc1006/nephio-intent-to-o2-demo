@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] - 2025-09-17
+
+### Changed
+- Repository structure cleanup and reorganization
+- Moved outdated documentation to archive/ directory
+- Removed duplicate network configuration files
+- Streamlined root directory for production readiness
+- Updated network configuration with correct VM architecture
+
+### Removed
+- Temporary tracking files (CI_FIX_LOOP.md, status reports)
+- Duplicate configuration documents
+- Old VM-specific documentation files
+- Redundant SSL and network visualization files
+
 ## [v1.1.1] - 2025-09-14
 
 ### Added
