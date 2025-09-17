@@ -1,17 +1,18 @@
-# 🚀 Nephio Intent-to-O2IMS Demo
+# Nephio Intent-to-O2IMS Demo
 
-## 📖 Overview
+## Overview
 This project demonstrates an end-to-end pipeline from natural language intent to O-RAN O2IMS deployment using Nephio, GitOps, and cloud-native technologies.
 
-## 🏗️ Architecture
-- **SMO/GitOps Server**: VM-1 (172.16.0.78)
+## Architecture
+- **SMO/GitOps Orchestrator**: VM-1 (Current VM)
 - **Edge Site 1**: VM-2 (172.16.4.45)
-- **Edge Site 2**: VM-4 (172.16.0.89)
+- **LLM Adapter Service**: VM-3 (Configure via VM3_IP environment variable)
+- **Edge Site 2**: VM-4 (172.16.4.176)
 
-## 📚 Key Documentation
+## Key Documentation
 
 ### Core References
-- **[AUTHORITATIVE_NETWORK_CONFIG.md](AUTHORITATIVE_NETWORK_CONFIG.md)** - 🔐 Network configuration source of truth
+- **[AUTHORITATIVE_NETWORK_CONFIG.md](AUTHORITATIVE_NETWORK_CONFIG.md)** - Network configuration source of truth
 - **[SYSTEM_ARCHITECTURE_HLA.md](SYSTEM_ARCHITECTURE_HLA.md)** - System architecture overview
 - **[OPERATIONS.md](OPERATIONS.md)** - Operations manual
 - **[SECURITY.md](SECURITY.md)** - Security guidelines
@@ -21,7 +22,7 @@ This project demonstrates an end-to-end pipeline from natural language intent to
 - **[OPENSTACK_COMPLETE_GUIDE.md](OPENSTACK_COMPLETE_GUIDE.md)** - OpenStack configuration
 - **[docs/](docs/)** - Additional documentation
 
-## 🔧 Quick Start
+## Quick Start
 
 ### Prerequisites
 - Access to VMs (VM-1, VM-2, VM-4)
@@ -45,24 +46,24 @@ docker ps | grep gitea
 | SLO Service | 30090 | http://<edge-ip>:30090 |
 | O2IMS API | 31280 | http://<edge-ip>:31280 |
 
-## 📊 Pipeline Flow
+## Pipeline Flow
 ```
 Natural Language → Intent (JSON) → KRM → GitOps → Edge Deployment → SLO Validation
 ```
 
-## 🌐 Multi-Site Support
+## Multi-Site Support
 - **Edge1**: Full functionality (100%)
 - **Edge2**: Core services operational (95%)
 
-## 📝 Version
+## Version
 - **Current**: v1.1.1
 - **Released**: 2025-09-14
 - See [RELEASE_NOTES_v1.1.1.md](RELEASE_NOTES_v1.1.1.md)
 
-## 🤝 Contributing
+## Contributing
 Please refer to contribution guidelines in docs/
 
-## 📄 License
+## License
 [License information]
 
 ---

@@ -1,6 +1,6 @@
-# 🚀 Summit Demo Guide - Intent-Driven O-RAN Orchestration
+#  Summit Demo Guide - Intent-Driven O-RAN Orchestration
 
-## 📊 Architecture Flow Diagram
+##  Architecture Flow Diagram
 
 ```mermaid
 graph TB
@@ -62,47 +62,47 @@ graph TB
     class MON,ROLL critical
 ```
 
-## 🔄 Detailed Pipeline Flow
+##  Detailed Pipeline Flow
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                        SUMMIT DEMO PIPELINE                      │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                   │
-│  1. 🗣️  Natural Language Input (VM-3)                            │
-│     └─> "Deploy 5G network slice for eMBB with 100Gbps"         │
-│                                                                   │
-│  2. 🤖 LLM Processing (VM-3:8888)                               │
-│     └─> TMF921 Intent JSON Generation                           │
-│                                                                   │
-│  3. 📋 Intent Compilation (VM-1)                                │
-│     └─> 3GPP TS 28.312 Compliant Intent                        │
-│                                                                   │
-│  4. 📦 KRM Package Generation (VM-1)                            │
-│     └─> Kubernetes Resources (Deployment, Service, ConfigMap)    │
-│                                                                   │
-│  5. 🔄 GitOps Deployment (VM-1)                                 │
-│     └─> Git Commit + Push to edge1-config/edge2-config          │
-│                                                                   │
-│  6. ⚙️  Config Sync Reconciliation (VM-2/VM-4)                  │
-│     └─> RootSync/RepoSync pulls configurations                   │
-│                                                                   │
-│  7. 🚀 O2IMS Provisioning (VM-2/VM-4)                          │
-│     └─> IntentDeployment CR → ProvisioningRequest               │
-│                                                                   │
-│  8. 📊 SLO Validation (VM-1)                                    │
-│     └─> Check E2/A1/O1 interface metrics                        │
-│                                                                   │
-│  9. ✅/❌ Decision Gate                                         │
-│     ├─> ✅ Success: Package artifacts for Summit                │
-│     └─> ❌ Failure: Automatic rollback                          │
-│                                                                   │
-└─────────────────────────────────────────────────────────────────┘
+
+                        SUMMIT DEMO PIPELINE                      
+
+                                                                   
+  1.   Natural Language Input (VM-3)                            
+     > "Deploy 5G network slice for eMBB with 100Gbps"         
+                                                                   
+  2.  LLM Processing (VM-3:8888)                               
+     > TMF921 Intent JSON Generation                           
+                                                                   
+  3.  Intent Compilation (VM-1)                                
+     > 3GPP TS 28.312 Compliant Intent                        
+                                                                   
+  4.  KRM Package Generation (VM-1)                            
+     > Kubernetes Resources (Deployment, Service, ConfigMap)    
+                                                                   
+  5.  GitOps Deployment (VM-1)                                 
+     > Git Commit + Push to edge1-config/edge2-config          
+                                                                   
+  6.   Config Sync Reconciliation (VM-2/VM-4)                  
+     > RootSync/RepoSync pulls configurations                   
+                                                                   
+  7.  O2IMS Provisioning (VM-2/VM-4)                          
+     > IntentDeployment CR → ProvisioningRequest               
+                                                                   
+  8.  SLO Validation (VM-1)                                    
+     > Check E2/A1/O1 interface metrics                        
+                                                                   
+  9. / Decision Gate                                         
+     >  Success: Package artifacts for Summit                
+     >  Failure: Automatic rollback                          
+                                                                   
+
 ```
 
-## ⚠️ Summit Demo Critical Checklist
+##  Summit Demo Critical Checklist
 
-### 🔧 Pre-Demo Setup (T-24 hours)
+###  Pre-Demo Setup (T-24 hours)
 
 - [ ] **Network Connectivity**
   ```bash
@@ -136,7 +136,7 @@ graph TB
   git pull origin main
   ```
 
-### 🎯 Demo Execution Steps
+###  Demo Execution Steps
 
 1. **Environment Setup** (2 min)
    ```bash
@@ -169,7 +169,7 @@ graph TB
    tail -f logs/demo_$(date +%Y%m%d)*.log
    ```
 
-### 🚨 Troubleshooting Guide
+###  Troubleshooting Guide
 
 | Issue | Quick Fix | Fallback |
 |-------|-----------|----------|
@@ -179,7 +179,7 @@ graph TB
 | Network issues | Check firewall rules | Use local mock services |
 | Rollback triggered | `export ROLLBACK_ON_FAILURE=false` | Explain as "safety feature demo" |
 
-### 📈 Key Metrics to Showcase
+###  Key Metrics to Showcase
 
 1. **Performance Metrics**
    - Intent processing time: < 5 seconds
@@ -199,7 +199,7 @@ graph TB
    - SLO-based validation
    - Comprehensive audit trail
 
-### 🎬 Demo Script Talking Points
+###  Demo Script Talking Points
 
 1. **Opening (1 min)**
    - "Today we demonstrate intent-driven orchestration for O-RAN"
@@ -236,20 +236,20 @@ graph TB
    - Display Summit package
    - "Production-ready, standards-compliant"
 
-### 📦 Summit Package Contents
+###  Summit Package Contents
 
 After successful demo, find artifacts in:
 ```
 reports/$(date +%Y%m%d)_*/
-├── executive_summary.md      # 1-page summary
-├── technical_report.pdf      # Full technical details
-├── metrics_dashboard.html    # Interactive metrics
-├── demo_recording.mp4        # Screen recording
-├── architecture.svg          # System diagram
-└── attestation.sig          # Cosign signature
+ executive_summary.md      # 1-page summary
+ technical_report.pdf      # Full technical details
+ metrics_dashboard.html    # Interactive metrics
+ demo_recording.mp4        # Screen recording
+ architecture.svg          # System diagram
+ attestation.sig          # Cosign signature
 ```
 
-### ⚡ Emergency Fallback Procedures
+###  Emergency Fallback Procedures
 
 1. **Complete System Failure**
    ```bash
@@ -271,7 +271,7 @@ reports/$(date +%Y%m%d)_*/
    ./scripts/demo_llm.sh
    ```
 
-### 📝 Final Checklist (T-5 minutes)
+###  Final Checklist (T-5 minutes)
 
 - [ ] All VMs accessible
 - [ ] Screen recording started
@@ -284,20 +284,20 @@ reports/$(date +%Y%m%d)_*/
 - [ ] Audience questions anticipated
 - [ ] Emergency contacts available
 
-### 🎯 Success Criteria
+###  Success Criteria
 
-✅ Demo completes in < 15 minutes
-✅ All 4 VMs participate successfully
-✅ GitOps sync shows green status
-✅ SLO validation passes
-✅ Artifacts generated automatically
-✅ No manual intervention required
-✅ Rollback capability demonstrated
-✅ Questions answered confidently
+ Demo completes in < 15 minutes
+ All 4 VMs participate successfully
+ GitOps sync shows green status
+ SLO validation passes
+ Artifacts generated automatically
+ No manual intervention required
+ Rollback capability demonstrated
+ Questions answered confidently
 
 ---
 
-## 🚀 Quick Start Commands
+##  Quick Start Commands
 
 ```bash
 # One-liner to start demo
@@ -310,4 +310,4 @@ watch -n 1 'kubectl get all -A | grep -E "(intent|root|repo)"'
 ./scripts/package_artifacts.sh --format=summit
 ```
 
-**Remember: Confidence is key. The system is production-ready and all CI tests are passing! 🎉**
+**Remember: Confidence is key. The system is production-ready and all CI tests are passing! **
