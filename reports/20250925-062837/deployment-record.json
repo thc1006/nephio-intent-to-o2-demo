@@ -1,0 +1,9 @@
+{
+  "timestamp": "20250925-062837",
+  "intent_file": "summit/golden-intents/both-federated-learning.json",
+  "intent_id": "intent-federated-learning-001",
+  "target_site": "both",
+  "service_type": "5G-mMTC-Federated",
+  "krm_location": "artifacts/20250925-062837/krm",
+  "status": "deployed"
+}

@@ -1,0 +1,9 @@
+{
+  "timestamp": "20250925-062826",
+  "intent_file": "summit/golden-intents/edge2-ml-inference.json",
+  "intent_id": "intent-edge2-ml-001",
+  "target_site": "edge2",
+  "service_type": "5G-URLLC-AI",
+  "krm_location": "artifacts/20250925-062826/krm",
+  "status": "deployed"
+}

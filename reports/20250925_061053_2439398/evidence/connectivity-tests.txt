@@ -1,0 +1,6 @@
+Testing connectivity to edge2: http://172.16.0.89:30090/metrics/api/v1/slo
+HTTP_000 Time_18.382071s
+---
+Testing connectivity to edge1: http://172.16.4.45:30090/metrics/api/v1/slo
+HTTP_200 Time_0.005179s
+---

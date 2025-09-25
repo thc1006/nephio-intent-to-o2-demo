@@ -1,0 +1,153 @@
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: Node
+  metadata:
+    annotations:
+      node.alpha.kubernetes.io/ttl: "0"
+      volumes.kubernetes.io/controller-managed-attach-detach: "true"
+    creationTimestamp: "2025-09-16T15:36:54Z"
+    labels:
+      beta.kubernetes.io/arch: amd64
+      beta.kubernetes.io/os: linux
+      ingress-ready: "true"
+      kubernetes.io/arch: amd64
+      kubernetes.io/hostname: nephio-demo-control-plane
+      kubernetes.io/os: linux
+      node-role.kubernetes.io/control-plane: ""
+    name: nephio-demo-control-plane
+    resourceVersion: "979561"
+    uid: 3dbdf544-a313-4e92-9648-9059deb92b64
+  spec:
+    podCIDR: 10.244.0.0/24
+    podCIDRs:
+    - 10.244.0.0/24
+    providerID: kind://docker/nephio-demo/nephio-demo-control-plane
+  status:
+    addresses:
+    - address: 172.18.0.2
+      type: InternalIP
+    - address: nephio-demo-control-plane
+      type: Hostname
+    allocatable:
+      cpu: "16"
+      ephemeral-storage: 203056560Ki
+      hugepages-1Gi: "0"
+      hugepages-2Mi: "0"
+      memory: 30796324Ki
+      pods: "110"
+    capacity:
+      cpu: "16"
+      ephemeral-storage: 203056560Ki
+      hugepages-1Gi: "0"
+      hugepages-2Mi: "0"
+      memory: 30796324Ki
+      pods: "110"
+    conditions:
+    - lastHeartbeatTime: "2025-09-25T06:10:21Z"
+      lastTransitionTime: "2025-09-16T15:36:54Z"
+      message: kubelet has sufficient memory available
+      reason: KubeletHasSufficientMemory
+      status: "False"
+      type: MemoryPressure
+    - lastHeartbeatTime: "2025-09-25T06:10:21Z"
+      lastTransitionTime: "2025-09-16T15:36:54Z"
+      message: kubelet has no disk pressure
+      reason: KubeletHasNoDiskPressure
+      status: "False"
+      type: DiskPressure
+    - lastHeartbeatTime: "2025-09-25T06:10:21Z"
+      lastTransitionTime: "2025-09-16T15:36:54Z"
+      message: kubelet has sufficient PID available
+      reason: KubeletHasSufficientPID
+      status: "False"
+      type: PIDPressure
+    - lastHeartbeatTime: "2025-09-25T06:10:21Z"
+      lastTransitionTime: "2025-09-16T15:37:25Z"
+      message: kubelet is posting ready status
+      reason: KubeletReady
+      status: "True"
+      type: Ready
+    daemonEndpoints:
+      kubeletEndpoint:
+        Port: 10250
+    features:
+      supplementalGroupsPolicy: true
+    images:
+    - names:
+      - registry.k8s.io/kube-apiserver-amd64:v1.34.0
+      - registry.k8s.io/kube-apiserver:v1.34.0
+      sizeBytes: 89044732
+    - names:
+      - registry.k8s.io/kube-controller-manager-amd64:v1.34.0
+      - registry.k8s.io/kube-controller-manager:v1.34.0
+      sizeBytes: 75998818
+    - names:
+      - registry.k8s.io/etcd:3.6.4-0
+      sizeBytes: 74311308
+    - names:
+      - registry.k8s.io/kube-proxy-amd64:v1.34.0
+      - registry.k8s.io/kube-proxy:v1.34.0
+      sizeBytes: 73135815
+    - names:
+      - registry.k8s.io/kube-scheduler-amd64:v1.34.0
+      - registry.k8s.io/kube-scheduler:v1.34.0
+      sizeBytes: 53839458
+    - names:
+      - docker.io/kindest/kindnetd:v20250512-df8de77b
+      sizeBytes: 44375501
+    - names:
+      - docker.io/kindest/local-path-provisioner:v20250214-acbabc1a
+      sizeBytes: 22540870
+    - names:
+      - registry.k8s.io/coredns/coredns:v1.12.1
+      sizeBytes: 22384805
+    - names:
+      - quay.io/jetstack/cert-manager-controller@sha256:81316365dc0b713eddddfbf9b8907b2939676e6c0e12beec0f9625f202a36d16
+      - quay.io/jetstack/cert-manager-controller:v1.18.2
+      sizeBytes: 21889705
+    - names:
+      - quay.io/jetstack/cert-manager-webhook@sha256:9431f0d8b5103b06cc6138564f471ac02c6b2638c2fa399d81e28a01d817ae73
+      - quay.io/jetstack/cert-manager-webhook:v1.18.2
+      sizeBytes: 18891327
+    - names:
+      - quay.io/jetstack/cert-manager-cainjector@sha256:af59e01ad9756a1034fbf948330e75702e5d79b3577f323f6a9947707ba262fc
+      - quay.io/jetstack/cert-manager-cainjector:v1.18.2
+      sizeBytes: 16005870
+    - names:
+      - docker.io/kindest/local-path-helper:v20241212-8ac705d0
+      sizeBytes: 3084671
+    - names:
+      - docker.io/library/busybox@sha256:ab33eacc8251e3807b85bb6dba570e4698c3998eca6f0fc2ccb60575a563ea74
+      - docker.io/library/busybox:latest
+      sizeBytes: 2223685
+    - names:
+      - registry.k8s.io/pause:3.10
+      sizeBytes: 320368
+    nodeInfo:
+      architecture: amd64
+      bootID: 29e59202-04b1-4ab0-ab8c-8e2dd8978cb1
+      containerRuntimeVersion: containerd://2.1.3
+      kernelVersion: 5.15.0-100-generic
+      kubeProxyVersion: ""
+      kubeletVersion: v1.34.0
+      machineID: 97ba415c3ab4410fb1bcbb1872d31a7a
+      operatingSystem: linux
+      osImage: Debian GNU/Linux 12 (bookworm)
+      systemUUID: 6e66ddcd-4c1a-4cb5-97a1-1d05849f3cd3
+    runtimeHandlers:
+    - features:
+        recursiveReadOnlyMounts: true
+        userNamespaces: true
+      name: runc
+    - features:
+        recursiveReadOnlyMounts: true
+        userNamespaces: true
+      name: ""
+    - features:
+        recursiveReadOnlyMounts: true
+        userNamespaces: true
+      name: test-handler
+kind: List
+metadata:
+  resourceVersion: ""

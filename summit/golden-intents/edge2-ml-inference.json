@@ -1,90 +1,35 @@
 {
+  "id": "intent-edge2-ml-001",
+  "name": "ML Inference Service",
+  "description": "Deploy ML inference workload at Edge Site 2",
+  "serviceType": "5G-URLLC-AI",
+  "target": {
+    "site": "edge2",
+    "cluster": "edge-cluster-2",
+    "namespace": "ml-inference"
+  },
+  "expectations": [
+    {
+      "type": "ServiceCapacity",
+      "targets": {
+        "throughput": "1Gbps",
+        "latency": "5ms",
+        "availability": "99.99%"
+      }
+    },
+    {
+      "type": "ResourceAllocation",
+      "targets": {
+        "cpu": "8cores",
+        "memory": "16Gi",
+        "gpu": "1"
+      }
+    }
+  ],
+  "priority": "critical",
   "metadata": {
-    "name": "edge2-ml-inference-golden",
-    "version": "v1.0",
-    "site": "edge2",
-    "timestamp": "2025-09-16T05:00:00Z"
-  },
-  "intent": {
-    "service": "ml-inference-engine",
-    "description": "Deploy ML inference service to Edge-2 with GPU acceleration",
-    "site": "edge2",
-    "deployment": {
-      "replicas": 2,
-      "strategy": "Recreate",
-      "nodeSelector": {
-        "gpu": "true"
-      }
-    },
-    "resources": {
-      "requests": {
-        "cpu": "1000m",
-        "memory": "4Gi",
-        "nvidia.com/gpu": "1"
-      },
-      "limits": {
-        "cpu": "2000m",
-        "memory": "8Gi",
-        "nvidia.com/gpu": "1"
-      }
-    },
-    "network": {
-      "endpoints": {
-        "o2ims": "http://172.16.4.176:31280",
-        "monitoring": "http://172.16.4.176:30090"
-      },
-      "service": {
-        "type": "NodePort",
-        "nodePort": 30280
-      }
-    },
-    "ml_config": {
-      "model": "resnet50-v2",
-      "batch_size": 32,
-      "inference_timeout": "100ms",
-      "cache_enabled": true
-    }
-  },
-  "kpis": {
-    "inference_latency": {
-      "p50": "20ms",
-      "p95": "50ms",
-      "p99": "100ms",
-      "measurement": "ml_inference_duration_seconds"
-    },
-    "throughput": {
-      "target": "500 inferences/s",
-      "measurement": "ml_inferences_per_second"
-    },
-    "accuracy": {
-      "target": "> 95%",
-      "measurement": "ml_prediction_accuracy"
-    },
-    "gpu_utilization": {
-      "target": "60-80%",
-      "measurement": "gpu_utilization_percent"
-    },
-    "cache_hit_rate": {
-      "target": "> 70%",
-      "measurement": "cache_hits_ratio"
-    }
-  },
-  "expected_results": {
-    "deployment": {
-      "pods_ready": 2,
-      "gpu_allocated": true,
-      "service_endpoints": ["ml-inference.default.svc.cluster.local"],
-      "nodeport": 30280
-    },
-    "performance": {
-      "warmup_time": "30s",
-      "steady_state": true,
-      "model_loaded": "resnet50-v2"
-    },
-    "validation": {
-      "health_check": "http://172.16.4.176:30280/health",
-      "inference_test": "http://172.16.4.176:30280/predict",
-      "expected_response": {"status": "ready", "model": "resnet50-v2"}
-    }
+    "createdAt": "2025-09-25T06:00:00Z",
+    "createdBy": "summit-demo",
+    "tags": ["ml", "edge2", "inference", "gpu"]
   }
 }

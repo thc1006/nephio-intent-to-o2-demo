@@ -1,0 +1,1804 @@
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: Pod
+  metadata:
+    creationTimestamp: "2025-09-16T15:37:09Z"
+    generateName: coredns-66bc5c9577-
+    generation: 1
+    labels:
+      k8s-app: kube-dns
+      pod-template-hash: 66bc5c9577
+    name: coredns-66bc5c9577-rs8nm
+    namespace: kube-system
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: ReplicaSet
+      name: coredns-66bc5c9577
+      uid: b70148ec-1cd2-4048-9133-dababbc4a95e
+    resourceVersion: "508"
+    uid: f115f7d3-f7ca-4022-9f93-ebd424dfb57d
+  spec:
+    affinity:
+      podAntiAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - podAffinityTerm:
+            labelSelector:
+              matchExpressions:
+              - key: k8s-app
+                operator: In
+                values:
+                - kube-dns
+            topologyKey: kubernetes.io/hostname
+          weight: 100
+    containers:
+    - args:
+      - -conf
+      - /etc/coredns/Corefile
+      image: registry.k8s.io/coredns/coredns:v1.12.1
+      imagePullPolicy: IfNotPresent
+      livenessProbe:
+        failureThreshold: 5
+        httpGet:
+          path: /health
+          port: liveness-probe
+          scheme: HTTP
+        initialDelaySeconds: 60
+        periodSeconds: 10
+        successThreshold: 1
+        timeoutSeconds: 5
+      name: coredns
+      ports:
+      - containerPort: 53
+        name: dns
+        protocol: UDP
+      - containerPort: 53
+        name: dns-tcp
+        protocol: TCP
+      - containerPort: 9153
+        name: metrics
+        protocol: TCP
+      - containerPort: 8080
+        name: liveness-probe
+        protocol: TCP
+      - containerPort: 8181
+        name: readiness-probe
+        protocol: TCP
+      readinessProbe:
+        failureThreshold: 3
+        httpGet:
+          path: /ready
+          port: readiness-probe
+          scheme: HTTP
+        periodSeconds: 10
+        successThreshold: 1
+        timeoutSeconds: 1
+      resources:
+        limits:
+          memory: 170Mi
+        requests:
+          cpu: 100m
+          memory: 70Mi
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          add:
+          - NET_BIND_SERVICE
+          drop:
+          - ALL
+        readOnlyRootFilesystem: true
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /etc/coredns
+        name: config-volume
+        readOnly: true
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: kube-api-access-nrzr7
+        readOnly: true
+    dnsPolicy: Default
+    enableServiceLinks: true
+    nodeName: nephio-demo-control-plane
+    nodeSelector:
+      kubernetes.io/os: linux
+    preemptionPolicy: PreemptLowerPriority
+    priority: 2000000000
+    priorityClassName: system-cluster-critical
+    restartPolicy: Always
+    schedulerName: default-scheduler
+    securityContext: {}
+    serviceAccount: coredns
+    serviceAccountName: coredns
+    terminationGracePeriodSeconds: 30
+    tolerations:
+    - key: CriticalAddonsOnly
+      operator: Exists
+    - effect: NoSchedule
+      key: node-role.kubernetes.io/control-plane
+    - effect: NoExecute
+      key: node.kubernetes.io/not-ready
+      operator: Exists
+      tolerationSeconds: 300
+    - effect: NoExecute
+      key: node.kubernetes.io/unreachable
+      operator: Exists
+      tolerationSeconds: 300
+    volumes:
+    - configMap:
+        defaultMode: 420
+        items:
+        - key: Corefile
+          path: Corefile
+        name: coredns
+      name: config-volume
+    - name: kube-api-access-nrzr7
+      projected:
+        defaultMode: 420
+        sources:
+        - serviceAccountToken:
+            expirationSeconds: 3607
+            path: token
+        - configMap:
+            items:
+            - key: ca.crt
+              path: ca.crt
+            name: kube-root-ca.crt
+        - downwardAPI:
+            items:
+            - fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.namespace
+              path: namespace
+  status:
+    conditions:
+    - lastProbeTime: null
+      lastTransitionTime: "2025-09-16T15:37:33Z"
+      observedGeneration: 1
+      status: "True"
+      type: PodReadyToStartContainers
+    - lastProbeTime: null
+      lastTransitionTime: "2025-09-16T15:37:25Z"
+      observedGeneration: 1
+      status: "True"
+      type: Initialized
+    - lastProbeTime: null
+      lastTransitionTime: "2025-09-16T15:37:33Z"
+      observedGeneration: 1
+      status: "True"
+      type: Ready
+    - lastProbeTime: null
+      lastTransitionTime: "2025-09-16T15:37:33Z"
+      observedGeneration: 1
+      status: "True"
+      type: ContainersReady
+    - lastProbeTime: null
+      lastTransitionTime: "2025-09-16T15:37:25Z"
+      observedGeneration: 1
+      status: "True"
+      type: PodScheduled
+    containerStatuses:
+    - allocatedResources:
+        cpu: 100m
+        memory: 70Mi
+      containerID: containerd://685eb8c4d6647a6f3abcd202e730e50723b7d8334a23ccf5d9a4de7bc21e3b23
+      image: registry.k8s.io/coredns/coredns:v1.12.1
+      imageID: sha256:52546a367cc9e0d924aa3b190596a9167fa6e53245023b5b5baf0f07e5443969
+      lastState: {}
+      name: coredns
+      ready: true
+      resources:
+        limits:
+          memory: 170Mi
+        requests:
+          cpu: 100m
+          memory: 70Mi
+      restartCount: 0
+      started: true
+      state:
+        running:
+          startedAt: "2025-09-16T15:37:32Z"
+      user:
+        linux:
+          gid: 65532
+          supplementalGroups:
+          - 65532
+          uid: 65532
+      volumeMounts:
+      - mountPath: /etc/coredns
+        name: config-volume
+        readOnly: true
+        recursiveReadOnly: Disabled
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: kube-api-access-nrzr7
+        readOnly: true
+        recursiveReadOnly: Disabled
+    hostIP: 172.18.0.2
+    hostIPs:
+    - ip: 172.18.0.2
+    observedGeneration: 1
+    phase: Running
+    podIP: 10.244.0.4
+    podIPs:
+    - ip: 10.244.0.4
+    qosClass: Burstable
+    startTime: "2025-09-16T15:37:25Z"
+- apiVersion: v1
+  kind: Pod
+  metadata:
+    creationTimestamp: "2025-09-16T15:37:09Z"
+    generateName: coredns-66bc5c9577-
+    generation: 1
+    labels:
+      k8s-app: kube-dns
+      pod-template-hash: 66bc5c9577
+    name: coredns-66bc5c9577-zzcbm
+    namespace: kube-system
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: ReplicaSet
+      name: coredns-66bc5c9577
+      uid: b70148ec-1cd2-4048-9133-dababbc4a95e
+    resourceVersion: "503"
+    uid: 6ee221b7-5e20-4176-9cc0-ea1f0c64be6a
+  spec:
+    affinity:
+      podAntiAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - podAffinityTerm:
+            labelSelector:
+              matchExpressions:
+              - key: k8s-app
+                operator: In
+                values:
+                - kube-dns
+            topologyKey: kubernetes.io/hostname
+          weight: 100
+    containers:
+    - args:
+      - -conf
+      - /etc/coredns/Corefile
+      image: registry.k8s.io/coredns/coredns:v1.12.1
+      imagePullPolicy: IfNotPresent
+      livenessProbe:
+        failureThreshold: 5
+        httpGet:
+          path: /health
+          port: liveness-probe
+          scheme: HTTP
+        initialDelaySeconds: 60
+        periodSeconds: 10
+        successThreshold: 1
+        timeoutSeconds: 5
+      name: coredns
+      ports:
+      - containerPort: 53
+        name: dns
+        protocol: UDP
+      - containerPort: 53
+        name: dns-tcp
+        protocol: TCP
+      - containerPort: 9153
+        name: metrics
+        protocol: TCP
+      - containerPort: 8080
+        name: liveness-probe
+        protocol: TCP
+      - containerPort: 8181
+        name: readiness-probe
+        protocol: TCP
+      readinessProbe:
+        failureThreshold: 3
+        httpGet:
+          path: /ready
+          port: readiness-probe
+          scheme: HTTP
+        periodSeconds: 10
+        successThreshold: 1
+        timeoutSeconds: 1
+      resources:
+        limits:
+          memory: 170Mi
+        requests:
+          cpu: 100m
+          memory: 70Mi
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          add:
+          - NET_BIND_SERVICE
+          drop:
+          - ALL
+        readOnlyRootFilesystem: true
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /etc/coredns
+        name: config-volume
+        readOnly: true
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: kube-api-access-rbw2s
+        readOnly: true
+    dnsPolicy: Default
+    enableServiceLinks: true
+    nodeName: nephio-demo-control-plane
+    nodeSelector:
+      kubernetes.io/os: linux
+    preemptionPolicy: PreemptLowerPriority
+    priority: 2000000000
+    priorityClassName: system-cluster-critical
+    restartPolicy: Always
+    schedulerName: default-scheduler
+    securityContext: {}
+    serviceAccount: coredns
+    serviceAccountName: coredns
+    terminationGracePeriodSeconds: 30
+    tolerations:
+    - key: CriticalAddonsOnly
+      operator: Exists
+    - effect: NoSchedule
+      key: node-role.kubernetes.io/control-plane
+    - effect: NoExecute
+      key: node.kubernetes.io/not-ready
+      operator: Exists
+      tolerationSeconds: 300
+    - effect: NoExecute
+      key: node.kubernetes.io/unreachable
+      operator: Exists
+      tolerationSeconds: 300
+    volumes:
+    - configMap:
+        defaultMode: 420
+        items:
+        - key: Corefile
+          path: Corefile
+        name: coredns
+      name: config-volume
+    - name: kube-api-access-rbw2s
+      projected:
+        defaultMode: 420
+        sources:
+        - serviceAccountToken:
+            expirationSeconds: 3607
+            path: token
+        - configMap:
+            items:
+            - key: ca.crt
+              path: ca.crt
+            name: kube-root-ca.crt
+        - downwardAPI:
+            items:
+            - fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.namespace
+              path: namespace
+  status:
+    conditions:
+    - lastProbeTime: null
+      lastTransitionTime: "2025-09-16T15:37:33Z"
+      observedGeneration: 1
+      status: "True"
+      type: PodReadyToStartContainers
+    - lastProbeTime: null
+      lastTransitionTime: "2025-09-16T15:37:25Z"
+      observedGeneration: 1
+      status: "True"
+      type: Initialized
+    - lastProbeTime: null
+      lastTransitionTime: "2025-09-16T15:37:33Z"
+      observedGeneration: 1
+      status: "True"
+      type: Ready
+    - lastProbeTime: null
+      lastTransitionTime: "2025-09-16T15:37:33Z"
+      observedGeneration: 1
+      status: "True"
+      type: ContainersReady
+    - lastProbeTime: null
+      lastTransitionTime: "2025-09-16T15:37:25Z"
+      observedGeneration: 1
+      status: "True"
+      type: PodScheduled
+    containerStatuses:
+    - allocatedResources:
+        cpu: 100m
+        memory: 70Mi
+      containerID: containerd://48cca2f34d1c8829f515f0c5bad152841d0583bfdddc1907ffc1f17acc43eaf7
+      image: registry.k8s.io/coredns/coredns:v1.12.1
+      imageID: sha256:52546a367cc9e0d924aa3b190596a9167fa6e53245023b5b5baf0f07e5443969
+      lastState: {}
+      name: coredns
+      ready: true
+      resources:
+        limits:
+          memory: 170Mi
+        requests:
+          cpu: 100m
+          memory: 70Mi
+      restartCount: 0
+      started: true
+      state:
+        running:
+          startedAt: "2025-09-16T15:37:32Z"
+      user:
+        linux:
+          gid: 65532
+          supplementalGroups:
+          - 65532
+          uid: 65532
+      volumeMounts:
+      - mountPath: /etc/coredns
+        name: config-volume
+        readOnly: true
+        recursiveReadOnly: Disabled
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: kube-api-access-rbw2s
+        readOnly: true
+        recursiveReadOnly: Disabled
+    hostIP: 172.18.0.2
+    hostIPs:
+    - ip: 172.18.0.2
+    observedGeneration: 1
+    phase: Running
+    podIP: 10.244.0.2
+    podIPs:
+    - ip: 10.244.0.2
+    qosClass: Burstable
+    startTime: "2025-09-16T15:37:25Z"
+- apiVersion: v1
+  kind: Pod
+  metadata:
+    annotations:
+      kubeadm.kubernetes.io/etcd.advertise-client-urls: https://172.18.0.2:2379
+      kubernetes.io/config.hash: 39c41d1bdb8528cc74b0394f7810ae1b
+      kubernetes.io/config.mirror: 39c41d1bdb8528cc74b0394f7810ae1b
+      kubernetes.io/config.seen: "2025-09-16T15:36:41.567464325Z"
+      kubernetes.io/config.source: file
+    creationTimestamp: "2025-09-16T15:36:55Z"
+    generation: 1
+    labels:
+      component: etcd
+      tier: control-plane
+    name: etcd-nephio-demo-control-plane
+    namespace: kube-system
+    ownerReferences:
+    - apiVersion: v1
+      controller: true
+      kind: Node
+      name: nephio-demo-control-plane
+      uid: 3dbdf544-a313-4e92-9648-9059deb92b64
+    resourceVersion: "353"
+    uid: d09673d7-7b56-4956-8fdf-146b66e84b9f
+  spec:
+    containers:
+    - command:
+      - etcd
+      - --advertise-client-urls=https://172.18.0.2:2379
+      - --cert-file=/etc/kubernetes/pki/etcd/server.crt
+      - --client-cert-auth=true
+      - --data-dir=/var/lib/etcd
+      - --feature-gates=InitialCorruptCheck=true
+      - --initial-advertise-peer-urls=https://172.18.0.2:2380
+      - --initial-cluster=nephio-demo-control-plane=https://172.18.0.2:2380
+      - --key-file=/etc/kubernetes/pki/etcd/server.key
+      - --listen-client-urls=https://127.0.0.1:2379,https://172.18.0.2:2379
+      - --listen-metrics-urls=http://127.0.0.1:2381
+      - --listen-peer-urls=https://172.18.0.2:2380
+      - --name=nephio-demo-control-plane
+      - --peer-cert-file=/etc/kubernetes/pki/etcd/peer.crt
+      - --peer-client-cert-auth=true
+      - --peer-key-file=/etc/kubernetes/pki/etcd/peer.key
+      - --peer-trusted-ca-file=/etc/kubernetes/pki/etcd/ca.crt
+      - --snapshot-count=10000
+      - --trusted-ca-file=/etc/kubernetes/pki/etcd/ca.crt
+      - --watch-progress-notify-interval=5s
+      image: registry.k8s.io/etcd:3.6.4-0
+      imagePullPolicy: IfNotPresent
+      livenessProbe:
+        failureThreshold: 8
+        httpGet:
+          host: 127.0.0.1
+          path: /livez
+          port: probe-port
+          scheme: HTTP
+        initialDelaySeconds: 10
+        periodSeconds: 10
+        successThreshold: 1
+        timeoutSeconds: 15
+      name: etcd
+      ports:
+      - containerPort: 2381
+        hostPort: 2381
+        name: probe-port
+        protocol: TCP
+      readinessProbe:
+        failureThreshold: 3
+        httpGet:
+          host: 127.0.0.1
+          path: /readyz
+          port: probe-port
+          scheme: HTTP
+        periodSeconds: 1
+        successThreshold: 1
+        timeoutSeconds: 15
+      resources:
+        requests:
+          cpu: 100m
+          memory: 100Mi
+      startupProbe:
+        failureThreshold: 24
+        httpGet:
+          host: 127.0.0.1
+          path: /readyz
+          port: probe-port
+          scheme: HTTP
+        initialDelaySeconds: 10
+        periodSeconds: 10
+        successThreshold: 1
+        timeoutSeconds: 15
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /var/lib/etcd
+        name: etcd-data
+      - mountPath: /etc/kubernetes/pki/etcd
+        name: etcd-certs
+    dnsPolicy: ClusterFirst
+    enableServiceLinks: true
+    hostNetwork: true
+    nodeName: nephio-demo-control-plane
+    preemptionPolicy: PreemptLowerPriority
+    priority: 2000001000
+    priorityClassName: system-node-critical
+    restartPolicy: Always
+    schedulerName: default-scheduler
+    securityContext:
+      seccompProfile:
+        type: RuntimeDefault
+    terminationGracePeriodSeconds: 30
+    tolerations:
+    - effect: NoExecute
+      operator: Exists
+    volumes:
+    - hostPath:
+        path: /etc/kubernetes/pki/etcd
+        type: DirectoryOrCreate
+      name: etcd-certs
+    - hostPath:
+        path: /var/lib/etcd
+        type: DirectoryOrCreate
+      name: etcd-data
+  status:
+    conditions:
+    - lastProbeTime: null
+      lastTransitionTime: "2025-09-16T15:37:03Z"
+      status: "True"
+      type: PodReadyToStartContainers
+    - lastProbeTime: null
+      lastTransitionTime: "2025-09-16T15:37:03Z"
+      status: "True"
+      type: Initialized
+    - lastProbeTime: null
+      lastTransitionTime: "2025-09-16T15:37:06Z"
+      status: "True"
+      type: Ready
+    - lastProbeTime: null
+      lastTransitionTime: "2025-09-16T15:37:06Z"
+      status: "True"
+      type: ContainersReady
+    - lastProbeTime: null
+      lastTransitionTime: "2025-09-16T15:37:03Z"
+      status: "True"
+      type: PodScheduled
+    containerStatuses:
+    - allocatedResources:
+        cpu: 100m
+        memory: 100Mi
+      containerID: containerd://7958e1a9d8aa012c5f1f77ba8b3431259328227a6ca4fc22402c408c7f78dd26
+      image: registry.k8s.io/etcd:3.6.4-0
+      imageID: sha256:5f1f5298c888daa46c4409ff4cefe5ca9d16e479419f94cdb5f5d5563dac0115
+      lastState: {}
+      name: etcd
+      ready: true
+      resources:
+        requests:
+          cpu: 100m
+          memory: 100Mi
+      restartCount: 0
+      started: true
+      state:
+        running:
+          startedAt: "2025-09-16T15:36:51Z"
+      user:
+        linux:
+          gid: 0
+          supplementalGroups:
+          - 0
+          uid: 0
+    hostIP: 172.18.0.2
+    hostIPs:
+    - ip: 172.18.0.2
+    phase: Running
+    podIP: 172.18.0.2
+    podIPs:
+    - ip: 172.18.0.2
+    qosClass: Burstable
+    startTime: "2025-09-16T15:37:03Z"
+- apiVersion: v1
+  kind: Pod
+  metadata:
+    creationTimestamp: "2025-09-16T15:37:08Z"
+    generateName: kindnet-
+    generation: 1
+    labels:
+      app: kindnet
+      controller-revision-hash: 7ccdfd4548
+      k8s-app: kindnet
+      pod-template-generation: "1"
+      tier: node
+    name: kindnet-dhtrr
+    namespace: kube-system
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: DaemonSet
+      name: kindnet
+      uid: 783a6a21-542d-42ae-bc94-b212db02a82b
+    resourceVersion: "456"
+    uid: eb3950aa-4d92-4676-9077-1dfdc2f03812
+  spec:
+    affinity:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+          - matchFields:
+            - key: metadata.name
+              operator: In
+              values:
+              - nephio-demo-control-plane
+    containers:
+    - env:
+      - name: HOST_IP
+        valueFrom:
+          fieldRef:
+            apiVersion: v1
+            fieldPath: status.hostIP
+      - name: POD_IP
+        valueFrom:
+          fieldRef:
+            apiVersion: v1
+            fieldPath: status.podIP
+      - name: POD_SUBNET
+        value: 10.244.0.0/16
+      - name: CONTROL_PLANE_ENDPOINT
+        value: nephio-demo-control-plane:6443
+      image: docker.io/kindest/kindnetd:v20250512-df8de77b
+      imagePullPolicy: IfNotPresent
+      name: kindnet-cni
+      resources:
+        limits:
+          cpu: 100m
+          memory: 50Mi
+        requests:
+          cpu: 100m
+          memory: 50Mi
+      securityContext:
+        capabilities:
+          add:
+          - NET_RAW
+          - NET_ADMIN
+        privileged: false
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /etc/cni/net.d
+        name: cni-cfg
+      - mountPath: /run/xtables.lock
+        name: xtables-lock
+      - mountPath: /lib/modules
+        name: lib-modules
+        readOnly: true
+      - mountPath: /var/run/nri
+        name: nri-plugin
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: kube-api-access-c47xc
+        readOnly: true
+    dnsPolicy: ClusterFirst
+    enableServiceLinks: true
+    hostNetwork: true
+    nodeName: nephio-demo-control-plane
+    nodeSelector:
+      kubernetes.io/os: linux
+    preemptionPolicy: PreemptLowerPriority
+    priority: 2000001000
+    priorityClassName: system-node-critical
+    restartPolicy: Always
+    schedulerName: default-scheduler
+    securityContext: {}
+    serviceAccount: kindnet
+    serviceAccountName: kindnet
+    terminationGracePeriodSeconds: 30
+    tolerations:
+    - operator: Exists
+    - effect: NoExecute
+      key: node.kubernetes.io/not-ready
+      operator: Exists
+    - effect: NoExecute
+      key: node.kubernetes.io/unreachable
+      operator: Exists
+    - effect: NoSchedule
+      key: node.kubernetes.io/disk-pressure
+      operator: Exists
+    - effect: NoSchedule
+      key: node.kubernetes.io/memory-pressure
+      operator: Exists
+    - effect: NoSchedule
+      key: node.kubernetes.io/pid-pressure
+      operator: Exists
+    - effect: NoSchedule
+      key: node.kubernetes.io/unschedulable
+      operator: Exists
+    - effect: NoSchedule
+      key: node.kubernetes.io/network-unavailable
+      operator: Exists
+    volumes:
+    - hostPath:
+        path: /etc/cni/net.d
+        type: ""
+      name: cni-cfg
+    - hostPath:
+        path: /run/xtables.lock
+        type: FileOrCreate
+      name: xtables-lock
+    - hostPath:
+        path: /lib/modules
+        type: ""
+      name: lib-modules
+    - hostPath:
+        path: /var/run/nri
+        type: ""
+      name: nri-plugin
+    - name: kube-api-access-c47xc
+      projected:
+        defaultMode: 420
+        sources:
+        - serviceAccountToken:
+            expirationSeconds: 3607
+            path: token
+        - configMap:
+            items:
+            - key: ca.crt
+              path: ca.crt
+            name: kube-root-ca.crt
+        - downwardAPI:
+            items:
+            - fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.namespace
+              path: namespace
+  status:
+    conditions:
+    - lastProbeTime: null
+      lastTransitionTime: "2025-09-16T15:37:15Z"
+      observedGeneration: 1
+      status: "True"
+      type: PodReadyToStartContainers
+    - lastProbeTime: null
+      lastTransitionTime: "2025-09-16T15:37:08Z"
+      observedGeneration: 1
+      status: "True"
+      type: Initialized
+    - lastProbeTime: null
+      lastTransitionTime: "2025-09-16T15:37:15Z"
+      observedGeneration: 1
+      status: "True"
+      type: Ready
+    - lastProbeTime: null
+      lastTransitionTime: "2025-09-16T15:37:15Z"
+      observedGeneration: 1
+      status: "True"
+      type: ContainersReady
+    - lastProbeTime: null
+      lastTransitionTime: "2025-09-16T15:37:08Z"
+      observedGeneration: 1
+      status: "True"
+      type: PodScheduled
+    containerStatuses:
+    - allocatedResources:
+        cpu: 100m
+        memory: 50Mi
+      containerID: containerd://98c370e9868350e59d2b861caadd4e4074539a6ff10ff3204976485bc5543a0a
+      image: docker.io/kindest/kindnetd:v20250512-df8de77b
+      imageID: sha256:409467f978b4a30fe717012736557d637f66371452c3b279c02b943b367a141c
+      lastState: {}
+      name: kindnet-cni
+      ready: true
+      resources:
+        limits:
+          cpu: 100m
+          memory: 50Mi
+        requests:
+          cpu: 100m
+          memory: 50Mi
+      restartCount: 0
+      started: true
+      state:
+        running:
+          startedAt: "2025-09-16T15:37:14Z"
+      user:
+        linux:
+          gid: 0
+          supplementalGroups:
+          - 0
+          uid: 0
+      volumeMounts:
+      - mountPath: /etc/cni/net.d
+        name: cni-cfg
+      - mountPath: /run/xtables.lock
+        name: xtables-lock
+      - mountPath: /lib/modules
+        name: lib-modules
+        readOnly: true
+        recursiveReadOnly: Disabled
+      - mountPath: /var/run/nri
+        name: nri-plugin
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: kube-api-access-c47xc
+        readOnly: true
+        recursiveReadOnly: Disabled
+    hostIP: 172.18.0.2
+    hostIPs:
+    - ip: 172.18.0.2
+    observedGeneration: 1
+    phase: Running
+    podIP: 172.18.0.2
+    podIPs:
+    - ip: 172.18.0.2
+    qosClass: Guaranteed
+    startTime: "2025-09-16T15:37:08Z"
+- apiVersion: v1
+  kind: Pod
+  metadata:
+    annotations:
+      kubeadm.kubernetes.io/kube-apiserver.advertise-address.endpoint: 172.18.0.2:6443
+      kubernetes.io/config.hash: 52b9f4be19721442fe75ff9de57e77a7
+      kubernetes.io/config.mirror: 52b9f4be19721442fe75ff9de57e77a7
+      kubernetes.io/config.seen: "2025-09-16T15:36:41.567465787Z"
+      kubernetes.io/config.source: file
+    creationTimestamp: "2025-09-16T15:36:55Z"
+    generation: 1
+    labels:
+      component: kube-apiserver
+      tier: control-plane
+    name: kube-apiserver-nephio-demo-control-plane
+    namespace: kube-system
+    ownerReferences:
+    - apiVersion: v1
+      controller: true
+      kind: Node
+      name: nephio-demo-control-plane
+      uid: 3dbdf544-a313-4e92-9648-9059deb92b64
+    resourceVersion: "667328"
+    uid: 6969cc37-c787-4ed7-b84a-eb67311175d3
+  spec:
+    containers:
+    - command:
+      - kube-apiserver
+      - --advertise-address=172.18.0.2
+      - --allow-privileged=true
+      - --authorization-mode=Node,RBAC
+      - --client-ca-file=/etc/kubernetes/pki/ca.crt
+      - --enable-admission-plugins=NodeRestriction
+      - --enable-bootstrap-token-auth=true
+      - --etcd-cafile=/etc/kubernetes/pki/etcd/ca.crt
+      - --etcd-certfile=/etc/kubernetes/pki/apiserver-etcd-client.crt
+      - --etcd-keyfile=/etc/kubernetes/pki/apiserver-etcd-client.key
+      - --etcd-servers=https://127.0.0.1:2379
+      - --kubelet-client-certificate=/etc/kubernetes/pki/apiserver-kubelet-client.crt
+      - --kubelet-client-key=/etc/kubernetes/pki/apiserver-kubelet-client.key
+      - --kubelet-preferred-address-types=InternalIP,ExternalIP,Hostname
+      - --proxy-client-cert-file=/etc/kubernetes/pki/front-proxy-client.crt
+      - --proxy-client-key-file=/etc/kubernetes/pki/front-proxy-client.key
+      - --requestheader-allowed-names=front-proxy-client
+      - --requestheader-client-ca-file=/etc/kubernetes/pki/front-proxy-ca.crt
+      - --requestheader-extra-headers-prefix=X-Remote-Extra-
+      - --requestheader-group-headers=X-Remote-Group
+      - --requestheader-username-headers=X-Remote-User
+      - --runtime-config=
+      - --secure-port=6443
+      - --service-account-issuer=https://kubernetes.default.svc.cluster.local
+      - --service-account-key-file=/etc/kubernetes/pki/sa.pub
+      - --service-account-signing-key-file=/etc/kubernetes/pki/sa.key
+      - --service-cluster-ip-range=10.96.0.0/16
+      - --tls-cert-file=/etc/kubernetes/pki/apiserver.crt
+      - --tls-private-key-file=/etc/kubernetes/pki/apiserver.key
+      image: registry.k8s.io/kube-apiserver:v1.34.0
+      imagePullPolicy: IfNotPresent
+      livenessProbe:
+        failureThreshold: 8
+        httpGet:
+          host: 172.18.0.2
+          path: /livez
+          port: probe-port
+          scheme: HTTPS
+        initialDelaySeconds: 10
+        periodSeconds: 10
+        successThreshold: 1
+        timeoutSeconds: 15
+      name: kube-apiserver
+      ports:
+      - containerPort: 6443
+        hostPort: 6443
+        name: probe-port
+        protocol: TCP
+      readinessProbe:
+        failureThreshold: 3
+        httpGet:
+          host: 172.18.0.2
+          path: /readyz
+          port: probe-port
+          scheme: HTTPS
+        periodSeconds: 1
+        successThreshold: 1
+        timeoutSeconds: 15
+      resources:
+        requests:
+          cpu: 250m
+      startupProbe:
+        failureThreshold: 24
+        httpGet:
+          host: 172.18.0.2
+          path: /livez
+          port: probe-port
+          scheme: HTTPS
+        initialDelaySeconds: 10
+        periodSeconds: 10
+        successThreshold: 1
+        timeoutSeconds: 15
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /etc/ssl/certs
+        name: ca-certs
+        readOnly: true
+      - mountPath: /etc/ca-certificates
+        name: etc-ca-certificates
+        readOnly: true
+      - mountPath: /etc/kubernetes/pki
+        name: k8s-certs
+        readOnly: true
+      - mountPath: /usr/local/share/ca-certificates
+        name: usr-local-share-ca-certificates
+        readOnly: true
+      - mountPath: /usr/share/ca-certificates
+        name: usr-share-ca-certificates
+        readOnly: true
+    dnsPolicy: ClusterFirst
+    enableServiceLinks: true
+    hostNetwork: true
+    nodeName: nephio-demo-control-plane
+    preemptionPolicy: PreemptLowerPriority
+    priority: 2000001000
+    priorityClassName: system-node-critical
+    restartPolicy: Always
+    schedulerName: default-scheduler
+    securityContext:
+      seccompProfile:
+        type: RuntimeDefault
+    terminationGracePeriodSeconds: 30
+    tolerations:
+    - effect: NoExecute
+      operator: Exists
+    volumes:
+    - hostPath:
+        path: /etc/ssl/certs
+        type: DirectoryOrCreate
+      name: ca-certs
+    - hostPath:
+        path: /etc/ca-certificates
+        type: DirectoryOrCreate
+      name: etc-ca-certificates
+    - hostPath:
+        path: /etc/kubernetes/pki
+        type: DirectoryOrCreate
+      name: k8s-certs
+    - hostPath:
+        path: /usr/local/share/ca-certificates
+        type: DirectoryOrCreate
+      name: usr-local-share-ca-certificates
+    - hostPath:
+        path: /usr/share/ca-certificates
+        type: DirectoryOrCreate
+      name: usr-share-ca-certificates
+  status:
+    conditions:
+    - lastProbeTime: null
+      lastTransitionTime: "2025-09-16T15:37:03Z"
+      status: "True"
+      type: PodReadyToStartContainers
+    - lastProbeTime: null
+      lastTransitionTime: "2025-09-16T15:37:03Z"
+      status: "True"
+      type: Initialized
+    - lastProbeTime: null
+      lastTransitionTime: "2025-09-22T12:15:14Z"
+      status: "True"
+      type: Ready
+    - lastProbeTime: null
+      lastTransitionTime: "2025-09-22T12:15:14Z"
+      status: "True"
+      type: ContainersReady
+    - lastProbeTime: null
+      lastTransitionTime: "2025-09-16T15:37:03Z"
+      status: "True"
+      type: PodScheduled
+    containerStatuses:
+    - allocatedResources:
+        cpu: 250m
+      containerID: containerd://4a09fc1730a57c39a48d970c2d27738dafa9b7fffd892f847d4ca8d946c3b49d
+      image: registry.k8s.io/kube-apiserver-amd64:v1.34.0
+      imageID: sha256:90550c43ad2bcfd11fcd5fd27d2eac5a7ca823be1308884b33dd816ec169be90
+      lastState: {}
+      name: kube-apiserver
+      ready: true
+      resources:
+        requests:
+          cpu: 250m
+      restartCount: 0
+      started: true
+      state:
+        running:
+          startedAt: "2025-09-16T15:36:50Z"
+      user:
+        linux:
+          gid: 0
+          supplementalGroups:
+          - 0
+          uid: 0
+    hostIP: 172.18.0.2
+    hostIPs:
+    - ip: 172.18.0.2
+    phase: Running
+    podIP: 172.18.0.2
+    podIPs:
+    - ip: 172.18.0.2
+    qosClass: Burstable
+    startTime: "2025-09-16T15:37:03Z"
+- apiVersion: v1
+  kind: Pod
+  metadata:
+    annotations:
+      kubernetes.io/config.hash: ec1aba53d46bd054d3391471abaec680
+      kubernetes.io/config.mirror: ec1aba53d46bd054d3391471abaec680
+      kubernetes.io/config.seen: "2025-09-16T15:36:41.567456699Z"
+      kubernetes.io/config.source: file
+    creationTimestamp: "2025-09-16T15:36:55Z"
+    generation: 1
+    labels:
+      component: kube-controller-manager
+      tier: control-plane
+    name: kube-controller-manager-nephio-demo-control-plane
+    namespace: kube-system
+    ownerReferences:
+    - apiVersion: v1
+      controller: true
+      kind: Node
+      name: nephio-demo-control-plane
+      uid: 3dbdf544-a313-4e92-9648-9059deb92b64
+    resourceVersion: "667378"
+    uid: efcc612c-9ab5-4188-b72c-2250ef9b2d9b
+  spec:
+    containers:
+    - command:
+      - kube-controller-manager
+      - --allocate-node-cidrs=true
+      - --authentication-kubeconfig=/etc/kubernetes/controller-manager.conf
+      - --authorization-kubeconfig=/etc/kubernetes/controller-manager.conf
+      - --bind-address=127.0.0.1
+      - --client-ca-file=/etc/kubernetes/pki/ca.crt
+      - --cluster-cidr=10.244.0.0/16
+      - --cluster-name=nephio-demo
+      - --cluster-signing-cert-file=/etc/kubernetes/pki/ca.crt
+      - --cluster-signing-key-file=/etc/kubernetes/pki/ca.key
+      - --controllers=*,bootstrapsigner,tokencleaner
+      - --enable-hostpath-provisioner=true
+      - --kubeconfig=/etc/kubernetes/controller-manager.conf
+      - --leader-elect=true
+      - --requestheader-client-ca-file=/etc/kubernetes/pki/front-proxy-ca.crt
+      - --root-ca-file=/etc/kubernetes/pki/ca.crt
+      - --service-account-private-key-file=/etc/kubernetes/pki/sa.key
+      - --service-cluster-ip-range=10.96.0.0/16
+      - --use-service-account-credentials=true
+      image: registry.k8s.io/kube-controller-manager:v1.34.0
+      imagePullPolicy: IfNotPresent
+      livenessProbe:
+        failureThreshold: 8
+        httpGet:
+          host: 127.0.0.1
+          path: /healthz
+          port: probe-port
+          scheme: HTTPS
+        initialDelaySeconds: 10
+        periodSeconds: 10
+        successThreshold: 1
+        timeoutSeconds: 15
+      name: kube-controller-manager
+      ports:
+      - containerPort: 10257
+        hostPort: 10257
+        name: probe-port
+        protocol: TCP
+      resources:
+        requests:
+          cpu: 200m
+      startupProbe:
+        failureThreshold: 24
+        httpGet:
+          host: 127.0.0.1
+          path: /healthz
+          port: probe-port
+          scheme: HTTPS
+        initialDelaySeconds: 10
+        periodSeconds: 10
+        successThreshold: 1
+        timeoutSeconds: 15
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /etc/ssl/certs
+        name: ca-certs
+        readOnly: true
+      - mountPath: /etc/ca-certificates
+        name: etc-ca-certificates
+        readOnly: true
+      - mountPath: /usr/libexec/kubernetes/kubelet-plugins/volume/exec
+        name: flexvolume-dir
+      - mountPath: /etc/kubernetes/pki
+        name: k8s-certs
+        readOnly: true
+      - mountPath: /etc/kubernetes/controller-manager.conf
+        name: kubeconfig
+        readOnly: true
+      - mountPath: /usr/local/share/ca-certificates
+        name: usr-local-share-ca-certificates
+        readOnly: true
+      - mountPath: /usr/share/ca-certificates
+        name: usr-share-ca-certificates
+        readOnly: true
+    dnsPolicy: ClusterFirst
+    enableServiceLinks: true
+    hostNetwork: true
+    nodeName: nephio-demo-control-plane
+    preemptionPolicy: PreemptLowerPriority
+    priority: 2000001000
+    priorityClassName: system-node-critical
+    restartPolicy: Always
+    schedulerName: default-scheduler
+    securityContext:
+      seccompProfile:
+        type: RuntimeDefault
+    terminationGracePeriodSeconds: 30
+    tolerations:
+    - effect: NoExecute
+      operator: Exists
+    volumes:
+    - hostPath:
+        path: /etc/ssl/certs
+        type: DirectoryOrCreate
+      name: ca-certs
+    - hostPath:
+        path: /etc/ca-certificates
+        type: DirectoryOrCreate
+      name: etc-ca-certificates
+    - hostPath:
+        path: /usr/libexec/kubernetes/kubelet-plugins/volume/exec
+        type: DirectoryOrCreate
+      name: flexvolume-dir
+    - hostPath:
+        path: /etc/kubernetes/pki
+        type: DirectoryOrCreate
+      name: k8s-certs
+    - hostPath:
+        path: /etc/kubernetes/controller-manager.conf
+        type: FileOrCreate
+      name: kubeconfig
+    - hostPath:
+        path: /usr/local/share/ca-certificates
+        type: DirectoryOrCreate
+      name: usr-local-share-ca-certificates
+    - hostPath:
+        path: /usr/share/ca-certificates
+        type: DirectoryOrCreate
+      name: usr-share-ca-certificates
+  status:
+    conditions:
+    - lastProbeTime: null
+      lastTransitionTime: "2025-09-16T15:37:03Z"
+      status: "True"
+      type: PodReadyToStartContainers
+    - lastProbeTime: null
+      lastTransitionTime: "2025-09-16T15:37:03Z"
+      status: "True"
+      type: Initialized
+    - lastProbeTime: null
+      lastTransitionTime: "2025-09-22T12:15:35Z"
+      status: "True"
+      type: Ready
+    - lastProbeTime: null
+      lastTransitionTime: "2025-09-22T12:15:35Z"
+      status: "True"
+      type: ContainersReady
+    - lastProbeTime: null
+      lastTransitionTime: "2025-09-16T15:37:03Z"
+      status: "True"
+      type: PodScheduled
+    containerStatuses:
+    - allocatedResources:
+        cpu: 200m
+      containerID: containerd://f59be556d284c8b6dad47ffd0dbccc8a5a0079ab379237c33749a87b97b86e9b
+      image: registry.k8s.io/kube-controller-manager-amd64:v1.34.0
+      imageID: sha256:a0af72f2ec6d628152b015a46d4074df8f77d5b686978987c70f48b8c7660634
+      lastState:
+        terminated:
+          containerID: containerd://9fd528dbce6aa5a4eeb609544298bf6c6b42757a965f85abd08f56d111c0d189
+          exitCode: 1
+          finishedAt: "2025-09-22T12:14:55Z"
+          reason: Error
+          startedAt: "2025-09-21T05:55:54Z"
+      name: kube-controller-manager
+      ready: true
+      resources:
+        requests:
+          cpu: 200m
+      restartCount: 10
+      started: true
+      state:
+        running:
+          startedAt: "2025-09-22T12:15:20Z"
+      user:
+        linux:
+          gid: 0
+          supplementalGroups:
+          - 0
+          uid: 0
+    hostIP: 172.18.0.2
+    hostIPs:
+    - ip: 172.18.0.2
+    phase: Running
+    podIP: 172.18.0.2
+    podIPs:
+    - ip: 172.18.0.2
+    qosClass: Burstable
+    startTime: "2025-09-16T15:37:03Z"
+- apiVersion: v1
+  kind: Pod
+  metadata:
+    creationTimestamp: "2025-09-16T15:37:08Z"
+    generateName: kube-proxy-
+    generation: 1
+    labels:
+      controller-revision-hash: 6f475c7966
+      k8s-app: kube-proxy
+      pod-template-generation: "1"
+    name: kube-proxy-628bh
+    namespace: kube-system
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: DaemonSet
+      name: kube-proxy
+      uid: 78c0373b-76b2-4363-aa3e-4f56875a953e
+    resourceVersion: "440"
+    uid: 8ab5e3bf-4384-47dd-9699-8d109738ffe8
+  spec:
+    affinity:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+          - matchFields:
+            - key: metadata.name
+              operator: In
+              values:
+              - nephio-demo-control-plane
+    containers:
+    - command:
+      - /usr/local/bin/kube-proxy
+      - --config=/var/lib/kube-proxy/config.conf
+      - --hostname-override=$(NODE_NAME)
+      env:
+      - name: NODE_NAME
+        valueFrom:
+          fieldRef:
+            apiVersion: v1
+            fieldPath: spec.nodeName
+      image: registry.k8s.io/kube-proxy:v1.34.0
+      imagePullPolicy: IfNotPresent
+      name: kube-proxy
+      resources: {}
+      securityContext:
+        privileged: true
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /var/lib/kube-proxy
+        name: kube-proxy
+      - mountPath: /run/xtables.lock
+        name: xtables-lock
+      - mountPath: /lib/modules
+        name: lib-modules
+        readOnly: true
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: kube-api-access-rs2j4
+        readOnly: true
+    dnsPolicy: ClusterFirst
+    enableServiceLinks: true
+    hostNetwork: true
+    nodeName: nephio-demo-control-plane
+    nodeSelector:
+      kubernetes.io/os: linux
+    preemptionPolicy: PreemptLowerPriority
+    priority: 2000001000
+    priorityClassName: system-node-critical
+    restartPolicy: Always
+    schedulerName: default-scheduler
+    securityContext: {}
+    serviceAccount: kube-proxy
+    serviceAccountName: kube-proxy
+    terminationGracePeriodSeconds: 30
+    tolerations:
+    - operator: Exists
+    - effect: NoExecute
+      key: node.kubernetes.io/not-ready
+      operator: Exists
+    - effect: NoExecute
+      key: node.kubernetes.io/unreachable
+      operator: Exists
+    - effect: NoSchedule
+      key: node.kubernetes.io/disk-pressure
+      operator: Exists
+    - effect: NoSchedule
+      key: node.kubernetes.io/memory-pressure
+      operator: Exists
+    - effect: NoSchedule
+      key: node.kubernetes.io/pid-pressure
+      operator: Exists
+    - effect: NoSchedule
+      key: node.kubernetes.io/unschedulable
+      operator: Exists
+    - effect: NoSchedule
+      key: node.kubernetes.io/network-unavailable
+      operator: Exists
+    volumes:
+    - configMap:
+        defaultMode: 420
+        name: kube-proxy
+      name: kube-proxy
+    - hostPath:
+        path: /run/xtables.lock
+        type: FileOrCreate
+      name: xtables-lock
+    - hostPath:
+        path: /lib/modules
+        type: ""
+      name: lib-modules
+    - name: kube-api-access-rs2j4
+      projected:
+        defaultMode: 420
+        sources:
+        - serviceAccountToken:
+            expirationSeconds: 3607
+            path: token
+        - configMap:
+            items:
+            - key: ca.crt
+              path: ca.crt
+            name: kube-root-ca.crt
+        - downwardAPI:
+            items:
+            - fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.namespace
+              path: namespace
+  status:
+    conditions:
+    - lastProbeTime: null
+      lastTransitionTime: "2025-09-16T15:37:12Z"
+      observedGeneration: 1
+      status: "True"
+      type: PodReadyToStartContainers
+    - lastProbeTime: null
+      lastTransitionTime: "2025-09-16T15:37:08Z"
+      observedGeneration: 1
+      status: "True"
+      type: Initialized
+    - lastProbeTime: null
+      lastTransitionTime: "2025-09-16T15:37:12Z"
+      observedGeneration: 1
+      status: "True"
+      type: Ready
+    - lastProbeTime: null
+      lastTransitionTime: "2025-09-16T15:37:12Z"
+      observedGeneration: 1
+      status: "True"
+      type: ContainersReady
+    - lastProbeTime: null
+      lastTransitionTime: "2025-09-16T15:37:08Z"
+      observedGeneration: 1
+      status: "True"
+      type: PodScheduled
+    containerStatuses:
+    - containerID: containerd://a9349a8610b518d38bcf1521ddee0b78a80ff6c4d7662904076eafd7b74f0da7
+      image: registry.k8s.io/kube-proxy-amd64:v1.34.0
+      imageID: sha256:df0860106674df871eebbd01fede90c764bf472f5b97eca7e945761292e9b0ce
+      lastState: {}
+      name: kube-proxy
+      ready: true
+      resources: {}
+      restartCount: 0
+      started: true
+      state:
+        running:
+          startedAt: "2025-09-16T15:37:12Z"
+      user:
+        linux:
+          gid: 0
+          supplementalGroups:
+          - 0
+          uid: 0
+      volumeMounts:
+      - mountPath: /var/lib/kube-proxy
+        name: kube-proxy
+      - mountPath: /run/xtables.lock
+        name: xtables-lock
+      - mountPath: /lib/modules
+        name: lib-modules
+        readOnly: true
+        recursiveReadOnly: Disabled
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: kube-api-access-rs2j4
+        readOnly: true
+        recursiveReadOnly: Disabled
+    hostIP: 172.18.0.2
+    hostIPs:
+    - ip: 172.18.0.2
+    observedGeneration: 1
+    phase: Running
+    podIP: 172.18.0.2
+    podIPs:
+    - ip: 172.18.0.2
+    qosClass: BestEffort
+    startTime: "2025-09-16T15:37:08Z"
+- apiVersion: v1
+  kind: Pod
+  metadata:
+    annotations:
+      kubernetes.io/config.hash: ac0fe075c72bf9f8134acea87f82c0f9
+      kubernetes.io/config.mirror: ac0fe075c72bf9f8134acea87f82c0f9
+      kubernetes.io/config.seen: "2025-09-16T15:36:41.567462670Z"
+      kubernetes.io/config.source: file
+    creationTimestamp: "2025-09-16T15:36:55Z"
+    generation: 1
+    labels:
+      component: kube-scheduler
+      tier: control-plane
+    name: kube-scheduler-nephio-demo-control-plane
+    namespace: kube-system
+    ownerReferences:
+    - apiVersion: v1
+      controller: true
+      kind: Node
+      name: nephio-demo-control-plane
+      uid: 3dbdf544-a313-4e92-9648-9059deb92b64
+    resourceVersion: "667371"
+    uid: 1b3a6e2b-95c2-4999-a753-4927ff735f0c
+  spec:
+    containers:
+    - command:
+      - kube-scheduler
+      - --authentication-kubeconfig=/etc/kubernetes/scheduler.conf
+      - --authorization-kubeconfig=/etc/kubernetes/scheduler.conf
+      - --bind-address=127.0.0.1
+      - --kubeconfig=/etc/kubernetes/scheduler.conf
+      - --leader-elect=true
+      image: registry.k8s.io/kube-scheduler:v1.34.0
+      imagePullPolicy: IfNotPresent
+      livenessProbe:
+        failureThreshold: 8
+        httpGet:
+          host: 127.0.0.1
+          path: /livez
+          port: probe-port
+          scheme: HTTPS
+        initialDelaySeconds: 10
+        periodSeconds: 10
+        successThreshold: 1
+        timeoutSeconds: 15
+      name: kube-scheduler
+      ports:
+      - containerPort: 10259
+        hostPort: 10259
+        name: probe-port
+        protocol: TCP
+      readinessProbe:
+        failureThreshold: 3
+        httpGet:
+          host: 127.0.0.1
+          path: /readyz
+          port: probe-port
+          scheme: HTTPS
+        periodSeconds: 1
+        successThreshold: 1
+        timeoutSeconds: 15
+      resources:
+        requests:
+          cpu: 100m
+      startupProbe:
+        failureThreshold: 24
+        httpGet:
+          host: 127.0.0.1
+          path: /livez
+          port: probe-port
+          scheme: HTTPS
+        initialDelaySeconds: 10
+        periodSeconds: 10
+        successThreshold: 1
+        timeoutSeconds: 15
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /etc/kubernetes/scheduler.conf
+        name: kubeconfig
+        readOnly: true
+    dnsPolicy: ClusterFirst
+    enableServiceLinks: true
+    hostNetwork: true
+    nodeName: nephio-demo-control-plane
+    preemptionPolicy: PreemptLowerPriority
+    priority: 2000001000
+    priorityClassName: system-node-critical
+    restartPolicy: Always
+    schedulerName: default-scheduler
+    securityContext:
+      seccompProfile:
+        type: RuntimeDefault
+    terminationGracePeriodSeconds: 30
+    tolerations:
+    - effect: NoExecute
+      operator: Exists
+    volumes:
+    - hostPath:
+        path: /etc/kubernetes/scheduler.conf
+        type: FileOrCreate
+      name: kubeconfig
+  status:
+    conditions:
+    - lastProbeTime: null
+      lastTransitionTime: "2025-09-16T15:37:03Z"
+      status: "True"
+      type: PodReadyToStartContainers
+    - lastProbeTime: null
+      lastTransitionTime: "2025-09-16T15:37:03Z"
+      status: "True"
+      type: Initialized
+    - lastProbeTime: null
+      lastTransitionTime: "2025-09-22T12:15:32Z"
+      status: "True"
+      type: Ready
+    - lastProbeTime: null
+      lastTransitionTime: "2025-09-22T12:15:32Z"
+      status: "True"
+      type: ContainersReady
+    - lastProbeTime: null
+      lastTransitionTime: "2025-09-16T15:37:03Z"
+      status: "True"
+      type: PodScheduled
+    containerStatuses:
+    - allocatedResources:
+        cpu: 100m
+      containerID: containerd://2a74391b4f486054bf3b0274fd02a2d8140ea336701b350fa3964175c7cfb386
+      image: registry.k8s.io/kube-scheduler-amd64:v1.34.0
+      imageID: sha256:46169d968e9203e8b10debaf898210fe11c94b5864c351ea0f6fcf621f659bdc
+      lastState:
+        terminated:
+          containerID: containerd://fa907fd5e0fca16bb165c1ccdf7f1578c1ae5e4360b6379deac20dd463d840cd
+          exitCode: 1
+          finishedAt: "2025-09-22T12:15:05Z"
+          reason: Error
+          startedAt: "2025-09-21T05:55:56Z"
+      name: kube-scheduler
+      ready: true
+      resources:
+        requests:
+          cpu: 100m
+      restartCount: 10
+      started: true
+      state:
+        running:
+          startedAt: "2025-09-22T12:15:21Z"
+      user:
+        linux:
+          gid: 0
+          supplementalGroups:
+          - 0
+          uid: 0
+    hostIP: 172.18.0.2
+    hostIPs:
+    - ip: 172.18.0.2
+    phase: Running
+    podIP: 172.18.0.2
+    podIPs:
+    - ip: 172.18.0.2
+    qosClass: Burstable
+    startTime: "2025-09-16T15:37:03Z"
+- apiVersion: v1
+  kind: Pod
+  metadata:
+    creationTimestamp: "2025-09-16T15:37:09Z"
+    generateName: local-path-provisioner-7b8c8ddbd6-
+    generation: 1
+    labels:
+      app: local-path-provisioner
+      pod-template-hash: 7b8c8ddbd6
+    name: local-path-provisioner-7b8c8ddbd6-ngcxq
+    namespace: local-path-storage
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: ReplicaSet
+      name: local-path-provisioner-7b8c8ddbd6
+      uid: 75d57d13-9bc1-4156-8f0f-6dbec705e98b
+    resourceVersion: "518"
+    uid: f01eb48f-47cf-4c69-9e31-09293f5ac2de
+  spec:
+    containers:
+    - command:
+      - local-path-provisioner
+      - --debug
+      - start
+      - --helper-image
+      - docker.io/kindest/local-path-helper:v20241212-8ac705d0
+      - --config
+      - /etc/config/config.json
+      env:
+      - name: POD_NAMESPACE
+        valueFrom:
+          fieldRef:
+            apiVersion: v1
+            fieldPath: metadata.namespace
+      - name: CONFIG_MOUNT_PATH
+        value: /etc/config/
+      image: docker.io/kindest/local-path-provisioner:v20250214-acbabc1a
+      imagePullPolicy: IfNotPresent
+      name: local-path-provisioner
+      resources: {}
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /etc/config/
+        name: config-volume
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: kube-api-access-gtfbj
+        readOnly: true
+    dnsPolicy: ClusterFirst
+    enableServiceLinks: true
+    nodeName: nephio-demo-control-plane
+    nodeSelector:
+      kubernetes.io/os: linux
+    preemptionPolicy: PreemptLowerPriority
+    priority: 0
+    restartPolicy: Always
+    schedulerName: default-scheduler
+    securityContext: {}
+    serviceAccount: local-path-provisioner-service-account
+    serviceAccountName: local-path-provisioner-service-account
+    terminationGracePeriodSeconds: 30
+    tolerations:
+    - effect: NoSchedule
+      key: node-role.kubernetes.io/control-plane
+      operator: Equal
+    - effect: NoSchedule
+      key: node-role.kubernetes.io/master
+      operator: Equal
+    - effect: NoExecute
+      key: node.kubernetes.io/not-ready
+      operator: Exists
+      tolerationSeconds: 300
+    - effect: NoExecute
+      key: node.kubernetes.io/unreachable
+      operator: Exists
+      tolerationSeconds: 300
+    volumes:
+    - configMap:
+        defaultMode: 420
+        name: local-path-config
+      name: config-volume
+    - name: kube-api-access-gtfbj
+      projected:
+        defaultMode: 420
+        sources:
+        - serviceAccountToken:
+            expirationSeconds: 3607
+            path: token
+        - configMap:
+            items:
+            - key: ca.crt
+              path: ca.crt
+            name: kube-root-ca.crt
+        - downwardAPI:
+            items:
+            - fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.namespace
+              path: namespace
+  status:
+    conditions:
+    - lastProbeTime: null
+      lastTransitionTime: "2025-09-16T15:37:35Z"
+      observedGeneration: 1
+      status: "True"
+      type: PodReadyToStartContainers
+    - lastProbeTime: null
+      lastTransitionTime: "2025-09-16T15:37:25Z"
+      observedGeneration: 1
+      status: "True"
+      type: Initialized
+    - lastProbeTime: null
+      lastTransitionTime: "2025-09-16T15:37:35Z"
+      observedGeneration: 1
+      status: "True"
+      type: Ready
+    - lastProbeTime: null
+      lastTransitionTime: "2025-09-16T15:37:35Z"
+      observedGeneration: 1
+      status: "True"
+      type: ContainersReady
+    - lastProbeTime: null
+      lastTransitionTime: "2025-09-16T15:37:25Z"
+      observedGeneration: 1
+      status: "True"
+      type: PodScheduled
+    containerStatuses:
+    - containerID: containerd://c5fa4a7e8d6750d3613e3f926c5b40d75973a3a7d8eb343ba7919216db97e6e8
+      image: docker.io/kindest/local-path-provisioner:v20250214-acbabc1a
+      imageID: sha256:bbb6209cc873b9b4095bd014b4687512eea2bd7b246f9ec06f4f6f0be14d9fb6
+      lastState: {}
+      name: local-path-provisioner
+      ready: true
+      resources: {}
+      restartCount: 0
+      started: true
+      state:
+        running:
+          startedAt: "2025-09-16T15:37:34Z"
+      user:
+        linux:
+          gid: 0
+          supplementalGroups:
+          - 0
+          uid: 0
+      volumeMounts:
+      - mountPath: /etc/config/
+        name: config-volume
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: kube-api-access-gtfbj
+        readOnly: true
+        recursiveReadOnly: Disabled
+    hostIP: 172.18.0.2
+    hostIPs:
+    - ip: 172.18.0.2
+    observedGeneration: 1
+    phase: Running
+    podIP: 10.244.0.3
+    podIPs:
+    - ip: 10.244.0.3
+    qosClass: BestEffort
+    startTime: "2025-09-16T15:37:25Z"
+kind: List
+metadata:
+  resourceVersion: ""

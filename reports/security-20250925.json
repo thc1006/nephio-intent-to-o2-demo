@@ -1,0 +1,246 @@
+{
+  "security_report": {
+    "metadata": {
+      "timestamp": "2025-09-25T06:07:17Z",
+      "version": "1.0.0",
+      "project_root": "/home/ubuntu/nephio-intent-to-o2-demo",
+      "git": {
+        "commit": "fac01ac",
+        "branch": "main"
+      }
+    },
+    "configuration": {
+      "security_policy_level": "permissive",
+      "allow_unsigned": false,
+      "allowed_registries": [
+        "gcr.io",
+        "ghcr.io",
+        "registry.k8s.io",
+        "docker.io/library",
+        "quay.io",
+        "docker.io/nephio",
+        "docker.io/oransc"
+      ]
+    },
+    "summary": {
+      "total_images": 1,
+      "registry_violations": 1,
+      "signature_issues": 1,
+      "kubeconform_files": 38,
+      "policy_compliance_score": 100
+    },
+    "findings": {
+      "kubeconform_validation": [
+        {
+          "file": "packages/intent-to-krm/crds/intent-to-krm-namespace.yaml",
+          "status": "valid",
+          "message": "passed validation"
+        },
+        {
+          "file": "packages/intent-to-krm/crds/bundles.yaml",
+          "status": "valid",
+          "message": "passed validation"
+        },
+        {
+          "file": "packages/intent-to-krm/testdata/golden/ran_performance.yaml",
+          "status": "valid",
+          "message": "passed validation"
+        },
+        {
+          "file": "packages/intent-to-krm/testdata/golden/tn_coverage.yaml",
+          "status": "valid",
+          "message": "passed validation"
+        },
+        {
+          "file": "packages/intent-to-krm/testdata/golden/cn_capacity.yaml",
+          "status": "valid",
+          "message": "passed validation"
+        },
+        {
+          "file": "packages/intent-to-krm/dist/edge1/namespace.yaml",
+          "status": "valid",
+          "message": "passed validation"
+        },
+        {
+          "file": "packages/intent-to-krm/dist/edge1/ran_performance.yaml",
+          "status": "valid",
+          "message": "passed validation"
+        },
+        {
+          "file": "packages/intent-to-krm/dist/edge1/tn_coverage.yaml",
+          "status": "valid",
+          "message": "passed validation"
+        },
+        {
+          "file": "packages/intent-to-krm/dist/edge1/cn_capacity.yaml",
+          "status": "valid",
+          "message": "passed validation"
+        },
+        {
+          "file": "packages/intent-to-krm/dist/edge1/kustomization.yaml",
+          "status": "valid",
+          "message": "passed validation"
+        },
+        {
+          "file": "packages/intent-to-krm/dist/edge1-rendered.yaml",
+          "status": "valid",
+          "message": "passed validation"
+        },
+        {
+          "file": "packages/intent-to-krm/artifacts/ran_performance.yaml",
+          "status": "valid",
+          "message": "passed validation"
+        },
+        {
+          "file": "packages/intent-to-krm/artifacts/tn_coverage.yaml",
+          "status": "valid",
+          "message": "passed validation"
+        },
+        {
+          "file": "packages/intent-to-krm/artifacts/cn_capacity.yaml",
+          "status": "valid",
+          "message": "passed validation"
+        },
+        {
+          "file": "packages/intent-to-krm/expectation-config.yaml",
+          "status": "valid",
+          "message": "passed validation"
+        },
+        {
+          "file": "packages/intent-to-krm/artifacts.backup1/ran_performance.yaml",
+          "status": "valid",
+          "message": "passed validation"
+        },
+        {
+          "file": "packages/intent-to-krm/artifacts.backup1/tn_coverage.yaml",
+          "status": "valid",
+          "message": "passed validation"
+        },
+        {
+          "file": "packages/intent-to-krm/artifacts.backup1/cn_capacity.yaml",
+          "status": "valid",
+          "message": "passed validation"
+        },
+        {
+          "file": "samples/ocloud/provisioning-request.yaml",
+          "status": "valid",
+          "message": "passed validation"
+        },
+        {
+          "file": "samples/ocloud/ocloud.yaml",
+          "status": "valid",
+          "message": "passed validation"
+        },
+        {
+          "file": "samples/ocloud/kustomization.yaml",
+          "status": "valid",
+          "message": "passed validation"
+        },
+        {
+          "file": "samples/ocloud/template-info.yaml",
+          "status": "valid",
+          "message": "passed validation"
+        },
+        {
+          "file": "samples/llm/krm_expected.yaml",
+          "status": "valid",
+          "message": "passed validation"
+        },
+        {
+          "file": "guardrails/sigstore/policies/cluster-image-policy.yaml",
+          "status": "valid",
+          "message": "passed validation"
+        },
+        {
+          "file": "guardrails/sigstore/tests/test-unsigned-deployment.yaml",
+          "status": "valid",
+          "message": "passed validation"
+        },
+        {
+          "file": "guardrails/sigstore/tests/test-signed-deployment.yaml",
+          "status": "valid",
+          "message": "passed validation"
+        },
+        {
+          "file": "guardrails/gitops/edge2-config/o2ims-full-deployment.yaml",
+          "status": "valid",
+          "message": "passed validation"
+        },
+        {
+          "file": "guardrails/gitops/edge2-config/kustomization.yaml",
+          "status": "valid",
+          "message": "passed validation"
+        },
+        {
+          "file": "guardrails/kyverno/policies/verify-images.yaml",
+          "status": "valid",
+          "message": "passed validation"
+        },
+        {
+          "file": "guardrails/kyverno/tests/resource.yaml",
+          "status": "valid",
+          "message": "passed validation"
+        },
+        {
+          "file": "guardrails/kyverno/tests/kyverno-test.yaml",
+          "status": "valid",
+          "message": "passed validation"
+        },
+        {
+          "file": "guardrails/kyverno/tests/test-values.yaml",
+          "status": "valid",
+          "message": "passed validation"
+        },
+        {
+          "file": "guardrails/cert-manager/tests/test-certificate.yaml",
+          "status": "valid",
+          "message": "passed validation"
+        },
+        {
+          "file": "guardrails/cert-manager/manifests/install.yaml",
+          "status": "valid",
+          "message": "passed validation"
+        },
+        {
+          "file": "guardrails/cert-manager/manifests/cluster-issuer.yaml",
+          "status": "valid",
+          "message": "passed validation"
+        },
+        {
+          "file": "manifests/focom-operator.yaml",
+          "status": "valid",
+          "message": "passed validation"
+        },
+        {
+          "file": "manifests/configsync/edge2-rootsync.yaml",
+          "status": "valid",
+          "message": "passed validation"
+        },
+        {
+          "file": "manifests/configsync/edge2-rootsync-local.yaml",
+          "status": "valid",
+          "message": "passed validation"
+        }
+      ],
+      "image_signature_verification": [],
+      "registry_allowlist_violations": [
+        ""
+      ],
+      "policy_compliance": {
+        "score": 100,
+        "level": "excellent",
+        "violations": [
+          ""
+        ],
+        "total_violations": 0
+      }
+    },
+    "recommendations": [
+      "Regularly update base container images",
+      "Implement vulnerability scanning in CI/CD pipeline",
+      "Enable audit logging for all Kubernetes API access",
+      "Implement certificate rotation policy",
+      "Set up monitoring for security policy violations"
+    ]
+  }
+}

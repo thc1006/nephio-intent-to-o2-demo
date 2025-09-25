@@ -1,0 +1,9 @@
+{
+  "timestamp": "20250925-062815",
+  "intent_file": "summit/golden-intents/edge1-analytics.json",
+  "intent_id": "intent-edge1-analytics-001",
+  "target_site": "edge1",
+  "service_type": "5G-eMBB-Analytics",
+  "krm_location": "artifacts/20250925-062815/krm",
+  "status": "deployed"
+}
