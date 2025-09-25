@@ -1,0 +1,16 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: upf-latency-p95
+  namespace: ran-slice-a
+spec:
+  metrics:
+    - name: latency-p95
+      interval: 1m
+      count: 10
+      successCondition: result < 0.010
+      provider:
+        prometheus:
+          address: http://prometheus.ran-slice-a.svc:9090
+          query: |
+            histogram_quantile(0.95, sum(rate(request_latency_bucket{app="upf"}[1m])) by (le))

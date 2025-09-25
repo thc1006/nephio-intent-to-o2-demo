@@ -1,0 +1,9 @@
+global:
+  scrape_interval: 15s
+
+remote_write:
+  - url: http://smo-thanos-receive.monitoring.svc:19291/api/v1/receive
+    write_relabel_configs:
+      - source_labels: [__name__]
+        regex: '.*(latency|throughput|errors|cpu|memory|pod).*'
+        action: keep

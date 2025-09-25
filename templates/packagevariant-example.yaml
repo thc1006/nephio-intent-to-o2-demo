@@ -1,0 +1,17 @@
+apiVersion: config.porch.kpt.dev/v1alpha1
+kind: PackageVariant
+metadata:
+  name: upf-to-edges
+  namespace: porch-system
+spec:
+  upstream:
+    repository: deployments
+    package: upf
+    revision: v1
+  downstreams:
+    - repository: deployments
+      package: upf-edge01
+      workspaceName: edge01
+    - repository: deployments
+      package: upf-edge02
+      workspaceName: edge02

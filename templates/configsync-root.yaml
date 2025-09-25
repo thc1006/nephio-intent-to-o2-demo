@@ -1,0 +1,14 @@
+apiVersion: configsync.gke.io/v1beta1
+kind: RootSync
+metadata:
+  name: root-sync
+  namespace: config-management-system
+spec:
+  sourceFormat: unstructured
+  git:
+    repo: https://your-gitea.example.com/org/deployments.git
+    branch: main
+    dir: clusters/edge01
+    auth: none
+  override:
+    enableShellInRendering: true

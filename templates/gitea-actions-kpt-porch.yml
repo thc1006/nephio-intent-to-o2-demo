@@ -1,0 +1,14 @@
+name: kpt-porch-pipeline
+on: { push: { branches: [ "main" ] }, pull_request: {} }
+jobs:
+  render-and-validate:
+    runs-on: docker
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install kpt
+        run: |
+          curl -sSL https://github.com/GoogleContainerTools/kpt/releases/latest/download/kpt_linux_amd64 -o /usr/local/bin/kpt
+          chmod +x /usr/local/bin/kpt
+      - name: Render packages (kpt functions)
+        run: |
+          kpt fn render --truncate-output=false || { echo "kpt render failed"; exit 1; }

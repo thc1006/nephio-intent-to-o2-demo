@@ -1,0 +1,37 @@
+apiVersion: flagger.app/v1beta1
+kind: Canary
+metadata:
+  name: upf
+  namespace: ran-slice-a
+spec:
+  provider: kubernetes
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: upf
+  service:
+    port: 8805
+  analysis:
+    interval: 1m
+    threshold: 5
+    stepWeight: 10
+    maxWeight: 50
+    metrics:
+      - name: latency-p95
+        thresholdRange:
+          max: 0.010
+        interval: 1m
+        templateRef:
+          name: prom-q-latency-p95
+---
+apiVersion: flagger.app/v1beta1
+kind: MetricTemplate
+metadata:
+  name: prom-q-latency-p95
+  namespace: ran-slice-a
+spec:
+  provider:
+    type: prometheus
+    address: http://prometheus.ran-slice-a.svc:9090
+  query: >
+    histogram_quantile(0.95, sum(rate(request_latency_bucket{app="upf"}[1m])) by (le))
