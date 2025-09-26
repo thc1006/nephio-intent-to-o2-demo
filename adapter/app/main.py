@@ -559,7 +559,7 @@ async def root():
     <!DOCTYPE html>
     <html>
     <head>
-        <title>TMF921 Intent Generator - VM3 LLM Adapter</title>
+        <title>TMF921 Intent Generator - VM1 LLM Adapter</title>
         <style>
             body {
                 font-family: 'Segoe UI', Arial, sans-serif;
@@ -702,8 +702,8 @@ async def root():
         <div class="container">
             <h1>🚀 TMF921 Intent Generator</h1>
             <div class="info-box">
-                <strong>VM-3 LLM Adapter</strong> | Phase 12-17 Implementation<br>
-                Endpoint: <code>http://localhost:8888/generate_intent</code><br>
+                <strong>VM-1</strong> | Phase 12-17 Implementation<br>
+                Endpoint: <code>http://localhost:8002/generate_intent</code><br>
                 targetSite values: <code>edge1</code> | <code>edge2</code> | <code>both</code>
             </div>
 

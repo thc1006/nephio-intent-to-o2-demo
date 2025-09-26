@@ -104,7 +104,7 @@ The system is ready for demonstration with the following verified capabilities:
 
 ### ⚠️ Pre-Demo Checklist:
 1. Verify Gitea service status if GitOps features are needed
-2. Ensure VM3 (LLM Service) and VM4 (Edge Site 2) connectivity if multi-site demo planned
+2. Ensure VM1 (LLM Service) and VM4 (Edge Site 2) connectivity if multi-site demo planned
 3. Clear previous artifacts: `rm -rf artifacts/$(date +%Y%m%d)*`
 4. Set environment variables for demo mode
 

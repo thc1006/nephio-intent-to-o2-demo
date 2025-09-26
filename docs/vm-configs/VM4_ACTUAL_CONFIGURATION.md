@@ -149,7 +149,7 @@ O2IMS (O-RAN O2 Interface Management Services) 是**集中式管理服務**：
 
 ## 📊 VM-4 vs 其他 VM 的功能對比
 
-| 功能 | VM-1 | VM-2 | VM-3 | VM-4 |
+| 功能 | VM-1 | VM-2 | VM-1 | VM-4 |
 |------|------|------|------|------|
 | 角色 | SMO/編排器 | Edge1 | LLM 服務 | Edge2 |
 | Kubernetes | ✅ Master | ✅ Kind | ❌ | ✅ Kind |

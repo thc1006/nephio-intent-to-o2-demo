@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document outlines comprehensive security measures, access controls, and compliance requirements for the multi-site O-RAN L Release deployment with Nephio R5 GitOps orchestration across VM-1 (SMO), VM-2 (Edge1), VM-3 (LLM Adapter), and VM-4 (Edge2).
+This document outlines comprehensive security measures, access controls, and compliance requirements for the multi-site O-RAN L Release deployment with Nephio R5 GitOps orchestration across VM-1 (SMO), VM-2 (Edge1), VM-1, and VM-4 (Edge2).
 
 ---
 
@@ -34,7 +34,7 @@ This document outlines comprehensive security measures, access controls, and com
 172.17.0.0/16
 ```
 
-**iptables Rules for LLM Adapter (VM-3):**
+**iptables Rules for LLM Adapter (VM-1):**
 ```bash
 #!/bin/bash
 # Apply LLM adapter security rules for port 8888
@@ -144,7 +144,7 @@ spec:
 |-----------|---------------|---------------|-------|-------------|
 | **VM-1 SMO** | mTLS + JWT | RBAC | 6443 (K8s API) | cluster-admin |
 | **VM-2 Edge1** | mTLS + JWT | RBAC | 6443, 31080, 31443, 31280 | site-admin |
-| **VM-3 LLM** | API Key + IP Whitelist | Rate Limiting | 8888 | intent-processor |
+| **VM-1 LLM** | API Key + IP Whitelist | Rate Limiting | 8888 | intent-processor |
 | **VM-4 Edge2** | mTLS + JWT | RBAC | 6443, 31080, 31443, 31280 | site-admin |
 | **E2 Interface** | mTLS | Certificate-based | 36421 | e2-operator |
 | **A1 Interface** | OAuth2 | RBAC | 9001 | policy-manager |
@@ -202,7 +202,7 @@ rules:
 | **VM-2** | NodePort HTTP | 31080 | TCP/HTTP | Edge services | Network policies |
 | **VM-2** | NodePort HTTPS | 31443 | TCP/HTTPS | Edge services (secure) | TLS + certificates |
 | **VM-2** | O2IMS API | 31280 | TCP/HTTP | O-Cloud interface | OAuth2 + rate limiting |
-| **VM-3** | LLM Adapter | 8888 | TCP/HTTP | Intent processing | IP whitelist + API keys |
+| **VM-1** | LLM Adapter | 8888 | TCP/HTTP | Intent processing | IP whitelist + API keys |
 | **VM-4** | Kubernetes API | 6443 | TCP/TLS | Edge2 cluster | mTLS + RBAC |
 | **VM-4** | NodePort HTTP | 31080 | TCP/HTTP | Edge services | Network policies |
 | **VM-4** | NodePort HTTPS | 31443 | TCP/HTTPS | Edge services (secure) | TLS + certificates |
@@ -246,7 +246,7 @@ iptables -A OUTPUT -p tcp --dport 31280 -d 172.16.4.45 -j ACCEPT
 iptables -A OUTPUT -p tcp --dport 31280 -d <VM4_IP> -j ACCEPT
 
 # Allow outbound to LLM adapter
-iptables -A OUTPUT -p tcp --dport 8888 -d <VM3_IP> -j ACCEPT
+iptables -A OUTPUT -p tcp --dport 8888 -d <VM1_IP> -j ACCEPT
 
 # Drop all other inbound traffic
 iptables -A INPUT -j DROP

@@ -25,7 +25,7 @@ This project demonstrates a complete automation flow from natural language inten
                               ▼
 ┌─────────────────────────────────────────────────────────────┐
 │                  Intent Layer                                │
-│  • LLM Adapter (VM-3)  • TMF921/3GPP Conversion             │
+│  • LLM Adapter (VM-1 Integrated)  • TMF921/3GPP Conversion             │
 │  • Intent Validation                                         │
 └─────────────────────────────────────────────────────────────┘
                               ▼
@@ -56,9 +56,10 @@ This project demonstrates a complete automation flow from natural language inten
         ┌──────────────────────┼──────────────────────┐
         │                      │                      │
    ┌────▼────┐          ┌─────▼─────┐         ┌─────▼─────┐
-   │  VM-1   │          │   VM-3    │         │   VM-4    │
-   │  SMO    │◄─────────┤LLM Adapter├─────────┤  edge2    │
-   │172.16.0.78│        │Configure   │         │172.16.4.176│
+   │  VM-1   │                                 │   VM-4    │
+   │  SMO +  │◄────────────────────────────────┤  edge2    │
+   │LLM Integ│                                 │172.16.4.176│
+   │172.16.0.78│                               │           │
    └────┬────┘          └───────────┘         └───────────┘
         │
         │ GitOps Sync
@@ -74,9 +75,8 @@ This project demonstrates a complete automation flow from natural language inten
 
 | VM | Role | IP Address | Main Functions | Key Services |
 |----|------|------------|----------------|--------------|
-| VM-1 | SMO/Orchestrator | 172.16.0.78 | Central orchestration controller | • Gitea (Git Server)<br>• KRM Renderer<br>• Config Sync<br>• SLO Controller |
+| VM-1 | SMO/Orchestrator + LLM | 172.16.0.78 | Central orchestration & Intent processing | • Gitea (8888)<br>• LLM Adapter (8002)<br>• KRM Renderer<br>• Config Sync<br>• SLO Controller |
 | VM-2 | Edge Site 1 | 172.16.4.45 | Edge cluster 1 | • Kubernetes API (6443)<br>• O2 IMS (31280)<br>• HTTP/HTTPS (31080/31443) |
-| VM-3 | LLM Adapter | Configure via VM3_IP | Intent transformation service | • FastAPI Service (8888)<br>• LLM Client<br>• Intent Parser |
 | VM-4 | Edge Site 2 | 172.16.4.176 | Edge cluster 2 | • Kubernetes API<br>• O2 IMS<br>• Network Functions |
 
 ## 3. Core Workflows
@@ -86,7 +86,7 @@ This project demonstrates a complete automation flow from natural language inten
 ```mermaid
 sequenceDiagram
     participant User
-    participant LLM as LLM Adapter (VM-3)
+    participant LLM as LLM Adapter (VM-1)
     participant SMO as SMO (VM-1)
     participant Git as Gitea
     participant Edge1 as Edge1 (VM-2)
@@ -128,7 +128,7 @@ sequenceDiagram
 User Input: "I need to deploy 5G eMBB service in Taipei, downlink 100Mbps, latency 20ms"
                             ▼
 ┌─────────────────────────────────────────────────┐
-│              LLM Adapter (VM-3)                 │
+│              LLM Adapter (VM-1)                 │
 │  1. NLP Parsing                                 │
 │  2. Entity Recognition (Service Type, Location, QoS) │
 │  3. Parameter Extraction                        │
@@ -193,7 +193,7 @@ VM-1 (SMO)                    VM-2 (edge1)              VM-4 (edge2)
 
 ## 4. Key Component Details
 
-### 4.1 LLM Adapter (VM-3)
+### 4.1 LLM Adapter (VM-1 Integrated Service)
 
 **Functional Responsibilities**:
 - Natural language understanding and intent extraction
@@ -302,9 +302,8 @@ gitops/
 **Firewall Rules**:
 ```
 VM-1 → VM-2: 6443 (K8s API), 31280 (O2IMS)
-VM-1 → VM-3: 8888 (LLM Adapter)
 VM-1 → VM-4: 6443 (K8s API)
-VM-3 → External: 443 (LLM API)
+VM-1 → External: 443 (LLM API access)
 * → VM-1: 3000 (Gitea)
 ```
 
@@ -359,7 +358,6 @@ Business Monitoring
 **Hardware Requirements**:
 - VM-1: 4 vCPU, 8GB RAM, 100GB Disk
 - VM-2/4: 8 vCPU, 16GB RAM, 200GB Disk
-- VM-3: 2 vCPU, 4GB RAM, 50GB Disk
 
 **Software Requirements**:
 - Ubuntu 22.04 LTS
@@ -371,7 +369,7 @@ Business Monitoring
 **Network Requirements**:
 - Internal network: 172.16.0.0/16
 - Inter-VM connectivity
-- VM-3 needs external network access (LLM API)
+- VM-1 needs external network access (for LLM API)
 
 ### 8.2 Installation Steps
 
@@ -388,13 +386,12 @@ sudo apt install -y git curl wget jq make gcc
 sudo timedatectl set-timezone Asia/Taipei
 
 # Set hostname
-sudo hostnamectl set-hostname vm-{1,2,3,4}
+sudo hostnamectl set-hostname vm-{1,2,4}
 
 # Configure /etc/hosts
 cat <<EOF | sudo tee -a /etc/hosts
-172.16.0.78   vm-1 smo orchestrator
+172.16.0.78   vm-1 smo orchestrator llm-adapter
 172.16.4.45   vm-2 edge1
-Configure     vm-3 llm-adapter
 172.16.4.176  vm-4 edge2
 EOF
 ```
@@ -485,35 +482,21 @@ kubectl get pods -A
 kubectl get rootsync -A
 ```
 
-#### Step 4: VM-3 (LLM Adapter) Deployment
+#### Step 4: VM-1 Integrated LLM Service
 
 ```bash
-# Install Python 3.10+
-sudo apt install -y python3 python3-pip python3-venv
+# LLM service is already integrated into VM-1
+cd ~/nephio-intent-to-o2-demo/services
 
-# Create virtual environment
-cd ~/nephio-intent-to-o2-demo/llm-adapter
-python3 -m venv venv
-source venv/bin/activate
+# Verify integrated services
+python3 tmf921_processor.py &  # Port 8002
+python3 tmux_websocket_bridge.py &  # Port 8004
+python3 web_frontend.py &  # Port 8005
 
-# Install dependencies
-pip install -r requirements.txt
-
-# Configure LLM API Key
-export OPENAI_API_KEY="your-api-key"  # or other LLM service
-export LLM_PROVIDER="openai"  # openai, anthropic, local
-
-# Start service
-uvicorn main:app --host 0.0.0.0 --port 8888 --reload
-
-# Or use systemd service
-sudo cp llm-adapter.service /etc/systemd/system/
-sudo systemctl enable llm-adapter
-sudo systemctl start llm-adapter
-
-# Verify service
-curl http://localhost:8888/health
-curl http://localhost:8888/docs
+# Verify services
+curl http://localhost:8002/health
+curl http://localhost:8004/
+curl http://localhost:8005/
 ```
 
 #### Step 5: End-to-End Testing
@@ -548,11 +531,11 @@ make test-e2e
 
 1. **scripts/env.sh** - Environment variable configuration
 ```bash
+VM1_IP="172.16.0.78"
 VM2_IP="172.16.4.45"
-VM3_IP="Configure via environment"
 VM4_IP="172.16.4.176"
-LLM_ADAPTER_URL="http://${VM3_IP}:8888"
-GITEA_URL="http://localhost:3000"
+LLM_ADAPTER_URL="http://localhost:8002"  # Integrated into VM-1
+GITEA_URL="http://localhost:8888"
 ```
 
 2. **configs/sites.yaml** - Site configuration
@@ -568,25 +551,26 @@ sites:
     gitops_path: gitops/edge2-config
 ```
 
-3. **llm-adapter/config.yaml** - LLM configuration
+3. **services/config.yaml** - Integrated LLM service configuration
 ```yaml
 llm:
-  provider: openai
-  model: gpt-4
+  provider: claude  # Using Claude CLI integration
+  model: claude-3
   temperature: 0.7
   max_tokens: 2000
+  endpoint: localhost:8002
 ```
 
 ### 8.4 Troubleshooting
 
 **Common Issues and Solutions**:
 
-1. **LLM Adapter Cannot Connect**
+1. **LLM Service Cannot Connect**
 ```bash
-# Check service status
-systemctl status llm-adapter
-# Check network
-curl -v http://vm-3:8888/health
+# Check integrated service status
+ps aux | grep tmf921_processor
+# Check service health
+curl -v http://localhost:8002/health
 # Check firewall
 sudo ufw status
 ```

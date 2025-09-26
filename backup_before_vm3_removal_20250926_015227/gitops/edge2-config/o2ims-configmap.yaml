@@ -1,0 +1,49 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: o2ims-config
+  namespace: o2ims-system
+  labels:
+    app: o2ims
+    site: edge2
+data:
+  config.yaml: |
+    site:
+      name: edge2
+      location: "Edge Site 2"
+      type: edge
+      cluster: edge2-cluster
+
+    o2ims:
+      version: v1.0.0
+      api:
+        endpoint: http://o2ims-api.o2ims-system:8080
+        grpc_endpoint: o2ims-api.o2ims-system:9090
+      resources:
+        - type: compute
+          capacity: 16
+          unit: vCPU
+        - type: memory
+          capacity: 32
+          unit: GB
+        - type: storage
+          capacity: 500
+          unit: GB
+
+    connectivity:
+      smo:
+        endpoint: http://172.16.0.78:8080
+        auth_type: token
+      regional:
+        endpoint: http://172.16.0.78:30080
+        auth_type: basic
+
+    monitoring:
+      metrics_port: 8081
+      health_port: 8082
+      collect_interval: 30s
+
+    logging:
+      level: info
+      format: json
+      output: stdout

@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: edge-du-cluster-01-storage
+  namespace: o-ran-edge
+  annotations:
+    expectation.28312.3gpp.org/id: "edge-latency-expectation-001"
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: "100Gi"
+  storageClassName: fast-ssd

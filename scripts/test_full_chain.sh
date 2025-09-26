@@ -10,7 +10,7 @@ echo ""
 
 # 設置環境變數
 export VM2_IP=172.16.4.45
-export VM3_IP=172.16.2.10
+export VM1_IP=172.16.0.78
 export VM4_IP=172.16.4.176
 
 # 1. NL → TMF921 Intent

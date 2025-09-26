@@ -26,7 +26,7 @@ format: presentation
 
 ```
 ┌─────────────────────────┐    ┌─────────────────────────┐
-│      VM-1 SMO           │───▶│    VM-3 LLM Adapter     │
+│      VM-1 SMO           │───▶│    VM-1 LLM Adapter     │
 │  • GitOps Orchestrator  │    │  • Intent Translation   │
 │  • SLO Gate Controller  │    │  • TMF921→3GPP TS28.312 │
 │  • Auto-Rollback Engine │    │  • Context-Aware AI     │
@@ -47,7 +47,7 @@ format: presentation
 **Enhanced Components**:
 - VM-1: Central SMO/GitOps Controller + SLO Gate + Auto-Rollback
 - VM-2: Edge1 O-Cloud (172.16.4.45) + O2IMS Integration
-- VM-3: LLM Intent Adapter + Context-Aware Translation
+- VM-1: LLM Intent Adapter + Context-Aware Translation
 - VM-4: Edge2 O-Cloud + Multi-Site Synchronization
 
 ---

@@ -1,0 +1,26 @@
+# Example configuration for postcheck.sh
+# Copy to .postcheck.conf and modify as needed
+
+# VM-2 connectivity settings
+VM2_IP=172.16.4.45
+VM2_OBSERVABILITY_PORT=30090
+MAX_CURL_TIMEOUT_SEC=10
+
+# RootSync settings
+MAX_ROOTSYNC_WAIT_SEC=300
+KUBECONFIG_EDGE=/tmp/kubeconfig-edge.yaml
+
+# SLO thresholds (adjust based on your requirements)
+SLO_LATENCY_P95_MS=15
+SLO_SUCCESS_RATE=0.995
+SLO_THROUGHPUT_P95_MBPS=200
+
+# Behavior settings
+ROLLBACK_ON_FAILURE=true
+LOG_LEVEL=INFO
+
+# For production, consider:
+# SLO_LATENCY_P95_MS=5
+# SLO_SUCCESS_RATE=0.999
+# SLO_THROUGHPUT_P95_MBPS=500
+# LOG_LEVEL=JSON

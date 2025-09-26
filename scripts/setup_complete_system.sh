@@ -19,15 +19,15 @@ cd "$PROJECT_ROOT"
 # 網路配置（根據 AUTHORITATIVE_NETWORK_CONFIG.md）
 export VM1_IP="172.16.0.78"
 export VM2_IP="172.16.4.45"    # Edge1
-export VM3_IP="172.16.2.10"  # LLM Adapter
+export VM1_IP="172.16.0.78"  # LLM Adapter
 export VM4_IP="172.16.0.89"    # Edge2
 export GITEA_URL="http://${VM1_IP}:8888"
-export LLM_ADAPTER_URL="http://${VM3_IP}:8888"
+export LLM_ADAPTER_URL="http://${VM1_IP}:8888"
 
 echo -e "${BLUE}=== 完整系統設定開始 ===${NC}"
 echo -e "VM-1 IP: $VM1_IP"
 echo -e "VM-2 (Edge1) IP: $VM2_IP"
-echo -e "VM-3 (LLM) IP: $VM3_IP"
+echo -e "VM-1 (Integrated) (LLM) IP: $VM1_IP"
 echo -e "VM-4 (Edge2) IP: $VM4_IP"
 
 # 步驟 1: 驗證基礎環境
@@ -104,7 +104,7 @@ if curl -s --connect-timeout 5 ${LLM_ADAPTER_URL}/health | grep -q "healthy"; th
     curl -s ${LLM_ADAPTER_URL}/health | jq '.' || true
 else
     echo -e "${YELLOW}警告: 無法連接到 LLM Adapter (${LLM_ADAPTER_URL})${NC}"
-    echo -e "請確認 VM-3 服務運行中"
+    echo -e "請確認 VM-1 (Integrated) 服務運行中"
 fi
 
 # 步驟 7: 測試 Edge 站點連線
@@ -157,7 +157,7 @@ echo -e "${BLUE}================================${NC}"
 echo -e "\n${GREEN}系統設定完成！${NC}"
 echo -e "\n請設定以下環境變數後執行演示："
 echo -e "${YELLOW}export VM2_IP=${VM2_IP}${NC}"
-echo -e "${YELLOW}export VM3_IP=${VM3_IP}${NC}"
+echo -e "${YELLOW}export VM1_IP=${VM1_IP}${NC}"
 echo -e "${YELLOW}export VM4_IP=${VM4_IP}${NC}"
 echo -e "${YELLOW}export LLM_ADAPTER_URL=${LLM_ADAPTER_URL}${NC}"
 echo -e ""

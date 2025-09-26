@@ -10,7 +10,7 @@
 **Allowed source IPs for demo access:**
 - **VM-1 (SMO):** localhost, 127.0.0.1
 - **VM-2 (Edge1):** 172.16.4.45
-- **VM-3 (LLM):** 172.16.2.10  
+- **VM-1 (LLM):** 172.16.0.78  
 - **VM-4 (Edge2):** TBD (update when deployed)
 - **Demo operators:** [Add specific operator IPs]
 
@@ -29,9 +29,9 @@
 sudo ufw allow from 172.16.4.0/24 to any port 6443    # K8s API
 sudo ufw allow from any to any port 31080             # HTTP demo access  
 sudo ufw allow from any to any port 31443             # HTTPS demo access
-sudo ufw allow from 172.16.2.10 to any port 31280    # O2IMS restricted
+sudo ufw allow from 172.16.0.78 to any port 31280    # O2IMS restricted
 
-# VM-3 LLM (172.16.2.10)  
+# VM-1 LLM (172.16.0.78)  
 sudo ufw allow from 172.16.4.45 to any port 8888     # LLM adapter restricted
 sudo ufw deny from any to any port 8888               # Deny all others
 ```
@@ -47,7 +47,7 @@ sudo ufw deny from any to any port 8888               # Deny all others
    sudo ufw insert 1 deny from <SUSPICIOUS_IP>
    
    # Emergency service stop  
-   ssh vm3 "sudo systemctl stop llm-adapter"  # If LLM compromised
+   ssh vm1_integrated "sudo systemctl stop llm-adapter"  # If LLM compromised
    ```
 
 2. **Assess damage** (120 seconds)
@@ -79,8 +79,8 @@ sudo ufw deny from any to any port 8888               # Deny all others
 
 - **LLM Adapter API keys:**
   ```bash  
-  # Update API key (coordinate with VM-3)
-  ssh vm3 "sudo systemctl edit llm-adapter"  
+  # Update API key (coordinate with VM-1)
+  ssh vm1_integrated "sudo systemctl edit llm-adapter"  
   ```
 
 - **O2IMS certificates:**
@@ -129,18 +129,18 @@ kubectl --context edge1 delete secret --all -n config-management-system
 ```
 
 ### 2. LLM Adapter Compromise (Port 8888)
-**Symptoms:** Unusual intent generation, high traffic to VM-3
+**Symptoms:** Unusual intent generation, high traffic to VM-1
 
 **5-minute containment:**
 ```bash
 # Stop LLM adapter immediately
-ssh vm3 "sudo systemctl stop llm-adapter"
+ssh vm1_integrated "sudo systemctl stop llm-adapter"
 
 # Check for malicious payloads
-ssh vm3 "tail -100 /var/log/llm-adapter.log | grep -E '(script|exec|eval)'"
+ssh vm1_integrated "tail -100 /var/log/llm-adapter.log | grep -E '(script|exec|eval)'"
 
 # Restart with clean state
-ssh vm3 "sudo systemctl start llm-adapter"
+ssh vm1_integrated "sudo systemctl start llm-adapter"
 ```
 
 ### 3. O2IMS Data Exposure (Port 31280)  

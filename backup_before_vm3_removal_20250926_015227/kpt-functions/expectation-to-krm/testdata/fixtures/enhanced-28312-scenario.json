@@ -1,0 +1,88 @@
+{
+  "expectationId": "enhanced-test-expectation-001",
+  "expectationObject": {
+    "objectType": "O-RAN-DU",
+    "objectInstance": "enhanced-test-du-001",
+    "objectDescription": "Enhanced test O-RAN DU with comprehensive features",
+    "objectParameters": {
+      "deployment": "edge",
+      "location": "test-enhanced-cell-001",
+      "resources": {
+        "cpu": "6",
+        "memory": "12Gi",
+        "storage": "150Gi"
+      }
+    }
+  },
+  "expectationTarget": [
+    {
+      "targetName": "user-plane-latency",
+      "targetCondition": "LessThanOrEqual",
+      "targetValue": 8,
+      "targetDescription": "95th percentile user-plane latency",
+      "targetUnit": "ms",
+      "targetValueType": "numeric",
+      "targetContexts": [
+        {
+          "contextAttribute": "percentile",
+          "contextCondition": "Equal",
+          "contextValueType": "number",
+          "contextValue": 95,
+          "contextDescription": "95th percentile measurement"
+        }
+      ]
+    },
+    {
+      "targetName": "availability",
+      "targetCondition": "GreaterThanOrEqual",
+      "targetValue": 99.9,
+      "targetDescription": "Service availability",
+      "targetUnit": "percentage",
+      "targetValueType": "numeric"
+    }
+  ],
+  "expectationContext": {
+    "timeWindow": "1hour",
+    "monitoringInterval": "30seconds",
+    "o2imsProvider": "test-enhanced-o2ims",
+    "deployment-mode": "edge"
+  },
+  "intentId": "intent-enhanced-test-001",
+  "version": "1.0",
+  "priority": 1,
+  "lifecyclePhase": "active",
+  "creationTimestamp": "2024-01-01T00:00:00Z",
+  "lastModified": "2024-01-01T00:00:00Z",
+  "traceabilityInfo": {
+    "sourceIntentId": "intent-enhanced-test-001",
+    "sourceSystem": "test-system",
+    "sourceVersion": "1.0",
+    "transformationId": "test-transformation-001",
+    "correlationIds": ["intent-enhanced-test-001"]
+  },
+  "sloConfiguration": {
+    "sloTargets": [
+      {
+        "metricName": "user-plane-latency",
+        "targetValue": 8.0,
+        "threshold": "lessThan",
+        "unit": "ms",
+        "percentile": 95
+      },
+      {
+        "metricName": "availability",
+        "targetValue": 99.9,
+        "threshold": "greaterThan",
+        "unit": "percentage"
+      }
+    ],
+    "measurementWindow": "5m",
+    "reportingInterval": "30s"
+  },
+  "deploymentScope": {
+    "targetNamespaces": ["o-ran-edge"],
+    "labelSelectors": {
+      "test": "enhanced"
+    }
+  }
+}

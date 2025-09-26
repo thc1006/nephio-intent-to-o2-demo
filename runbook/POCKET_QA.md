@@ -28,7 +28,7 @@ mMTC → Both (IoT coverage)
 ```
 VM-1: SMO/GitOps (172.16.4.44)
 VM-2: Edge1 O-Cloud (172.16.4.45)
-VM-3: LLM Adapter (port 8888)
+VM-1: LLM Adapter (port 8888)
 VM-4: Edge2 O-Cloud
 ```
 
@@ -132,14 +132,14 @@ tests/golden/       # Golden tests
 ### 15. API endpoints?
 - **O2 IMS**: `http://172.16.4.45:31280/o2ims/v1/`
 - **Edge1 API**: `https://172.16.4.45:6443`
-- **LLM Adapter**: `http://<VM3_IP>:8888/api/intent-to-28312`
+- **LLM Adapter**: `http://<VM1_IP>:8888/api/intent-to-28312`
 - **Metrics**: `http://172.16.4.45:31080/metrics`
 
 ### 16. Common errors & enhanced fixes?
 | Error | Enhanced Fix | Evidence Collection |
 |-------|--------------|--------------------|
 | RootSync not syncing | `kubectl delete rootsync -n config-management-system --all` | `./scripts/collect_gitops_evidence.sh` |
-| LLM timeout | Check VM-3 connectivity, restart adapter | `./scripts/validate_llm_health.sh` |
+| LLM timeout | Check VM-1 connectivity, restart adapter | `./scripts/validate_llm_health.sh` |
 | SLO violation | Auto-rollback triggered, validate recovery | `./scripts/postcheck.sh --post-rollback` |
 | KRM render fail | Validate intent JSON, check golden tests | `./scripts/validate_intent_schema.sh` |
 | Multi-site sync fail | Check network, validate site connectivity | `./scripts/validate_multisite_health.sh` |
@@ -157,7 +157,7 @@ tests/golden/       # Golden tests
 ### 18. Resource requirements?
 - **VM-1**: 4 vCPU, 8GB RAM
 - **VM-2/4**: 8 vCPU, 16GB RAM (edge clusters)
-- **VM-3**: 2 vCPU, 4GB RAM (LLM adapter)
+- **VM-1**: 2 vCPU, 4GB RAM (LLM adapter)
 - **Storage**: 50GB per VM minimum
 
 ### 19. What's next on strategic roadmap?

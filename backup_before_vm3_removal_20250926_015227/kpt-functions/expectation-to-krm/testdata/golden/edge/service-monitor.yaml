@@ -1,0 +1,20 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: edge-du-cluster-01-monitor
+  namespace: o-ran-edge
+  annotations:
+    expectation.28312.3gpp.org/id: "edge-latency-expectation-001"
+    expectation.28312.3gpp.org/target-user-plane-latency: "LessThanOrEqual:1:milliseconds:p95"
+    expectation.28312.3gpp.org/target-availability: "GreaterThanOrEqual:99.99:percentage"
+    expectation.28312.3gpp.org/time-window: "1hour"
+    expectation.28312.3gpp.org/monitoring-interval: "30seconds"
+spec:
+  selector:
+    matchLabels:
+      app: o-ran-du
+      instance: edge-du-cluster-01
+  endpoints:
+  - port: metrics
+    interval: 30s
+    path: /metrics

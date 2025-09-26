@@ -6,7 +6,7 @@
 ```bash
 # Set required network configuration
 export VM2_IP=192.168.1.100  # Edge1 cluster IP
-export VM3_IP=192.168.1.101  # LLM adapter IP
+export VM1_IP=192.168.1.101  # LLM adapter IP
 
 # Standard deployment
 ./scripts/demo_llm.sh --target edge1
@@ -19,14 +19,14 @@ export VM4_IP=192.168.1.102  # Edge2 cluster IP
 ### Configuration Validation
 ```bash
 # Validate your configuration before running
-VM2_IP=192.168.1.100 VM3_IP=192.168.1.101 \
+VM2_IP=192.168.1.100 VM1_IP=192.168.1.101 \
     ./scripts/demo_llm.sh --config-check --target edge1
 ```
 
 ### Dry Run Testing
 ```bash
 # Preview what will be executed without making changes
-VM2_IP=192.168.1.100 VM3_IP=192.168.1.101 \
+VM2_IP=192.168.1.100 VM1_IP=192.168.1.101 \
     ./scripts/demo_llm.sh --dry-run --target edge1
 ```
 
@@ -62,7 +62,7 @@ VM2_IP=192.168.1.100 VM3_IP=192.168.1.101 \
 mkdir -p ./config
 cat > ./config/demo.conf << EOF
 VM2_IP=192.168.1.100
-VM3_IP=192.168.1.101
+VM1_IP=192.168.1.101
 VM4_IP=192.168.1.102
 TARGET_SITE=both
 DEMO_MODE=automated
@@ -78,7 +78,7 @@ EOF
 export TARGET_SITE=edge1              # edge1|edge2|both
 export DEMO_MODE=interactive          # interactive|automated|debug
 export VM2_IP=192.168.1.100          # Edge1 cluster (REQUIRED)
-export VM3_IP=192.168.1.101          # LLM adapter (REQUIRED)
+export VM1_IP=192.168.1.101          # LLM adapter (REQUIRED)
 export VM4_IP=192.168.1.102          # Edge2 cluster (for edge2/both)
 export DRY_RUN=false                  # true for preview mode
 export IDEMPOTENT_MODE=true           # Skip unchanged operations
@@ -140,10 +140,10 @@ reports/TIMESTAMP/
 ### Configuration Issues
 ```bash
 # Check configuration
-VM2_IP=YOUR_IP VM3_IP=YOUR_IP ./scripts/demo_llm.sh --config-check
+VM2_IP=YOUR_IP VM1_IP=YOUR_IP ./scripts/demo_llm.sh --config-check
 
 # Common issues:
-# 1. Missing VM2_IP or VM3_IP environment variables
+# 1. Missing VM2_IP or VM1_IP environment variables
 # 2. Invalid target site (must be edge1, edge2, or both)
 # 3. VM4_IP required for edge2/both targets
 # 4. Network connectivity to specified IPs
@@ -182,7 +182,7 @@ export DEMO_MODE=automated
 - name: Deploy Intent to O2
   env:
     VM2_IP: ${{ secrets.EDGE1_IP }}
-    VM3_IP: ${{ secrets.LLM_ADAPTER_IP }}
+    VM1_IP: ${{ secrets.LLM_ADAPTER_IP }}
     VM4_IP: ${{ secrets.EDGE2_IP }}
   run: |
     ./scripts/demo_llm.sh --target both --mode automated
@@ -201,7 +201,7 @@ export DEMO_MODE=automated
 # Deploy to multiple targets sequentially
 for target in edge1 edge2; do
   echo "Deploying to $target..."
-  VM2_IP=192.168.1.100 VM3_IP=192.168.1.101 VM4_IP=192.168.1.102 \
+  VM2_IP=192.168.1.100 VM1_IP=192.168.1.101 VM4_IP=192.168.1.102 \
     ./scripts/demo_llm.sh --target $target --mode automated
 done
 ```

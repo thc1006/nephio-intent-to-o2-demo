@@ -12,7 +12,7 @@ Transform the current multi-VM architecture into a unified, Claude-driven orches
 - **VM-1**: Central orchestrator with integrated Claude CLI headless mode
 - **VM-2**: Edge1 site with GitOps pull and local SLO validation
 - **VM-4**: Edge2 site with GitOps pull and local SLO validation
-- **Eliminate VM-3**: Integrate LLM capabilities directly into VM-1
+- **Eliminate VM-1**: Integrate LLM capabilities directly into VM-1
 
 ---
 
@@ -467,4 +467,4 @@ If any phase fails:
 
 ---
 
-*This plan integrates all three VMs into a cohesive, Claude-driven orchestration platform with GitOps, progressive delivery, and centralized monitoring.*
+*This plan integrates all two VMs into a cohesive, Claude-driven orchestration platform with GitOps, progressive delivery, and centralized monitoring.*

@@ -1,6 +1,6 @@
 #!/bin/bash
 # Integrated Orchestrator - All-in-One on VM-1
-# No need for VM-3 LLM Adapter
+# No need for VM-1 (Integrated) LLM Adapter
 
 set -euo pipefail
 
@@ -12,7 +12,7 @@ NC='\033[0m'
 
 echo -e "${CYAN}╔══════════════════════════════════════════════╗${NC}"
 echo -e "${CYAN}║  VM-1 Integrated Orchestrator                ║${NC}"
-echo -e "${CYAN}║  (No VM-3 Required)                          ║${NC}"
+echo -e "${CYAN}║  (No VM-1 (Integrated) Required)                          ║${NC}"
 echo -e "${CYAN}╚══════════════════════════════════════════════╝${NC}"
 echo
 
@@ -26,7 +26,7 @@ echo
 process_intent() {
     local intent="$1"
 
-    echo -e "${GREEN}✓${NC} Processing on VM-1 (No VM-3 needed):"
+    echo -e "${GREEN}✓${NC} Processing on VM-1 (No VM-1 (Integrated) needed):"
     echo "   • Natural Language: $intent"
     echo "   • Claude Code parses intent"
     echo "   • Generate KRM directly"
@@ -57,12 +57,12 @@ deploy_to_edges() {
 
 # Example usage
 echo -e "${GREEN}Architecture Benefits:${NC}"
-echo "• Simplified: VM-1 → VM-2/4 (no VM-3)"
+echo "• Simplified: VM-1 → VM-2/4 (no VM-1 (Integrated))"
 echo "• Faster: No intermediate API calls"
 echo "• Cleaner: Single point of orchestration"
 echo "• Efficient: All logic in one place"
 echo
-echo -e "${CYAN}VM-3 can be repurposed for:${NC}"
+echo -e "${CYAN}VM-1 (Integrated) can be repurposed for:${NC}"
 echo "• Additional edge site"
 echo "• Monitoring/observability"
 echo "• Backup orchestrator"

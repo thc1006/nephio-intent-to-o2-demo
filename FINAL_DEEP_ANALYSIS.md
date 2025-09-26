@@ -20,7 +20,7 @@
 - ✅ **Natural Language Processing**: Claude CLI integrated with `--dangerously-skip-permissions`
 - ✅ **TMF921 Compliance**: Full schema validation and structured output
 - ✅ **Service Types**: eMBB, URLLC, mMTC fully supported
-- ✅ **Deterministic Rules**: VM-3 LLM rules successfully migrated to VM-1
+- ✅ **Deterministic Rules**: VM-1 LLM rules successfully migrated to VM-1
 - ⚠️ **Partial**: O-RAN specific deployments need real K8s clusters on edge
 
 **Evidence**:

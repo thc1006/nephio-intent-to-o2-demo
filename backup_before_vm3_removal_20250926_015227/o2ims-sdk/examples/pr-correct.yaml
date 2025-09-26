@@ -1,0 +1,18 @@
+apiVersion: o2ims.provisioning.oran.org/v1alpha1
+kind: ProvisioningRequest
+metadata:
+  name: test-gnb-deployment
+  namespace: default
+spec:
+  description: "Test gNodeB deployment for O2IMS validation"
+  targetCluster: "edge-cluster-01"
+  
+  networkConfig:
+    subnet: "10.0.1.0/24"
+    gateway: "10.0.1.1"
+    vlan: 100
+    
+  resourceRequirements:
+    cpu: "4"
+    memory: "8Gi"
+    storage: "20Gi"

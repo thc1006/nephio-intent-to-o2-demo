@@ -1,9 +1,9 @@
-# VM-1 Integrated LLM Architecture Design
+# VM-1 Architecture Design
 ## Intent-to-O2 with Claude Code CLI Integration
 
 ### Executive Summary
 
-This document outlines the architectural redesign for integrating LLM capabilities directly into VM-1 using Claude Code CLI, eliminating the need for VM-3. The design includes service abstraction layers, API interfaces, frontend UI, and real-time monitoring capabilities.
+This document outlines the architectural redesign for integrating LLM capabilities directly into VM-1 using Claude Code CLI, eliminating the need for VM-1. The design includes service abstraction layers, API interfaces, frontend UI, and real-time monitoring capabilities.
 
 ---
 
@@ -13,7 +13,7 @@ This document outlines the architectural redesign for integrating LLM capabiliti
 
 **Current Architecture:**
 ```
-User → VM-1 → VM-3 (LLM) → VM-1 → Edge Sites (VM-2/4)
+User → VM-1 → VM-1 (LLM) → VM-1 → Edge Sites (VM-2/4)
 ```
 
 **Proposed Integrated Architecture:**
@@ -754,16 +754,16 @@ class IntegratedPipeline:
 
 ### 8.1 Performance Improvements
 
-- **Latency Reduction**: ~50% reduction by eliminating VM-3 network calls
+- **Latency Reduction**: ~50% reduction by eliminating VM-1 network calls
 - **Single Point of Processing**: All logic in VM-1 reduces coordination overhead
 - **Direct Claude Access**: No intermediate API translation
 
 ### 8.2 Operational Benefits
 
 - **Simplified Maintenance**: Single VM to monitor and maintain
-- **Reduced Failure Points**: Eliminates VM-3 as potential failure point
+- **Reduced Failure Points**: Eliminates VM-1 as potential failure point
 - **Unified Logging**: All logs centralized in VM-1
-- **Resource Efficiency**: VM-3 resources can be repurposed
+- **Resource Efficiency**: VM-1 resources can be repurposed
 
 ### 8.3 Development Benefits
 
@@ -777,7 +777,7 @@ class IntegratedPipeline:
 
 ### Phase 1: Parallel Operation (Week 1-2)
 - Deploy integrated service on VM-1
-- Keep VM-3 running as fallback
+- Keep VM-1 running as fallback
 - Route 10% traffic to new service
 
 ### Phase 2: Gradual Migration (Week 3-4)
@@ -787,12 +787,12 @@ class IntegratedPipeline:
 
 ### Phase 3: Full Migration (Week 5)
 - Route 100% traffic to VM-1
-- Keep VM-3 in standby mode
+- Keep VM-1 in standby mode
 - Monitor for 1 week
 
 ### Phase 4: Decommission (Week 6)
-- Shutdown VM-3 services
-- Repurpose VM-3 for other uses
+- Shutdown VM-1 services
+- Repurpose VM-1 for other uses
 - Document lessons learned
 
 ---

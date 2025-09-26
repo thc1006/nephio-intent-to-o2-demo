@@ -1,0 +1,73 @@
+apiVersion: o2ims.provisioning.oran.org/v1alpha1
+kind: ProvisioningRequest
+metadata:
+  name: test-gnb-deployment
+  namespace: default
+spec:
+  # Network Function identification
+  nfType: "CU-DU"
+  vendor: "Nephio"
+  version: "R5"
+  
+  # Deployment configuration
+  deploymentConfig:
+    clusterName: "edge-cluster-01"
+    namespace: "ran-functions"
+    
+  # Network Function configuration
+  nfConfig:
+    plmnId: "00101"
+    gnbId: "00001"
+    tac: "0001"
+    
+    # CU Configuration
+    cuConfig:
+      cuName: "CU-001"
+      f1Interface:
+        localAddress: "10.0.1.10"
+        remoteAddress: "10.0.1.20"
+        port: 38472
+      e1Interface:
+        localAddress: "10.0.2.10"
+        remoteAddress: "10.0.2.20"
+        port: 38462
+    
+    # DU Configuration
+    duConfig:
+      duName: "DU-001"
+      cellConfig:
+        - cellId: "001"
+          pci: 100
+          earfcn: 3400
+          bandwidth: 20
+    
+  # Resources requirements
+  resources:
+    cpu: "4"
+    memory: "8Gi"
+    storage: "20Gi"
+  
+  # Intent expectations (from 3GPP TS 28.312)
+  expectations:
+    - expectationId: "exp-001"
+      expectationType: "ServiceLevelExpectation"
+      expectationTargets:
+        - targetName: "latency"
+          targetValue: "10"
+          targetUnit: "ms"
+        - targetName: "throughput"
+          targetValue: "1000"
+          targetUnit: "Mbps"
+        - targetName: "availability"
+          targetValue: "99.99"
+          targetUnit: "percent"
+  
+  # Provisioning parameters
+  provisioningParameters:
+    priority: "high"
+    deploymentMode: "immediate"
+    validationRequired: true
+    
+status:
+  phase: "Pending"
+  message: "Waiting for provisioning"

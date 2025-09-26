@@ -1,0 +1,91 @@
+# SLO Thresholds Configuration for O-RAN L Release & Nephio R5
+# Used by postcheck.sh for comprehensive validation
+
+slo_config:
+  version: "1.0"
+  environment: "production"
+
+  # Global thresholds
+  thresholds:
+    # Network performance (milliseconds)
+    latency:
+      p95_ms: 15
+      p99_ms: 25
+      average_ms: 8
+
+    # Availability and reliability
+    availability:
+      success_rate: 0.995
+      error_rate: 0.005
+      uptime_percentage: 99.9
+
+    # Throughput (Mbps)
+    throughput:
+      p95_mbps: 200
+      p99_mbps: 150
+      minimum_mbps: 100
+
+    # Resource utilization
+    resources:
+      cpu_utilization: 0.80
+      memory_utilization: 0.85
+      disk_utilization: 0.90
+
+    # O-RAN specific metrics
+    o_ran:
+      e2_interface_latency_ms: 10
+      a1_policy_response_ms: 100
+      o1_netconf_response_ms: 50
+      o2_provisioning_time_s: 300
+
+    # AI/ML performance
+    ai_ml:
+      inference_latency_p99_ms: 50
+      model_accuracy: 0.95
+      training_convergence_epochs: 100
+
+    # Multi-site consistency
+    multi_site:
+      sync_delay_ms: 1000
+      consistency_check_interval_s: 30
+      cross_site_latency_ms: 100
+
+  # Site-specific overrides
+  site_overrides:
+    edge1:
+      # Edge1 specific thresholds
+      throughput:
+        p95_mbps: 250  # Higher capacity site
+    edge2:
+      # Edge2 specific thresholds
+      latency:
+        p95_ms: 20    # Relaxed for edge2
+
+  # Test configuration
+  test_config:
+    metrics_timeout_seconds: 30
+    retry_attempts: 3
+    backoff_delay_seconds: 5
+
+    # Evidence collection
+    evidence_retention_days: 30
+    collect_logs: true
+    collect_metrics: true
+    collect_traces: true
+
+    # Reporting
+    report_format: "json"
+    include_raw_metrics: true
+    generate_charts: true
+
+    # Integration points
+    o2ims_enabled: true
+    prometheus_enabled: true
+    jaeger_enabled: true
+
+  # Compliance requirements
+  compliance:
+    o_ran_l_release: true
+    nephio_r5: true
+    fips_140_2: true
+    wg11_security: true

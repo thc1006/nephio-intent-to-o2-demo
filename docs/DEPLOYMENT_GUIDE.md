@@ -8,7 +8,7 @@
 |-----------|---------------|---------|
 | **VM-1 (SMO)** | 4 vCPU, 8GB RAM, 100GB SSD | GitOps Orchestrator |
 | **VM-2 (Edge1)** | 8 vCPU, 16GB RAM, 200GB SSD | O-Cloud + O2IMS |
-| **VM-3 (LLM)** | 2 vCPU, 4GB RAM, 50GB SSD | Intent Adapter |
+| **VM-1 (LLM)** | 2 vCPU, 4GB RAM, 50GB SSD | Intent Adapter |
 | **VM-4 (Edge2)** | 8 vCPU, 16GB RAM, 200GB SSD | O-Cloud + O2IMS |
 
 ### Network Requirements
@@ -17,7 +17,7 @@
 network_topology:
   connectivity:
     - vm1_to_vm2: "1Gbps, <10ms latency"
-    - vm1_to_vm3: "1Gbps, <10ms latency"
+    - vm1_to_vm1_integrated: "1Gbps, <10ms latency"
     - vm1_to_vm4: "1Gbps, <10ms latency"
     - vm2_to_vm4: "1Gbps, <10ms latency"
   firewall_rules:
@@ -123,11 +123,11 @@ kubectl cluster-info
 echo "VM-2 Edge1 cluster ready"
 ```
 
-### Step 1.3: VM-3 LLM Adapter Configuration
+### Step 1.3: VM-1 LLM Adapter Configuration
 
 ```bash
 #!/bin/bash
-# VM-3 LLM Adapter Setup Script
+# VM-1 LLM Adapter Setup Script
 
 # Install Python and dependencies
 sudo apt-get update
@@ -222,7 +222,7 @@ sudo systemctl daemon-reload
 sudo systemctl enable llm-adapter
 sudo systemctl start llm-adapter
 
-echo "VM-3 LLM adapter ready"
+echo "VM-1 LLM adapter ready"
 ```
 
 ### Step 1.4: VM-4 Edge2 Configuration

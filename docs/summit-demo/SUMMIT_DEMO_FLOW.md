@@ -8,9 +8,9 @@ graph TB
         USER[("👥 觀眾<br/>自然語言需求")]
     end
 
-    subgraph "VM-3: LLM 服務"
-        WEBUI[("🌐 Web UI<br/>http://localhost:8888")]
-        LLM[("🧠 Claude AI<br/>172.16.2.10:8888")]
+    subgraph "VM-1: LLM 服務"
+        WEBUI[("🌐 Web UI<br/>http://localhost:8002")]
+        LLM[("🧠 Claude AI<br/>172.16.0.78:8888")]
         INTENT[("📋 TMF921 Intent<br/>JSON 格式")]
     end
 
@@ -63,8 +63,8 @@ graph TB
 ```mermaid
 sequenceDiagram
     participant 觀眾
-    participant WebUI as VM-3 Web UI
-    participant VM3_LLM as VM-3 LLM
+    participant WebUI as VM-1 Web UI
+    participant VM1_LLM as VM-1 LLM
     participant VM1_Orchestrator as VM-1 編排器
     participant GitOps
     participant Edge1
@@ -72,9 +72,9 @@ sequenceDiagram
     participant SLO_Monitor as SLO 監控
 
     觀眾->>WebUI: 在瀏覽器輸入<br/>"部署 5G 高頻寬服務"
-    WebUI->>VM3_LLM: 發送請求
-    VM3_LLM->>VM3_LLM: AI 理解與分類
-    VM3_LLM-->>WebUI: 顯示 Intent JSON
+    WebUI->>VM1_LLM: 發送請求
+    VM1_LLM->>VM1_LLM: AI 理解與分類
+    VM1_LLM-->>WebUI: 顯示 Intent JSON
     WebUI-->>VM1_Orchestrator: TMF921 Intent
 
     VM1_Orchestrator->>VM1_Orchestrator: Intent → KRM 編譯
@@ -155,8 +155,8 @@ graph LR
                     ┌────────────┴────────────┐
                     │                         │
         ┌───────────▼───────────┐ ┌──────────▼──────────┐
-        │   VM-1 (GitOps)       │ │   VM-3 (LLM)       │
-        │   172.16.0.78         │ │   172.16.2.10      │
+        │   VM-1 (GitOps)       │ │   VM-1 (LLM)       │
+        │   172.16.0.78         │ │   172.16.0.78      │
         │                       │ │                    │
         │  • Kubernetes Master  │ │  • Claude AI API   │
         │  • Config Sync        │ │  • Intent Gen      │
@@ -245,16 +245,16 @@ gantt
 
 ```bash
 # 建立 SSH 隧道（用於 Web UI）
-ssh -L 8888:172.16.2.10:8888 ubuntu@147.251.115.143
+ssh -L 8888:172.16.0.78:8888 ubuntu@147.251.115.143
 
 # 開啟 Web UI
-open http://localhost:8888/
+open http://localhost:8002/
 
 # 快速健康檢查
-curl -s http://172.16.2.10:8888/health | jq '.status'
+curl -s http://172.16.0.78:8888/health | jq '.status'
 
 # 中文 Intent 測試（命令列）
-curl -X POST http://172.16.2.10:8888/generate_intent \
+curl -X POST http://172.16.0.78:8888/generate_intent \
   -d '{"natural_language": "部署 5G 服務", "target_site": "edge1"}' | jq
 
 # 執行完整演示

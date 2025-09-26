@@ -10,7 +10,7 @@
 |---|---|---|---|---|
 | VM-1 | SMO/GitOps | 172.16.0.78 | 147.251.115.143 | ✅ Online |
 | VM-2 | edge1 | 172.16.4.45 | 147.251.115.129 | ⚠️ Service Issues |
-| VM-3 | LLM Adapter | - | 147.251.115.156 | ✅ Online |
+| VM-1 | LLM Adapter | - | 147.251.115.156 | ✅ Online |
 | VM-4 | edge2 | 172.16.0.89 | 147.251.115.193 | ❌ Network Isolated |
 
 ## 🔍 Connectivity Test Results

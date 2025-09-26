@@ -14,7 +14,7 @@ NC='\033[0m'
 # Configuration
 source /home/ubuntu/nephio-intent-to-o2-demo/scripts/env.sh 2>/dev/null || true
 VM2_IP="${VM2_IP:-172.16.4.45}"
-VM3_IP="${VM3_IP:-172.16.2.10}"
+VM1_IP="${VM1_IP:-172.16.0.78}"
 VM4_IP="${VM4_IP:-172.16.4.176}"
 
 # Service check function (more lenient)
@@ -56,10 +56,10 @@ display_status_bar() {
 
     # Display status
     echo -ne "${CYAN}[Intent-to-O2]${NC} "
-    echo -ne "LLM:$(check_service "http://${VM3_IP}:8888/health" "VM3") "
+    echo -ne "LLM:$(check_service "http://${VM1_IP}:8888/health" "VM1") "
     echo -ne "Edge1:$(check_service "http://${VM2_IP}:31280" "VM2") "
     echo -ne "Edge2:$(check_service "" "VM4") "
-    echo -ne "Git:$(check_service "http://localhost:8888" "Git") "
+    echo -ne "Git:$(check_service "http://localhost:8002" "Git") "
     echo -ne "| $(date '+%H:%M:%S')"
 
     # Restore cursor position
@@ -80,7 +80,7 @@ echo "  ${GREEN}●${NC} = 服務正常"
 echo "  ${RED}●${NC} = 服務離線"
 echo
 echo "服務對應："
-echo "  LLM   = VM-3 LLM Adapter (172.16.2.10)"
+echo "  LLM   = VM-1 (Integrated) LLM Adapter (172.16.0.78)"
 echo "  Edge1 = VM-2 O2IMS (172.16.4.45)"
 echo "  Edge2 = VM-4 O2IMS (172.16.4.176)"
 echo "  Git   = Gitea Repository (localhost)"

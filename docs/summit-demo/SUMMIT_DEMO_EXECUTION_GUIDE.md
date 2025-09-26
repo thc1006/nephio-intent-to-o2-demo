@@ -12,7 +12,7 @@
 # 內部網路 IP 對照表
 VM-1 (GitOps 編排器): 172.16.0.78  # 這是你要登入操作的主機
 VM-2 (Edge1 站台): 172.16.4.45     # 第一個邊緣站點
-VM-3 (LLM 服務): 172.16.2.10        # AI 語言模型服務
+VM-1 (LLM 服務): 172.16.0.78        # AI 語言模型服務
 VM-4 (Edge2 站台): 172.16.0.89     # 第二個邊緣站點
 ```
 
@@ -22,23 +22,23 @@ VM-4 (Edge2 站台): 172.16.0.89     # 第二個邊緣站點
    - 密碼: admin123
    - 用來展示: GitOps 自動化配置更新
 
-2. **LLM 服務 API**: http://172.16.2.10:8888
+2. **LLM 服務 API**: http://172.16.0.78:8888
    - 用來展示: 自然語言轉換成網路意圖
 
 ---
 
 ## 🆕 Web UI 演示選項（推薦）
 
-### 使用 VM-3 Web UI 的準備
+### 使用 VM-1 Web UI 的準備
 ```bash
 # 方法一：在你的筆電建立 SSH 隧道（推薦）
-ssh -L 8888:172.16.2.10:8888 ubuntu@147.251.115.143
+ssh -L 8888:172.16.0.78:8888 ubuntu@147.251.115.143
 
 # 然後在瀏覽器開啟
-http://localhost:8888/
+http://localhost:8002/
 
 # 方法二：直接存取（如果在內部網路）
-http://172.16.2.10:8888/
+http://172.16.0.78:8888/
 ```
 
 ---
@@ -74,7 +74,7 @@ echo "=== 🔍 檢查系統狀態 ==="
 kubectl get nodes
 
 # 確認 LLM 服務有回應
-curl -s http://172.16.2.10:8888/health | jq '.status'
+curl -s http://172.16.0.78:8888/health | jq '.status'
 
 # 確認 GitOps 設定正確
 kubectl get rootsync -n config-management-system
@@ -87,7 +87,7 @@ kubectl get rootsync -n config-management-system
 #### 🆕 選項 A: 使用 Web UI 演示（推薦，更視覺化）
 
 1. **開啟 Web UI**
-   - 瀏覽器訪問 `http://localhost:8888/`（如果已建立 SSH 隧道）
+   - 瀏覽器訪問 `http://localhost:8002/`（如果已建立 SSH 隧道）
    - 展示專業的介面設計
 
 2. **中文輸入演示**
@@ -108,7 +108,7 @@ kubectl get rootsync -n config-management-system
 # 在視窗 1 執行
 echo "=== 🧠 測試中文語言理解能力 ==="
 
-curl -X POST http://172.16.2.10:8888/generate_intent \
+curl -X POST http://172.16.0.78:8888/generate_intent \
   -H "Content-Type: application/json" \
   -d '{
     "natural_language": "部署 5G 高頻寬服務來支援 4K 影片串流",
@@ -131,7 +131,7 @@ curl -X POST http://172.16.2.10:8888/generate_intent \
 ```bash
 echo "=== 🚗 測試英文的超低延遲服務識別 ==="
 
-curl -X POST http://172.16.2.10:8888/generate_intent \
+curl -X POST http://172.16.0.78:8888/generate_intent \
   -H "Content-Type: application/json" \
   -d '{
     "natural_language": "Deploy ultra-reliable service for autonomous vehicles",
@@ -154,7 +154,7 @@ curl -X POST http://172.16.2.10:8888/generate_intent \
 echo "=== 🚀 開始部署到 Edge1 站點 ==="
 
 # 設定各個 VM 的 IP
-export VM2_IP=172.16.4.45 VM3_IP=172.16.2.10 VM4_IP=172.16.0.89
+export VM2_IP=172.16.4.45 VM1_IP=172.16.0.78 VM4_IP=172.16.0.89
 
 # 執行演示腳本（用 dry-run 模式可以更快展示）
 ./scripts/demo_llm.sh --dry-run --target edge1 --mode automated
@@ -273,7 +273,7 @@ cat artifacts/summit-bundle-latest/kpi-dashboard/PRODUCTION_KPI_SUMMARY.md | hea
 read -p "請問您需要什麼樣的 5G 服務？(可以用中文或英文): " USER_INPUT
 read -p "要部署到哪個站點？(edge1/edge2/both): " TARGET_SITE
 
-curl -X POST http://172.16.2.10:8888/generate_intent \
+curl -X POST http://172.16.0.78:8888/generate_intent \
   -H "Content-Type: application/json" \
   -d "{
     \"natural_language\": \"$USER_INPUT\",
@@ -285,12 +285,12 @@ curl -X POST http://172.16.2.10:8888/generate_intent \
 ```bash
 # 場景 1: 智慧城市的 IoT 網路
 echo "場景一: 智慧城市需要大量 IoT 連線"
-curl -X POST http://172.16.2.10:8888/generate_intent \
+curl -X POST http://172.16.0.78:8888/generate_intent \
   -d '{"natural_language": "建立一個可以支援 5 萬個 IoT 裝置的網路", "target_site": "both"}' | jq
 
 # 場景 2: 工廠自動化需要超低延遲
 echo "場景二: 工業 4.0 自動化產線"
-curl -X POST http://172.16.2.10:8888/generate_intent \
+curl -X POST http://172.16.0.78:8888/generate_intent \
   -d '{"natural_language": "Deploy ultra-low latency network for factory robots", "target_site": "edge1"}' | jq
 ```
 
@@ -349,7 +349,7 @@ echo "目前使用者: $(whoami)"
 echo "工作目錄: $(pwd)"
 echo ""
 echo "[2/5] 確認 LLM 服務..."
-curl -s http://172.16.2.10:8888/health | jq -r '.status' || echo "失敗"
+curl -s http://172.16.0.78:8888/health | jq -r '.status' || echo "失敗"
 echo ""
 echo "[3/5] 確認 Kubernetes 叢集..."
 kubectl get nodes --no-headers | wc -l || echo "0"

@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# LLM Integration Test Script for VM-3
-# Tests the integration between VM-1 and VM-3 LLM Adapter
+# LLM Integration Test Script for VM-1
+# Tests the integration between VM-1 and VM-1 LLM Adapter
 
 set -euo pipefail
 
 # Configuration
-LLM_ADAPTER_URL="${LLM_ADAPTER_URL:-http://172.16.2.10:8888}"
+LLM_ADAPTER_URL="${LLM_ADAPTER_URL:-http://172.16.0.78:8888}"
 TEST_TIMEOUT="${TEST_TIMEOUT:-10}"
 
 # Colors
@@ -251,7 +251,7 @@ main() {
         exit 0
     else
         echo -e "\n${RED}❌ Some tests failed. Please check the LLM Adapter implementation.${NC}"
-        echo -e "\nRefer to: /home/ubuntu/nephio-intent-to-o2-demo/docs/VM3_INTEGRATION_SPEC.md"
+        echo -e "\nRefer to: /home/ubuntu/nephio-intent-to-o2-demo/docs/VM1_INTEGRATION_SPEC.md"
         exit 1
     fi
 }

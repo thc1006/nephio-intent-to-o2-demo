@@ -4,7 +4,7 @@
 echo "🚀 啟動 Intent-to-O2 服務"
 echo "=========================="
 
-# 1. 啟動 LLM Adapter (本地運行當作 VM-3)
+# 1. 啟動 LLM Adapter (本地運行當作 VM-1 (Integrated))
 echo "1. 啟動 LLM Adapter..."
 cd /home/ubuntu/nephio-intent-to-o2-demo/llm-adapter
 pkill -f "uvicorn main:app" 2>/dev/null
@@ -31,7 +31,7 @@ echo "3. 設置環境變量..."
 cat > /home/ubuntu/nephio-intent-to-o2-demo/scripts/env.sh << 'EOF'
 export VM1_IP="172.16.0.78"
 export VM2_IP="172.16.4.45"
-export VM3_IP="localhost"  # LLM Adapter 在本地
+export VM1_IP="localhost"  # LLM Adapter 在本地
 export VM4_IP="172.16.4.176"
 export LLM_ADAPTER_URL="http://localhost:8000"
 export GITEA_URL="http://localhost:8888"

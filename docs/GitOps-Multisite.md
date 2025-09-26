@@ -11,7 +11,7 @@ This document describes the multi-site GitOps architecture for deploying network
 │                         VM-1 (Orchestrator)                      │
 │  ┌─────────────┐  ┌──────────────┐  ┌──────────────────────┐  │
 │  │ LLM Adapter │→│ Intent Engine │→│  KRM Renderer        │  │
-│  │  (VM-3)     │  │              │  │  (render_krm.sh)     │  │
+│  │  (VM-1)     │  │              │  │  (render_krm.sh)     │  │
 │  └─────────────┘  └──────────────┘  └──────────────────────┘  │
 │                           ↓                     ↓               │
 │                    ┌──────────────────────────────┐            │
@@ -318,7 +318,7 @@ spec:
 - SLO compliance: `/metrics/api/v1/slo`
 
 ### LLM Adapter
-- Endpoint: `http://172.16.2.10:8888`
+- Endpoint: `http://172.16.0.78:8888`
 - Intent API: `/api/v1/intent/generate`
 - Health check: `/health`
 

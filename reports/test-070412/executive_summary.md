@@ -86,7 +86,7 @@ From comprehensive security validation:
 ### Core Components
 1. **SMO/GitOps Orchestrator** (VM-1): Central control and workflow management
 2. **Edge1 O-Cloud** (VM-2): Primary deployment target with O2 IMS
-3. **LLM Adapter** (VM-3): AI-powered intent processing and validation
+3. **LLM Adapter** (VM-1): AI-powered intent processing and validation
 4. **Edge2 O-Cloud** (VM-4): Secondary site with monitoring focus
 
 ### Integration Points

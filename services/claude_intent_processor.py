@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Claude Intent Processor - VM-1 Integrated Version
-Incorporates VM-3's deterministic rules and structured output format
+Incorporates VM-1 (Integrated)'s deterministic rules and structured output format
 """
 
 import json
@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 CACHE = {}
 CACHE_TTL = 300  # 5 minutes
 
-# TMF921 Schema (from VM-3)
+# TMF921 Schema (from VM-1 (Integrated))
 TMF921_SCHEMA = {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "title": "TMF921 Intent Schema",
@@ -49,7 +49,7 @@ TMF921_SCHEMA = {
 
 class ClaudeIntentProcessor:
     """
-    Unified Intent processor using Claude CLI with VM-3's proven rules
+    Unified Intent processor using Claude CLI with VM-1 (Integrated)'s proven rules
     """
 
     def __init__(self):
@@ -144,7 +144,7 @@ class ClaudeIntentProcessor:
 
     def _parse_with_claude(self, text: str) -> Dict[str, Any]:
         """
-        Parse using Claude CLI with VM-3's deterministic prompt
+        Parse using Claude CLI with VM-1 (Integrated)'s deterministic prompt
         """
         prompt = f"""You are a TMF921 5G network intent parser. Output ONLY valid JSON.
 
@@ -226,7 +226,7 @@ JSON:"""
 
     def _parse_with_rules(self, text: str) -> Dict[str, Any]:
         """
-        Deterministic rule-based parser (from VM-3)
+        Deterministic rule-based parser (from VM-1 (Integrated))
         """
         text_lower = text.lower()
 

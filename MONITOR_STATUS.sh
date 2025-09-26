@@ -20,10 +20,10 @@ echo
 # Main monitoring loop
 while true; do
     # Check services
-    LLM=$(curl -s --max-time 1 http://172.16.2.10:8888/health &>/dev/null && echo "${G}✓${N}" || echo "${R}✗${N}")
+    LLM=$(curl -s --max-time 1 http://localhost:8002/health &>/dev/null && echo "${G}✓${N}" || echo "${R}✗${N}")
     E1=$(curl -s --max-time 1 http://172.16.4.45:31280 &>/dev/null && echo "${G}✓${N}" || echo "${R}✗${N}")
     E2=$(nc -zv -w 1 172.16.4.176 31280 &>/dev/null && echo "${G}✓${N}" || echo "${R}✗${N}")
-    GIT=$(curl -s --max-time 1 http://localhost:8888 &>/dev/null && echo "${G}✓${N}" || echo "${R}✗${N}")
+    GIT=$(curl -s --max-time 1 http://localhost:8002 &>/dev/null && echo "${G}✓${N}" || echo "${R}✗${N}")
 
     # Display on single line with carriage return
     echo -ne "\r${Y}[$(date +%H:%M:%S)]${N} LLM:$LLM Edge1:$E1 Edge2:$E2 Git:$GIT  "

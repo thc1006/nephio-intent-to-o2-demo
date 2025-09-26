@@ -31,7 +31,7 @@ case $choice in
         ;;
     4)
         echo "開啟 Web UI..."
-        echo "請在瀏覽器訪問: http://172.16.2.10:8888"
+        echo "請在瀏覽器訪問: http://localhost:8002"
         echo
         echo "在 Web UI 中你可以："
         echo "- 輸入自然語言指令"
@@ -48,7 +48,7 @@ case $choice in
         xterm -T "Flow Tracer" -e "./scripts/trace_flow.sh" &
         
         echo "✅ 監控系統已啟動"
-        echo "Web UI: http://${VM3_IP:-Configure_VM3_IP}:8888"
+        echo "Web UI: http://${VM1_IP:-Configure_VM1_IP}:8888"
         ;;
     *)
         echo "無效選項"

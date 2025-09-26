@@ -37,12 +37,12 @@
 ### Morning Startup (First demo of day)
 - [ ] **VM connectivity check**
   ```bash
-  ping 172.16.4.45 && ping 172.16.2.10  
+  ping 172.16.4.45 && ping 172.16.0.78  
   ```
 - [ ] **Service health validation**
   ```bash
   curl http://172.16.4.45:31080/health
-  curl http://172.16.2.10:8888/health
+  curl http://172.16.0.78:8888/health
   ```
 - [ ] **Demo pipeline test**  
   ```bash
@@ -78,13 +78,13 @@
    nc -zv 172.16.4.45 6443   # K8s API
    nc -zv 172.16.4.45 31080  # HTTP
    nc -zv 172.16.4.45 31280  # O2IMS  
-   nc -zv 172.16.2.10 8888   # LLM
+   nc -zv 172.16.0.78 8888   # LLM
    ```
 
 2. **Pre-demo testing**
    ```bash
    # Test intent generation
-   curl -X POST http://172.16.2.10:8888/intent \
+   curl -X POST http://172.16.0.78:8888/intent \
      -d '{"query": "test demo readiness"}'
    
    # Test KRM rendering
@@ -116,7 +116,7 @@
 ### Key Performance Indicators
 | Metric | Threshold | Check Command |
 |--------|-----------|---------------|
-| Intent Generation Time | < 10s | `time curl http://172.16.2.10:8888/intent` |
+| Intent Generation Time | < 10s | `time curl http://172.16.0.78:8888/intent` |
 | KRM Render Time | < 30s | `time ./scripts/render_krm.sh intent.json` |
 | RootSync Reconciliation | < 60s | `kubectl get rootsync -w` |
 | SLO Response Time | < 5s | `time curl http://172.16.4.45:30090/metrics/api/v1/slo` |
@@ -128,13 +128,13 @@
    ```bash
    # Check resource usage
    ssh vm2 "top -bn1 | head -10"
-   ssh vm3 "free -h && df -h"
+   ssh vm1_integrated "free -h && df -h"
    ```
 
 2. **Service restart if needed**
    ```bash
    # LLM adapter restart
-   ssh vm3 "sudo systemctl restart llm-adapter"
+   ssh vm1_integrated "sudo systemctl restart llm-adapter"
    
    # K8s service restart  
    kubectl --context edge1 rollout restart deployment -n target-namespace
@@ -187,7 +187,7 @@ git checkout main && git pull
 
 # Step 2: Restart all services (120s)  
 ssh vm2 "sudo systemctl restart kubelet"
-ssh vm3 "sudo systemctl restart llm-adapter"
+ssh vm1_integrated "sudo systemctl restart llm-adapter"
 
 # Step 3: Quick validation (120s)
 sleep 60 && ./scripts/demo_llm.sh --dry-run --target edge1
@@ -212,15 +212,15 @@ curl http://<VM4_IP>:31080/health     # edge2
 ```
 
 ### Scenario 3: LLM Adapter Down
-**Symptoms:** Intent generation fails at VM-3
+**Symptoms:** Intent generation fails at VM-1
 
 **5-minute fix:**
 ```bash
 # Quick restart
-ssh vm3 "sudo systemctl restart llm-adapter"
+ssh vm1_integrated "sudo systemctl restart llm-adapter"
 
 # Wait and test
-sleep 30 && curl http://172.16.2.10:8888/health
+sleep 30 && curl http://172.16.0.78:8888/health
 
 # If still down, use cached intent
 cp tests/golden/intent_edge1.json /tmp/fallback_intent.json

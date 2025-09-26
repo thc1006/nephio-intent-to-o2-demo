@@ -2,12 +2,12 @@
 
 ## Overview
 
-This operations manual provides comprehensive procedures for managing the Nephio Intent-to-O2 multi-site platform across VM-1 (SMO/GitOps Orchestrator), VM-2 (Edge1), VM-3 (LLM Adapter), and VM-4 (Edge2).
+This operations manual provides comprehensive procedures for managing the Nephio Intent-to-O2 multi-site platform across VM-1 (SMO/GitOps Orchestrator), VM-2 (Edge1), VM-1, and VM-4 (Edge2).
 
 **Network Configuration:**
 - VM-1 (SMO): Orchestrator with Gitea at port 8888
 - VM-2 (Edge1): API `https://172.16.4.45:6443`, NodePorts `31080/31443`, O2IMS `http://172.16.4.45:31280`
-- VM-3 (LLM): Adapter at `http://<VM3_IP>:8888` (default: 172.16.2.10)
+- VM-1 (LLM): Adapter at `http://<VM1_IP>:8888` (default: 172.16.0.78)
 - VM-4 (Edge2): API `https://172.16.4.55:6443`, NodePorts `31080/31443`, O2IMS `http://172.16.4.55:31280`
 
 **Critical Ports Reference:**
@@ -678,7 +678,7 @@ export INTENT_PROCESSOR_CPU="2000m"
 ```bash
 # Quick Fix (< 5 min)
 systemctl restart llm-adapter
-curl -X GET http://172.16.2.10:8888/health
+curl -X GET http://172.16.0.78:8888/health
 ```
 
 #### 2. O2IMS Connection Failure (Port 31280)

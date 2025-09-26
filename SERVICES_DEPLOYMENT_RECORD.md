@@ -8,10 +8,10 @@
 
 #### 1. **Claude Intent Processor** ✅
 - **File**: `/home/ubuntu/nephio-intent-to-o2-demo/services/claude_intent_processor.py`
-- **Purpose**: Unified intent processing with VM-3 rules integration
+- **Purpose**: Unified intent processing with VM-1 rules integration
 - **Features**:
   - TMF921 schema validation
-  - Deterministic parsing rules from VM-3
+  - Deterministic parsing rules from VM-1
   - Claude CLI integration with `--dangerously-skip-permissions`
   - Fallback to rule-based processing
 - **Status**: Tested and working

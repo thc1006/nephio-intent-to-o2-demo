@@ -1,0 +1,8 @@
+<!DOCTYPE html>
+<html>
+<head><title>Edge2 SLO Exporter</title></head>
+<body>
+  <h1>Edge2 SLO Metrics</h1>
+  <p>Site: edge2</p>
+  <p>Status: operational</p>
+  <p>Response time: <span id="time">5</span>

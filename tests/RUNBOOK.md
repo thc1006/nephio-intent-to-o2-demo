@@ -13,13 +13,13 @@
 1. **Check VM connectivity** (30 seconds)
    ```bash
    ping 172.16.4.45  # VM-2 Edge1
-   ping 172.16.2.10  # VM-3 LLM Adapter
+   ping 172.16.0.78  # VM-1 LLM Adapter
    ```
 
 2. **Verify core services** (60 seconds)
    ```bash
    curl -s http://172.16.4.45:31080/health
-   curl -s http://172.16.2.10:8888/health
+   curl -s http://172.16.0.78:8888/health
    ```
 
 3. **Restart critical components** (90 seconds)
@@ -42,7 +42,7 @@
 |----|------|------------|-----------|
 | VM-1 | SMO/GitOps Orchestrator | localhost | - |
 | VM-2 | Edge1 Cluster | 172.16.4.45 | 6443, 31080, 31443, 31280 |
-| VM-3 | LLM Adapter | 172.16.2.10 | 8888 |
+| VM-1 | LLM Adapter | 172.16.0.78 | 8888 |
 | VM-4 | Edge2 Cluster | TBD | 6443, 31080, 31443, 31280 |
 
 ### Port Reference
@@ -52,19 +52,19 @@
 | 31080 | HTTP NodePort | Application access | VM-2, VM-4 |
 | 31443 | HTTPS NodePort | Secure application access | VM-2, VM-4 |
 | 31280 | O2IMS API | O-RAN O2 Interface | VM-2, VM-4 |
-| 8888 | LLM Adapter | Intent processing | VM-3 |
+| 8888 | LLM Adapter | Intent processing | VM-1 |
 
 ## Common Failures
 
-### 1. LLM Adapter Unreachable (VM-3)
+### 1. LLM Adapter Unreachable (VM-1)
 **Symptoms:** demo_llm.sh fails at "check-llm" step
 ```bash
 # Diagnosis
-ping 172.16.2.10
-curl http://172.16.2.10:8888/health
+ping 172.16.0.78
+curl http://172.16.0.78:8888/health
 
 # 5-min fix
-ssh vm3 "sudo systemctl restart llm-adapter"
+ssh vm1_integrated "sudo systemctl restart llm-adapter"
 ./scripts/demo_llm.sh --target edge1 --dry-run
 ```
 

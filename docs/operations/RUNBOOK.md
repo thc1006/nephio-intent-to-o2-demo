@@ -9,7 +9,7 @@
 | Edge1 HTTP | VM-2 (172.16.4.45) | 31080 | `curl http://172.16.4.45:31080/health` |
 | Edge1 HTTPS | VM-2 (172.16.4.45) | 31443 | `curl -k https://172.16.4.45:31443/health` |
 | O2IMS | VM-2 (172.16.4.45) | 31280 | `curl http://172.16.4.45:31280/o2ims/api/v1/health` |
-| LLM Adapter | VM-3 | 8888 | `curl http://<VM3_IP>:8888/health` |
+| LLM Adapter | VM-1 | 8888 | `curl http://<VM1_IP>:8888/health` |
 | Edge2 API | VM-4 | TBD | `kubectl --kubeconfig edge2 get nodes` |
 
 ---
@@ -21,7 +21,7 @@
 ```
 Issue: Demo pipeline fails
 ├── LLM Adapter unreachable
-│   ├── Check VM-3 service: systemctl status llm-adapter
+│   ├── Check VM-1 service: systemctl status llm-adapter
 │   ├── Check port 8888: netstat -tlnp | grep 8888
 │   └── Restart: systemctl restart llm-adapter
 ├── Edge cluster unreachable
@@ -63,7 +63,7 @@ kubectl get nodes
 kubectl get pods -A | grep -v Running
 ```
 
-#### VM-3 (LLM Adapter) Service Restart
+#### VM-1 Service Restart
 ```bash
 # LLM Adapter service
 sudo systemctl restart llm-adapter
@@ -127,11 +127,11 @@ kubectl get events --sort-by='.lastTimestamp' -A
   - O2IMS API: `http://172.16.4.45:31280`
   - SSH: Port 22
 
-#### VM-3 (LLM Adapter)
-- **Private IP**: TBD (referenced as `<VM3_IP>`)
+#### VM-1
+- **Private IP**: TBD (referenced as `<VM1_IP>`)
 - **Services**:
-  - LLM Adapter API: `http://<VM3_IP>:8888`
-  - Health Endpoint: `http://<VM3_IP>:8888/health`
+  - LLM Adapter API: `http://<VM1_IP>:8888`
+  - Health Endpoint: `http://<VM1_IP>:8888/health`
   - SSH: Port 22
 
 #### VM-4 (Edge2 Cluster)
@@ -148,7 +148,7 @@ kubectl get events --sort-by='.lastTimestamp' -A
 |------|----|----- |----------|---------|
 | VM-1 | VM-2 | 6443 | HTTPS | Kubernetes API |
 | VM-1 | VM-2 | 31280 | HTTP | O2IMS API |
-| VM-1 | VM-3 | 8888 | HTTP | LLM Adapter |
+| VM-1 | VM-1 | 8888 | HTTP | LLM Adapter |
 | VM-1 | VM-4 | 6443 | HTTPS | Kubernetes API |
 | VM-2 | VM-1 | 22 | SSH | Git operations |
 | VM-4 | VM-1 | 22 | SSH | Git operations |
@@ -164,7 +164,7 @@ sudo iptables -L -n | grep -E "(6443|31080|31443|31280|8888)"
 # Test connectivity
 curl -k https://172.16.4.45:6443/healthz
 curl http://172.16.4.45:31280/o2ims/api/v1/health
-curl http://<VM3_IP>:8888/health
+curl http://<VM1_IP>:8888/health
 ```
 
 ---
@@ -193,10 +193,10 @@ git pull origin main
 #### LLM Adapter Service Failure
 ```bash
 # Quick restart
-ssh VM-3 "sudo systemctl restart llm-adapter"
+ssh VM-1 "sudo systemctl restart llm-adapter"
 
 # Manual recovery
-ssh VM-3 "cd /opt/llm-adapter && python3 -m uvicorn main:app --host 0.0.0.0 --port 8888 --reload"
+ssh VM-1 "cd /opt/llm-adapter && python3 -m uvicorn main:app --host 0.0.0.0 --port 8888 --reload"
 
 # Fallback to mock adapter
 export LLM_ADAPTER_URL="http://localhost:8889"  # Mock service
@@ -354,7 +354,7 @@ echo "$EDGE_NAME health check passed"
 #!/bin/bash
 # File: scripts/health_check_llm.sh
 
-LLM_URL=${LLM_ADAPTER_URL:-"http://<VM3_IP>:8888"}
+LLM_URL=${LLM_ADAPTER_URL:-"http://<VM1_IP>:8888"}
 
 echo "=== LLM Adapter Health Check ==="
 
@@ -695,7 +695,7 @@ ROUTINE: Email nephio-demo-ops@company.com
 
 Key IPs to remember:
 - Edge1: 172.16.4.45 (ports 6443, 31080, 31443, 31280)
-- LLM: <VM3_IP>:8888
+- LLM: <VM1_IP>:8888
 - Edge2: <VM4_IP> (TBD)
 
 Emergency commands:

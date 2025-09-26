@@ -1,4 +1,4 @@
-# LLM Adapter Service Status - VM-3
+# LLM Adapter Service Status - VM-1
 
 ## ✅ Implementation Complete
 

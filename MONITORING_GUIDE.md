@@ -3,7 +3,7 @@
 ## ✅ 服務狀態確認
 
 所有服務已正常運行：
-- **LLM Adapter (VM-3)**: ✅ Online at 172.16.2.10:8888
+- **LLM Adapter (VM-1)**: ✅ Online at 172.16.0.78:8888
 - **O2IMS Edge1 (VM-2)**: ✅ Online at 172.16.4.45:31280
 - **O2IMS Edge2 (VM-4)**: ✅ Online at 172.16.4.176:31280
 - **Gitea Repository**: ✅ Online at localhost:8888
@@ -58,7 +58,7 @@
 ## 🌐 Web UI 使用
 
 ### 訪問地址
-- **LLM Adapter Web UI**: http://172.16.2.10:8888
+- **LLM Adapter Web UI**: http://172.16.0.78:8888
 - **Gitea Repository**: http://localhost:8888
 
 ### Web UI 功能
@@ -80,7 +80,7 @@
 ./scripts/intent_from_llm.sh "Deploy eMBB slice in edge1 with 200Mbps DL"
 
 # 或透過 Web UI
-訪問 http://172.16.2.10:8888
+訪問 http://172.16.0.78:8888
 輸入: "Deploy eMBB slice in edge1 with 200Mbps DL"
 ```
 
@@ -104,7 +104,7 @@ kubectl get deployments -A | grep intent
 ./scripts/start_services.sh
 
 # 檢查網路連接
-ping -c 2 172.16.2.10   # VM-3
+ping -c 2 172.16.0.78   # VM-1
 ping -c 2 172.16.4.45   # VM-2
 ping -c 2 172.16.4.176  # VM-4
 ```
@@ -112,7 +112,7 @@ ping -c 2 172.16.4.176  # VM-4
 ### 查看服務日誌
 ```bash
 # LLM Adapter 日誌
-ssh ubuntu@172.16.2.10 "tail -f ~/nephio-intent-to-o2-demo/llm-adapter/service.log"
+ssh ubuntu@172.16.0.78 "tail -f ~/nephio-intent-to-o2-demo/llm-adapter/service.log"
 
 # Gitea 日誌
 docker logs gitea

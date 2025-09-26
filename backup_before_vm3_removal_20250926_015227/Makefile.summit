@@ -1,0 +1,214 @@
+# Summit Demo Makefile
+# Version: v1.1.2-rc1
+# Date: 2025-09-16
+
+.PHONY: all summit summit-operator summit-validate summit-report summit-rollback clean
+
+# Configuration
+TIMESTAMP := $(shell date +%Y%m%d-%H%M%S)
+REPORT_DIR := reports/$(TIMESTAMP)
+GOLDEN_INTENTS := summit/golden-intents
+ARTIFACTS_DIR := artifacts/$(TIMESTAMP)
+
+# Git information
+GIT_COMMIT := $(shell git rev-parse HEAD)
+GIT_BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
+GIT_TAG := v1.1.2-rc1
+
+# Network configuration
+EDGE1_HOST := 172.16.4.45
+EDGE2_HOST := 172.16.4.176
+SMO_HOST := 172.16.0.78
+
+# Colors for output
+RED := \033[0;31m
+GREEN := \033[0;32m
+YELLOW := \033[1;33m
+NC := \033[0m # No Color
+
+##@ Summit Demo Commands
+
+all: summit summit-validate summit-report ## Run complete summit demo
+
+summit: ## Run main shell pipeline demo
+	@echo "$(GREEN)===== Summit Demo: Shell Pipeline v1.1.2-rc1 =====$(NC)"
+	@mkdir -p $(REPORT_DIR) $(ARTIFACTS_DIR)
+	@echo "Report directory: $(REPORT_DIR)"
+
+	@echo "\n$(YELLOW)[1/6] Deploying Edge-1 Analytics$(NC)"
+	@./scripts/deploy_intent.sh $(GOLDEN_INTENTS)/edge1-analytics.json edge1
+	@sleep 10
+
+	@echo "\n$(YELLOW)[2/6] Deploying Edge-2 ML Inference$(NC)"
+	@./scripts/deploy_intent.sh $(GOLDEN_INTENTS)/edge2-ml-inference.json edge2
+	@sleep 10
+
+	@echo "\n$(YELLOW)[3/6] Deploying Federated Learning (Both Sites)$(NC)"
+	@./scripts/deploy_intent.sh $(GOLDEN_INTENTS)/both-federated-learning.json both
+	@sleep 15
+
+	@echo "\n$(YELLOW)[4/6] Validating Deployments$(NC)"
+	@$(MAKE) summit-validate
+
+	@echo "\n$(YELLOW)[5/6] Running KPI Tests$(NC)"
+	@./scripts/test_kpis.sh $(REPORT_DIR)/kpi-results.json
+
+	@echo "\n$(YELLOW)[6/6] Generating Report$(NC)"
+	@$(MAKE) summit-report
+
+	@echo "\n$(GREEN)✓ Summit demo completed successfully!$(NC)"
+
+summit-operator: ## Run operator-based demo
+	@echo "$(GREEN)===== Summit Demo: Operator v0.1.2-alpha =====$(NC)"
+	@mkdir -p $(REPORT_DIR)/operator
+
+	@echo "\n$(YELLOW)[1/4] Applying IntentDeployment CRs$(NC)"
+	@kubectl apply -f operator/config/samples/tna_v1alpha1_intentdeployment_edge1.yaml
+	@kubectl apply -f operator/config/samples/tna_v1alpha1_intentdeployment_edge2.yaml
+	@kubectl apply -f operator/config/samples/tna_v1alpha1_intentdeployment_both.yaml
+
+	@echo "\n$(YELLOW)[2/4] Monitoring Phase Transitions$(NC)"
+	@./scripts/monitor_operator_phases.sh
+
+	@echo "\n$(YELLOW)[3/4] Validating Operator Deployments$(NC)"
+	@kubectl get intentdeployments -o wide
+	@kubectl get pods -n nephio-intent-operator-system
+
+	@echo "\n$(YELLOW)[4/4] Collecting Operator Metrics$(NC)"
+	@./scripts/collect_operator_metrics.sh $(REPORT_DIR)/operator/metrics.json
+
+	@echo "\n$(GREEN)✓ Operator demo completed!$(NC)"
+
+summit-validate: ## Validate all deployments and services
+	@echo "$(YELLOW)Validating deployments...$(NC)"
+
+	@echo "Checking Edge-1 Services:"
+	@curl -sS http://$(EDGE1_HOST):31280/ | jq '.' || echo "$(RED)✗ O2IMS unavailable$(NC)"
+	@curl -sS http://$(EDGE1_HOST):30090/metrics | head -5 || echo "$(RED)✗ Metrics unavailable$(NC)"
+
+	@echo "\nChecking Edge-2 Services:"
+	@curl -sS http://$(EDGE2_HOST):31280/ | jq '.' 2>/dev/null || echo "$(YELLOW)⚠ O2IMS needs configuration$(NC)"
+
+	@echo "\nChecking GitOps Sync Status:"
+	@./scripts/check_gitops_sync.sh
+
+	@echo "\n$(GREEN)✓ Validation completed$(NC)"
+
+summit-report: ## Generate comprehensive summit report
+	@echo "$(YELLOW)Generating summit report...$(NC)"
+
+	@echo "Creating manifest.json..."
+	@cat > $(REPORT_DIR)/manifest.json <<EOF
+	{
+	  "summit": {
+	    "version": "$(GIT_TAG)",
+	    "timestamp": "$(TIMESTAMP)",
+	    "git": {
+	      "commit": "$(GIT_COMMIT)",
+	      "branch": "$(GIT_BRANCH)",
+	      "tag": "$(GIT_TAG)"
+	    },
+	    "infrastructure": {
+	      "edge1": "$(EDGE1_HOST)",
+	      "edge2": "$(EDGE2_HOST)",
+	      "smo": "$(SMO_HOST)"
+	    },
+	    "services": {
+	      "o2ims": {
+	        "edge1": "http://$(EDGE1_HOST):31280",
+	        "edge2": "http://$(EDGE2_HOST):31280"
+	      },
+	      "monitoring": {
+	        "prometheus": "http://$(SMO_HOST):31090",
+	        "grafana": "http://$(SMO_HOST):31300"
+	      }
+	    }
+	  }
+	}
+	EOF
+
+	@echo "Computing checksums..."
+	@find $(GOLDEN_INTENTS) -name "*.json" -exec sha256sum {} \; > $(REPORT_DIR)/checksums.txt
+	@find scripts/ -name "*.sh" -exec sha256sum {} \; >> $(REPORT_DIR)/checksums.txt
+
+	@echo "Generating HTML report..."
+	@./scripts/generate_html_report.sh $(REPORT_DIR)
+
+	@echo "\n$(GREEN)✓ Report generated at: $(REPORT_DIR)/index.html$(NC)"
+
+summit-rollback: ## Demonstrate rollback capability
+	@echo "$(YELLOW)===== Rollback Demonstration =====$(NC)"
+
+	@echo "\n$(YELLOW)[1/4] Injecting Fault$(NC)"
+	@./scripts/inject_fault.sh edge1 high_latency
+
+	@echo "\n$(YELLOW)[2/4] Detecting SLO Violation$(NC)"
+	@sleep 5
+	@./scripts/check_slo.sh edge1
+
+	@echo "\n$(YELLOW)[3/4] Triggering Rollback$(NC)"
+	@./scripts/trigger_rollback.sh edge1 $(REPORT_DIR)/rollback-evidence.json
+
+	@echo "\n$(YELLOW)[4/4] Verifying Recovery$(NC)"
+	@sleep 10
+	@./scripts/verify_recovery.sh edge1
+
+	@echo "\n$(GREEN)✓ Rollback demonstration completed!$(NC)"
+
+summit-fault-injection: ## Run fault injection tests
+	@echo "$(YELLOW)===== Fault Injection Tests =====$(NC)"
+
+	@echo "\nTest 1: High Error Rate"
+	@./scripts/inject_fault.sh edge1 error_rate 0.15
+	@sleep 5
+	@./scripts/check_slo.sh edge1 || echo "$(GREEN)✓ SLO violation detected$(NC)"
+
+	@echo "\nTest 2: Network Partition"
+	@./scripts/inject_fault.sh edge2 network_partition
+	@sleep 5
+	@./scripts/check_connectivity.sh edge2 || echo "$(GREEN)✓ Network fault detected$(NC)"
+
+	@echo "\nTest 3: Resource Exhaustion"
+	@./scripts/inject_fault.sh edge1 cpu_spike
+	@sleep 5
+	@./scripts/check_resources.sh edge1 || echo "$(GREEN)✓ Resource issue detected$(NC)"
+
+	@echo "\n$(GREEN)✓ Fault injection tests completed$(NC)"
+
+summit-sign: ## Sign artifacts with cosign
+	@echo "$(YELLOW)Signing artifacts...$(NC)"
+	@command -v cosign >/dev/null 2>&1 || { echo "$(RED)cosign not installed$(NC)"; exit 1; }
+
+	@echo "Creating artifact bundle..."
+	@tar czf $(ARTIFACTS_DIR)/summit-bundle.tar.gz \
+		$(REPORT_DIR) \
+		$(GOLDEN_INTENTS) \
+		scripts/*.sh
+
+	@echo "Signing bundle..."
+	@cosign sign-blob \
+		--key ~/.cosign/key.pem \
+		$(ARTIFACTS_DIR)/summit-bundle.tar.gz \
+		> $(ARTIFACTS_DIR)/summit-bundle.sig
+
+	@echo "Creating attestation..."
+	@cosign attest-blob \
+		--key ~/.cosign/key.pem \
+		--type custom \
+		--predicate $(REPORT_DIR)/manifest.json \
+		$(ARTIFACTS_DIR)/summit-bundle.tar.gz \
+		> $(ARTIFACTS_DIR)/attestation.json
+
+	@echo "\n$(GREEN)✓ Artifacts signed successfully$(NC)"
+
+clean: ## Clean up generated files
+	@echo "$(YELLOW)Cleaning up...$(NC)"
+	@rm -rf reports/
+	@rm -rf artifacts/
+	@rm -f *.log
+	@echo "$(GREEN)✓ Cleanup completed$(NC)"
+
+help: ## Display this help
+	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make -f Makefile.summit \033[36m<target>\033[0m\n"} /^[a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
+
+.DEFAULT_GOAL := help

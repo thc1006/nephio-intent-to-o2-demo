@@ -42,7 +42,7 @@ The `demo_llm.sh` script has been comprehensively enhanced with production-ready
 - **Configurable thresholds** via environment variables
 
 ### 6. Network Configuration (No Hardcoded IPs) ✅
-- **Environment variable driven**: VM2_IP, VM3_IP, VM4_IP (REQUIRED)
+- **Environment variable driven**: VM2_IP, VM1_IP, VM4_IP (REQUIRED)
 - **Configuration file support**: `./config/demo.conf`, `~/.nephio/demo.conf`, `/etc/nephio/demo.conf`
 - **Dynamic endpoint generation** based on provided IPs
 - **Validation checks** for required network parameters
@@ -73,7 +73,7 @@ The `demo_llm.sh` script has been comprehensively enhanced with production-ready
 
 # Network configuration (NO HARDCODED IPs)
 --vm2-ip IP                     # Edge1 cluster IP (REQUIRED)
---vm3-ip IP                     # LLM adapter IP (REQUIRED)
+--vm1_integrated-ip IP                     # LLM adapter IP (REQUIRED)
 --vm4-ip IP                     # Edge2 cluster IP (required for edge2/both)
 
 # Timeouts and behavior
@@ -154,25 +154,25 @@ The pipeline now includes 10 comprehensive steps:
 
 ### Standard Deployment
 ```bash
-VM2_IP=192.168.1.100 VM3_IP=192.168.1.101 \
+VM2_IP=192.168.1.100 VM1_IP=192.168.1.101 \
     ./scripts/demo_llm.sh --target edge1
 ```
 
 ### Multi-Site with Custom Timeouts
 ```bash
-VM2_IP=192.168.1.100 VM3_IP=192.168.1.101 VM4_IP=192.168.1.102 \
+VM2_IP=192.168.1.100 VM1_IP=192.168.1.101 VM4_IP=192.168.1.102 \
     ./scripts/demo_llm.sh --target both --gitops-timeout 1200
 ```
 
 ### Configuration Validation
 ```bash
-VM2_IP=192.168.1.100 VM3_IP=192.168.1.101 \
+VM2_IP=192.168.1.100 VM1_IP=192.168.1.101 \
     ./scripts/demo_llm.sh --config-check --target edge1
 ```
 
 ### Dry Run with Custom Artifacts Location
 ```bash
-VM2_IP=192.168.1.100 VM3_IP=192.168.1.101 \
+VM2_IP=192.168.1.100 VM1_IP=192.168.1.101 \
     ./scripts/demo_llm.sh --dry-run --artifacts-dir /tmp/demo-test
 ```
 
@@ -209,7 +209,7 @@ Create configuration files for streamlined execution:
 ```bash
 # ./config/demo.conf
 VM2_IP=192.168.1.100
-VM3_IP=192.168.1.101
+VM1_IP=192.168.1.101
 VM4_IP=192.168.1.102
 TARGET_SITE=both
 DEMO_MODE=automated
@@ -250,7 +250,7 @@ The enhanced script is now production-ready for the Summit demo with:
 ### From v1.0.0 to v2.0.0
 
 **Required changes:**
-1. Set environment variables: `VM2_IP`, `VM3_IP` (and `VM4_IP` for multi-site)
+1. Set environment variables: `VM2_IP`, `VM1_IP` (and `VM4_IP` for multi-site)
 2. Update scripts calling demo_llm.sh to handle new exit codes
 3. Adjust any hardcoded artifact paths to use timestamped directories
 

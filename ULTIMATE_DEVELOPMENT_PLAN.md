@@ -7,7 +7,7 @@
 
 ## Executive Summary
 
-This document presents the definitive development plan for transforming VM-1 into a fully integrated Intent-to-O2 orchestration platform, eliminating VM-3 dependency while leveraging Claude Code CLI's headless capabilities, kpt/Porch for package management, and GitOps for edge synchronization. The plan follows strict TDD principles with 2025 best practices.
+This document presents the definitive development plan for transforming VM-1 into a fully integrated Intent-to-O2 orchestration platform, eliminating VM-1 dependency while leveraging Claude Code CLI's headless capabilities, kpt/Porch for package management, and GitOps for edge synchronization. The plan follows strict TDD principles with 2025 best practices.
 
 ### Key Innovations
 - **Claude CLI Headless Mode**: Direct JSON output via `--output-format stream-json`
@@ -1166,10 +1166,10 @@ spec:
 ```python
 # migration/blue_green.py
 class BlueGreenMigration:
-    """Zero-downtime migration from VM-3 dependent to VM-1 integrated"""
+    """Zero-downtime migration from VM-1 dependent to VM-1 integrated"""
 
     def __init__(self):
-        self.blue = "vm3-dependent"  # Current
+        self.blue = "vm1_integrated-dependent"  # Current
         self.green = "vm1-integrated"  # New
         self.traffic_manager = TrafficManager()
 
@@ -1207,16 +1207,16 @@ class BlueGreenMigration:
 ```python
 # migration/data_migration.py
 class DataMigrator:
-    """Migrate historical data from VM-3 to VM-1"""
+    """Migrate historical data from VM-1 to VM-1"""
 
     async def migrate_intents(self):
         """Migrate intent history"""
 
-        # Extract from VM-3
-        vm3_intents = await self.extract_from_vm3()
+        # Extract from VM-1
+        vm1_integrated_intents = await self.extract_from_vm1_integrated()
 
         # Transform to new format
-        transformed = self.transform_intents(vm3_intents)
+        transformed = self.transform_intents(vm1_integrated_intents)
 
         # Load to VM-1
         await self.load_to_vm1(transformed)
@@ -1231,7 +1231,7 @@ class DataMigrator:
 
 ### 8.1 DORA Metrics
 
-| Metric | Current (VM-3) | Target (VM-1) | Measurement |
+| Metric | Current (VM-1) | Target (VM-1) | Measurement |
 |--------|---------------|--------------|-------------|
 | Lead Time | 45 min | < 15 min | Intent submission to production |
 | Deploy Frequency | 2/day | 10+/day | Successful deployments |
@@ -1451,7 +1451,7 @@ gantt
 
 This comprehensive development plan provides a robust, test-driven approach to building the VM-1 integrated Intent-to-O2 platform. By following TDD principles and incorporating 2025 best practices, the platform will deliver:
 
-- **50% latency reduction** through VM-3 elimination
+- **50% latency reduction** through VM-1 elimination
 - **99.9% reliability** with progressive delivery
 - **10x deployment frequency** via GitOps automation
 - **Real-time visibility** through WebSocket updates

@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: oran-services
+  labels:
+    site: edge1
+    managed-by: nephio

@@ -1,8 +1,8 @@
-# VM-3 LLM Adapter Operations Guide (Phase 16)
+# VM-1 LLM Adapter Operations Guide (Phase 16)
 
 ## Service Information
 
-**Endpoint**: `http://<VM3_IP>:8888`
+**Endpoint**: `http://<VM1_IP>:8888`
 **Service**: TMF921 Intent Generator with targetSite field
 **Claude CLI**: Subscription-based (no API key required)
 
@@ -82,13 +82,13 @@ if "targetSite" not in intent or intent["targetSite"] not in ["edge1", "edge2", 
 
 ### Health Check
 ```bash
-curl http://localhost:8888/health
+curl http://localhost:8002/health
 # {"status": "healthy", "timestamp": 1234567890.123}
 ```
 
 ### SLO Metrics (Mock)
 ```bash
-curl http://localhost:8888/mock/slo
+curl http://localhost:8002/mock/slo
 # {
 #   "status": "operational",
 #   "metrics": {
@@ -141,10 +141,10 @@ Located in `tests/golden/`:
 ### E2E Test
 ```bash
 # Start service
-python adapter/app/main.py &
+python services/tmf921_processor.py &
 
 # Test endpoints
-curl -X POST http://localhost:8888/generate_intent \
+curl -X POST http://localhost:8002/generate_intent \
   -H "Content-Type: application/json" \
   -d '{"natural_language": "Deploy 5G slice at edge1"}'
 ```
@@ -202,7 +202,7 @@ tail -f /var/log/claude.log
 ### Demo Script
 ```bash
 # 1. Show UI
-open http://localhost:8888
+open http://localhost:8002
 
 # 2. Demo targetSite auto-detection
 "Deploy 5G slice at edge1" → targetSite: edge1
@@ -214,7 +214,7 @@ Select "Edge Site 2" → targetSite: edge2
 Point out intentId, targetSite, hash fields
 
 # 5. Show SLO metrics
-curl http://localhost:8888/mock/slo
+curl http://localhost:8002/mock/slo
 ```
 
 ## Security Considerations
@@ -249,7 +249,7 @@ claude update
 
 ## Contact
 
-For issues or questions about VM-3 LLM Adapter:
+For issues or questions about VM-1 LLM Adapter:
 - Check logs: `journalctl -u llm-adapter`
 - Review this guide
-- Contact: [VM-3 Administrator]
+- Contact: [VM-1 Administrator]

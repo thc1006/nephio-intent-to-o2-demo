@@ -4,7 +4,7 @@
 
 ```mermaid
 graph TB
-    subgraph "VM-3: LLM Service"
+    subgraph "VM-1: LLM Service"
         NL[Natural Language Input]
         LLM[LLM Adapter<br/>Port: 8888]
         TMF[TMF921 Converter]
@@ -50,12 +50,12 @@ graph TB
     ROLL -->|Revert| GIT
 
     %% Styling
-    classDef vm3 fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+    classDef vm1_integrated fill:#e1f5fe,stroke:#01579b,stroke-width:2px
     classDef vm1 fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
     classDef edge fill:#fff3e0,stroke:#e65100,stroke-width:2px
     classDef critical fill:#ffebee,stroke:#b71c1c,stroke-width:3px
 
-    class NL,LLM,TMF vm3
+    class NL,LLM,TMF vm1_integrated
     class INT,KRM,GIT,MON,ROLL vm1
     class E1CS,E1K8S,E1RAN,E1O2 edge
     class E2CS,E2K8S,E2RAN,E2O2 edge
@@ -69,10 +69,10 @@ graph TB
                         SUMMIT DEMO PIPELINE                      
 
                                                                    
-  1.   Natural Language Input (VM-3)                            
+  1.   Natural Language Input (VM-1)                            
      > "Deploy 5G network slice for eMBB with 100Gbps"         
                                                                    
-  2.  LLM Processing (VM-3:8888)                               
+  2.  LLM Processing (VM-1:8888)                               
      > TMF921 Intent JSON Generation                           
                                                                    
   3.  Intent Compilation (VM-1)                                
@@ -108,14 +108,14 @@ graph TB
   ```bash
   # Test all VM connectivity
   ping -c 3 $VM2_IP  # Edge1
-  ping -c 3 $VM3_IP  # LLM Adapter
+  ping -c 3 $VM1_IP  # LLM Adapter
   ping -c 3 $VM4_IP  # Edge2
   ```
 
 - [ ] **Service Health Checks**
   ```bash
   # LLM Adapter health
-  curl -s http://$VM3_IP:8888/health | jq .
+  curl -s http://$VM1_IP:8888/health | jq .
 
   # Kubernetes clusters
   kubectl --context edge1 get nodes
@@ -142,7 +142,7 @@ graph TB
    ```bash
    # Set environment variables
    export VM2_IP="172.16.4.45"
-   export VM3_IP="<actual-vm3-ip>"
+   export VM1_IP="<actual-vm1_integrated-ip>"
    export VM4_IP="172.16.4.176"
    export TARGET_SITE="both"  # Deploy to both edges
    export DEMO_MODE="interactive"
@@ -207,7 +207,7 @@ graph TB
    - "Fully automated with GitOps and O2IMS integration"
 
 2. **NL to Intent (2 min)**
-   - Show LLM web UI at `http://$VM3_IP:8888`
+   - Show LLM web UI at `http://$VM1_IP:8888`
    - Enter: "Deploy 5G eMBB slice with 100Gbps throughput"
    - Explain TMF921 standard compliance
 
@@ -301,7 +301,7 @@ reports/$(date +%Y%m%d)_*/
 
 ```bash
 # One-liner to start demo
-export VM2_IP="172.16.4.45" VM3_IP="<vm3>" VM4_IP="172.16.4.176" && ./scripts/demo_llm.sh
+export VM2_IP="172.16.4.45" VM1_IP="<vm1_integrated>" VM4_IP="172.16.4.176" && ./scripts/demo_llm.sh
 
 # Monitor everything
 watch -n 1 'kubectl get all -A | grep -E "(intent|root|repo)"'

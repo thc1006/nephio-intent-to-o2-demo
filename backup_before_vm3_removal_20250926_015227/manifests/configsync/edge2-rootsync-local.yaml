@@ -1,0 +1,14 @@
+apiVersion: configsync.gke.io/v1beta1
+kind: RootSync
+metadata:
+  name: edge2
+  namespace: config-management-system
+spec:
+  sourceType: git
+  sourceFormat: unstructured
+  git:
+    repo: file:///tmp/edge2-gitops.git
+    branch: main
+    dir: sites/edge2
+    auth: none
+    period: 15s

@@ -1,0 +1,26 @@
+# TMF921 to 3GPP TS 28.312 Converter - Development Dependencies
+# Development and testing dependencies
+
+# Include core dependencies
+-r requirements.txt
+
+# Testing framework
+pytest>=7.2.0,<8.0.0
+pytest-cov>=4.0.0,<5.0.0
+pytest-mock>=3.10.0,<4.0.0
+
+# Code formatting and linting
+black>=23.0.0,<25.0.0
+ruff>=0.1.0,<1.0.0
+
+# Type checking
+mypy>=1.5.0,<2.0.0
+
+# Security scanning
+bandit>=1.7.0,<2.0.0
+
+# Build tools
+build>=0.10.0,<1.0.0
+
+# Additional development tools
+pre-commit>=3.0.0,<4.0.0

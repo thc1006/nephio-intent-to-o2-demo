@@ -1,0 +1,13 @@
+# SLO Gate Requirements  
+# Python 3.11 compatible packages
+
+requests==2.31.0
+
+# Development and testing
+pytest==7.4.2
+pytest-cov==4.1.0
+black==23.9.1
+ruff==0.0.291
+
+# For JSON schema validation (future use)
+jsonschema==4.19.1

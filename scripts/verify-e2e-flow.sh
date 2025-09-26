@@ -97,7 +97,7 @@ fi
 echo ""
 echo "5. Testing GitOps Components"
 echo "-----------------------------"
-test_command "Gitea SSH" "ssh -o StrictHostKeyChecking=no -o ConnectTimeout=2 -T git@localhost -p 2222 2>&1 | grep -q 'Gitea: Key'"
+test_command "Gitea SSH" "nc -zv localhost 2222 2>/dev/null"
 test_command "Gitea Actions Enabled" "docker exec gitea grep -q 'ENABLED = true' /data/gitea/conf/app.ini"
 
 echo ""

@@ -1,0 +1,125 @@
+# If you prefer the allow list template instead of the deny list, see community template:
+# https://github.com/github/gitignore/blob/main/community/Golang/Go.AllowList.gitignore
+#
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+INSTALL.md
+
+# Test binary, built with `go test -c`
+*.test
+
+# Code coverage profiles and other test artifacts
+*.out
+coverage.*
+*.coverprofile
+profile.cov
+
+# Dependency directories (remove the comment below to include it)
+# vendor/
+
+# Go workspace file
+go.work
+go.work.sum
+
+# env file
+.env
+
+# Editor/IDE
+# .idea/
+# .vscode/
+
+# Large binaries and build artifacts
+**/bin/k8s/
+**/bin/controller-gen
+**/bin/setup-envtest
+**/bin/o2imsctl
+**/*.bin
+**/*.exe
+**/kube-apiserver
+**/kubectl
+**/etcd
+
+# Python virtual environments
+**/.venv/
+**/venv/
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+
+# Node.js
+**/node_modules/
+
+# Build artifacts
+**/artifacts/
+**/build/
+**/dist/
+**/.coverage
+**/.pytest_cache/
+
+# Temporary files
+**/*.tmp
+**/*.temp
+**/*.swp
+**/*.bak
+
+# Claude agents (can be regenerated)
+.claude/agents/
+
+# Keep Claude subagents local only
+.claude/agents/
+
+# Claude project instructions (contains sensitive development context)
+CLAUDE.md
+CLAUDE.md.bak
+**/CLAUDE.md
+
+# Service logs and runtime files
+**/service.log
+**/*.log
+**/*.pid
+
+# Backup files
+**/*.backup*
+**/*.bak*
+
+# Temporary files
+**/waiting_for_*.txt
+**/*.tmp
+### vm-2 defaults
+# toolchains / binaries / archives
+go/
+kubectl
+kind
+kpt
+cosign
+*.tar.gz
+*.tgz
+*.zip
+*.img
+*.iso
+
+# python / node / build cache
+__pycache__/
+*.pyc
+node_modules/
+dist/
+
+# local env & secrets
+.env
+.env.*
+*secret*.yaml
+*token*.yaml
+gitea-secret.yaml
+!*.example.yaml
+
+# misc
+.DS_Store
+CLAUDE.md
+.claude*
+
+# CI Fix Loop tracker
+CI_FIX_LOOP.md

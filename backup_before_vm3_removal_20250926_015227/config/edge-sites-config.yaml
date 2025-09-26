@@ -1,0 +1,207 @@
+# =============================================================================
+# EDGE SITES AUTHORITATIVE CONFIGURATION
+# =============================================================================
+#
+# 此檔案為 Nephio Intent-to-O2 Demo 專案中 Edge 站點的權威配置來源
+#
+# 用途:
+#   - 定義 edge1 (VM-2) 和 edge2 (VM-4) 的所有網路端點和連接參數
+#   - 作為所有部署腳本、監控工具、和整合測試的單一真實來源
+#   - 確保跨團隊配置一致性，避免硬編碼分散在各處
+#
+# 維護責任:
+#   - 任何端點變更必須先更新此檔案
+#   - 所有相關腳本應從此檔案讀取配置，而非硬編碼
+#   - 變更此檔案需要通過 code review 和測試驗證
+#
+# 最後更新: 2025-09-13
+# 版本: 1.0.0
+# =============================================================================
+
+# 全域配置
+global:
+  project_name: "nephio-intent-to-o2-demo"
+  phase: "Phase 13 - SLO Integration"
+  slo_thresholds:
+    latency_p95_ms: 15
+    success_rate_min: 0.995
+    throughput_p95_mbps: 200
+  timeouts:
+    connection_timeout_seconds: 30
+    health_check_timeout_seconds: 10
+
+# Edge 站點配置
+sites:
+  edge1:
+    # 基本資訊
+    name: "Edge1 (VM-2)"
+    role: "edge-cluster"
+    location: "VM-2"
+    cluster_name: "nephio-demo"
+
+    # 網路配置
+    network:
+      internal_ip: "172.16.4.45"
+      external_ip: "147.251.115.129"
+      ssh_access: "ubuntu@147.251.115.129"
+
+    # 服務端點
+    endpoints:
+      slo_metrics:
+        url: "http://172.16.4.45:30090/metrics/api/v1/slo"
+        port: 30090
+        path: "/metrics/api/v1/slo"
+        protocol: "http"
+        health_check: "http://172.16.4.45:30090/health"
+        data_format: "legacy_metrics"
+
+      o2ims_api:
+        url: "http://172.16.4.45:31280"
+        port: 31280
+        path: "/o2ims/measurement/v1/slo"
+        protocol: "http"
+        health_check: "http://172.16.4.45:31280/health"
+        fallback_to_slo: true
+
+      kubernetes_api:
+        url: "https://172.16.4.45:6443"
+        port: 6443
+        protocol: "https"
+
+      http_nodeport:
+        url: "http://172.16.4.45:31080"
+        port: 31080
+        protocol: "http"
+
+      https_nodeport:
+        url: "https://172.16.4.45:31443"
+        port: 31443
+        protocol: "https"
+
+    # 服務狀態
+    status:
+      connectivity: "operational"
+      slo_service: "running"
+      o2ims_service: "running"
+      last_verified: "2025-09-13T12:52:00Z"
+
+  edge2:
+    # 基本資訊
+    name: "Edge2 (VM-4)"
+    role: "edge-cluster"
+    location: "VM-4"
+    cluster_name: "edge2-cluster"
+
+    # 網路配置
+    network:
+      internal_ip: "172.16.0.89"
+      external_ip: "147.251.115.193"
+      ssh_access: "ubuntu@147.251.115.193"
+
+    # 服務端點
+    endpoints:
+      slo_metrics:
+        url: "http://172.16.0.89:30090/metrics/api/v1/slo"
+        port: 30090
+        path: "/metrics/api/v1/slo"
+        protocol: "http"
+        health_check: "http://172.16.0.89:30090/health"
+        data_format: "standard_slo"
+
+      o2ims_api:
+        url: "http://172.16.0.89:31280"
+        port: 31280
+        path: "/o2ims/measurement/v1/slo"
+        protocol: "http"
+        health_check: "http://172.16.0.89:31280/health"
+        fallback_to_slo: true
+
+      kubernetes_api:
+        url: "https://172.16.0.89:6443"
+        port: 6443
+        protocol: "https"
+
+      gitops_repo:
+        url: "http://172.16.0.78:31924/admin1/edge2-config.git"
+        branch: "main"
+        path: "/"
+
+    # 服務狀態
+    status:
+      connectivity: "operational"
+      slo_service: "running"
+      o2ims_service: "pending_deployment"
+      last_verified: "2025-09-13T12:52:00Z"
+
+# 跨站點配置
+cross_site:
+  monitoring:
+    postcheck_script: "scripts/postcheck.sh"
+    o2ims_probe_script: "scripts/o2ims_probe.sh"
+    report_directory: "reports/"
+
+  network_requirements:
+    - name: "VM-1 to Edge1 connectivity"
+      source: "172.16.0.78"
+      destination: "172.16.4.45"
+      ports: [30090, 31280, 6443]
+      status: "operational"
+
+    - name: "VM-1 to Edge2 connectivity"
+      source: "172.16.0.78"
+      destination: "172.16.0.89"
+      ports: [30090, 31280, 6443]
+      status: "operational"
+      security_group_required: true
+
+  ssh_tunnels:
+    edge1:
+      local_port_slo: 30091
+      local_port_o2ims: 31281
+      command: "ssh -L 30091:localhost:30090 -L 31281:localhost:31280 ubuntu@147.251.115.129 -N"
+
+    edge2:
+      local_port_slo: 30092
+      local_port_o2ims: 31282
+      command: "ssh -L 30092:localhost:30090 -L 31282:localhost:31280 ubuntu@147.251.115.193 -N"
+
+# 部署模板
+deployment_templates:
+  postcheck_config:
+    sites_array: |
+      declare -A SITES=(
+          [edge1]="${sites.edge1.endpoints.slo_metrics.url}"
+          [edge2]="${sites.edge2.endpoints.slo_metrics.url}"
+      )
+
+    o2ims_array: |
+      declare -A O2IMS_SITES=(
+          [edge1]="${sites.edge1.endpoints.o2ims_api.url}"
+          [edge2]="${sites.edge2.endpoints.o2ims_api.url}"
+      )
+
+# 故障排除指南
+troubleshooting:
+  common_issues:
+    - issue: "Connection timeout to edge2"
+      solution: "Check OpenStack security group rules for ports 30090, 31280"
+      verification: "curl -v --connect-timeout 10 http://172.16.0.89:30090/health"
+
+    - issue: "SLO data format mismatch"
+      solution: "Check data_format field and adjust parsing logic"
+      edge1_format: "metrics.latency_p95_ms, metrics.success_rate"
+      edge2_format: "slo.latency_p95_ms, slo.success_rate"
+
+    - issue: "O2IMS endpoint not available"
+      solution: "Fallback to SLO endpoint automatically configured"
+      fallback_behavior: "System will use slo_metrics endpoint if o2ims_api fails"
+
+# 變更記錄
+changelog:
+  - version: "1.0.0"
+    date: "2025-09-13"
+    changes:
+      - "Initial authoritative configuration created"
+      - "Added edge1 and edge2 complete endpoint definitions"
+      - "Included network connectivity requirements"
+      - "Added troubleshooting guide and deployment templates"

@@ -4,9 +4,8 @@
 This project demonstrates an end-to-end pipeline from natural language intent to O-RAN O2IMS deployment using Nephio, GitOps, and cloud-native technologies.
 
 ## Architecture
-- **SMO/GitOps Orchestrator**: VM-1 (Current VM)
+- **SMO/GitOps Orchestrator with Integrated LLM**: VM-1 (Current VM - 172.16.0.78)
 - **Edge Site 1**: VM-2 (172.16.4.45)
-- **LLM Adapter Service**: VM-3 (Configure via VM3_IP environment variable)
 - **Edge Site 2**: VM-4 (172.16.4.176)
 
 ## Key Documentation

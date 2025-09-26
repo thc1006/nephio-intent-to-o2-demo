@@ -30,16 +30,16 @@ DEMO_MODE="${DEMO_MODE:-interactive}"  # interactive|automated|debug
 
 # Network configuration - use variables, not hardcoded IPs
 VM2_IP="${VM2_IP:-}"
-VM3_IP="${VM3_IP:-}"
+VM1_IP="${VM1_IP:-}"
 VM4_IP="${VM4_IP:-}"
 
 # Validate required IPs are provided
-if [[ -z "$VM2_IP" || -z "$VM3_IP" ]]; then
-    echo "[ERROR] Required network configuration missing. Set VM2_IP and VM3_IP environment variables." >&2
+if [[ -z "$VM2_IP" || -z "$VM1_IP" ]]; then
+    echo "[ERROR] Required network configuration missing. Set VM2_IP and VM1_IP environment variables." >&2
     exit 1
 fi
 
-LLM_ADAPTER_URL="${LLM_ADAPTER_URL:-http://${VM3_IP}:8888}"
+LLM_ADAPTER_URL="${LLM_ADAPTER_URL:-http://${VM1_IP}:8888}"
 TIMEOUT_STEP="${TIMEOUT_STEP:-300}"   # 5 minutes per step
 GITOPS_TIMEOUT="${GITOPS_TIMEOUT:-900}" # 15 minutes for GitOps reconciliation
 O2IMS_TIMEOUT="${O2IMS_TIMEOUT:-600}"   # 10 minutes for O2IMS readiness
@@ -475,8 +475,8 @@ collect_error_evidence() {
         echo "VM2_IP ($VM2_IP) connectivity:"
         ping -c 3 -W 5 "$VM2_IP" 2>&1 || echo "VM2 unreachable"
         echo ""
-        echo "VM3_IP ($VM3_IP) connectivity:"
-        ping -c 3 -W 5 "$VM3_IP" 2>&1 || echo "VM3 unreachable"
+        echo "VM1_IP ($VM1_IP) connectivity:"
+        ping -c 3 -W 5 "$VM1_IP" 2>&1 || echo "VM1 unreachable"
         if [[ -n "$VM4_IP" ]]; then
             echo ""
             echo "VM4_IP ($VM4_IP) connectivity:"
@@ -1521,7 +1521,7 @@ generate_demo_report() {
   },
   "environment": {
     "vm2_ip": "$VM2_IP",
-    "vm3_ip": "$VM3_IP",
+    "vm1_ip": "$VM1_IP",
     "vm4_ip": "$VM4_IP",
     "llm_adapter_url": "$LLM_ADAPTER_URL",
     "gitops_base_dir": "$GITOPS_BASE_DIR",
@@ -1831,9 +1831,9 @@ OPTIONS:
     -d, --dry-run           Perform dry run (show what would be executed)
     -m, --mode MODE         Demo mode: interactive|automated|debug (default: interactive)
     --vm2-ip IP             Edge1 IP address (REQUIRED)
-    --vm3-ip IP             LLM adapter IP address (REQUIRED)
+    --vm1-ip IP             LLM adapter IP address (REQUIRED)
     --vm4-ip IP             Edge2 IP address (required for edge2/both targets)
-    --llm-url URL           LLM adapter URL (default: http://VM3_IP:8888)
+    --llm-url URL           LLM adapter URL (default: http://VM1_IP:8888)
     --timeout SECONDS       Timeout per step in seconds (default: 300)
     --gitops-timeout SEC    GitOps reconciliation timeout (default: 900)
     --o2ims-timeout SEC     O2IMS readiness timeout (default: 600)
@@ -1849,7 +1849,7 @@ OPTIONS:
 ENVIRONMENT VARIABLES:
     TARGET_SITE             Target deployment site
     DEMO_MODE               Demo execution mode
-    VM2_IP, VM3_IP, VM4_IP  VM IP addresses (NO HARDCODED VALUES)
+    VM2_IP, VM1_IP, VM4_IP  VM IP addresses (NO HARDCODED VALUES)
     LLM_ADAPTER_URL         LLM adapter service URL
     DRY_RUN                 Enable dry-run mode
     IDEMPOTENT_MODE         Enable idempotency checks (default: true)
@@ -1883,18 +1883,18 @@ FEATURES:
 
 EXAMPLES:
     # Standard deployment with required IPs
-    VM2_IP=192.168.1.100 VM3_IP=192.168.1.101 $SCRIPT_NAME --target edge1
+    VM2_IP=192.168.1.100 VM1_IP=192.168.1.101 $SCRIPT_NAME --target edge1
 
     # Multi-site deployment
-    VM2_IP=192.168.1.100 VM3_IP=192.168.1.101 VM4_IP=192.168.1.102 \
+    VM2_IP=192.168.1.100 VM1_IP=192.168.1.101 VM4_IP=192.168.1.102 \
         $SCRIPT_NAME --target both
 
     # Dry-run with custom timeouts
-    VM2_IP=192.168.1.100 VM3_IP=192.168.1.101 \
+    VM2_IP=192.168.1.100 VM1_IP=192.168.1.101 \
         $SCRIPT_NAME --dry-run --target edge1 --gitops-timeout 1200
 
     # Production deployment with custom artifacts location
-    VM2_IP=192.168.1.100 VM3_IP=192.168.1.101 \
+    VM2_IP=192.168.1.100 VM1_IP=192.168.1.101 \
         $SCRIPT_NAME --target edge1 --artifacts-dir /tmp/demo-artifacts
 
     # Rollback specific execution
@@ -1902,7 +1902,7 @@ EXAMPLES:
 
     # Configuration file based deployment
     echo 'VM2_IP=192.168.1.100' > ./config/demo.conf
-    echo 'VM3_IP=192.168.1.101' >> ./config/demo.conf
+    echo 'VM1_IP=192.168.1.101' >> ./config/demo.conf
     $SCRIPT_NAME --target edge1
 
 CONFIGURATION FILES (optional):
@@ -1919,7 +1919,7 @@ ARTIFACTS & REPORTS:
 NETWORK REQUIREMENTS:
     • VM-1: Orchestrator (this machine) - dynamic configuration
     • VM-2: Edge1 cluster - IP via VM2_IP environment variable
-    • VM-3: LLM adapter - IP via VM3_IP environment variable
+    • VM-1 (Integrated): LLM adapter - IP via VM1_IP environment variable
     • VM-4: Edge2 cluster - IP via VM4_IP environment variable
     • NO HARDCODED IP ADDRESSES - all via environment variables
 
@@ -1972,9 +1972,9 @@ while [[ $# -gt 0 ]]; do
             VM2_IP="$2"
             shift 2
             ;;
-        --vm3-ip)
-            VM3_IP="$2"
-            LLM_ADAPTER_URL="http://${VM3_IP}:8888"
+        --vm1-ip)
+            VM1_IP="$2"
+            LLM_ADAPTER_URL="http://${VM1_IP}:8888"
             shift 2
             ;;
         --vm4-ip)
@@ -2072,7 +2072,7 @@ while [[ $# -gt 0 ]]; do
             echo "Target Site: $TARGET_SITE"
             echo "Demo Mode: $DEMO_MODE"
             echo "VM2_IP: ${VM2_IP:-NOT_SET}"
-            echo "VM3_IP: ${VM3_IP:-NOT_SET}"
+            echo "VM1_IP: ${VM1_IP:-NOT_SET}"
             echo "VM4_IP: ${VM4_IP:-NOT_SET}"
             echo "LLM Adapter URL: $LLM_ADAPTER_URL"
             echo "Dry Run: $DRY_RUN"
@@ -2087,8 +2087,8 @@ while [[ $# -gt 0 ]]; do
                 echo "[ERROR] VM2_IP is required but not set" >&2
                 ((config_errors++))
             fi
-            if [[ -z "$VM3_IP" ]]; then
-                echo "[ERROR] VM3_IP is required but not set" >&2
+            if [[ -z "$VM1_IP" ]]; then
+                echo "[ERROR] VM1_IP is required but not set" >&2
                 ((config_errors++))
             fi
             if [[ "$TARGET_SITE" =~ ^(edge2|both)$ ]] && [[ -z "$VM4_IP" ]]; then
@@ -2118,15 +2118,15 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Post-processing validation
-if [[ -z "$VM2_IP" || -z "$VM3_IP" ]]; then
-    echo "[ERROR] VM2_IP and VM3_IP are required. Set them as environment variables or use --vm2-ip and --vm3-ip options." >&2
-    echo "Example: VM2_IP=192.168.1.100 VM3_IP=192.168.1.101 $0 --target edge1" >&2
+if [[ -z "$VM2_IP" || -z "$VM1_IP" ]]; then
+    echo "[ERROR] VM2_IP and VM1_IP are required. Set them as environment variables or use --vm2-ip and --vm1-ip options." >&2
+    echo "Example: VM2_IP=192.168.1.100 VM1_IP=192.168.1.101 $0 --target edge1" >&2
     exit $EXIT_CONFIG_ERROR
 fi
 
 # Update derived configurations
 if [[ -z "$LLM_ADAPTER_URL" || "$LLM_ADAPTER_URL" == "http://:8888" ]]; then
-    LLM_ADAPTER_URL="http://${VM3_IP}:8888"
+    LLM_ADAPTER_URL="http://${VM1_IP}:8888"
 fi
 
 # Update O2IMS endpoints if not already set

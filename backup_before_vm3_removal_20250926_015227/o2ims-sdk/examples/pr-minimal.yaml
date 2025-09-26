@@ -1,0 +1,10 @@
+apiVersion: o2ims.oran.org/v1alpha1
+kind: ProvisioningRequest
+metadata:
+  name: minimal-pr
+  namespace: default
+spec:
+  targetCluster: test-cluster
+  resourceRequirements:
+    cpu: "1000m"
+    memory: "2Gi"

@@ -27,7 +27,7 @@ from jsonschema import ValidationError, validate
 class TestACC12AdapterAuditor:
     """Test suite for ACC-12: JSON-only & Schema validation with targetSite"""
 
-    BASE_URL = "http://localhost:8888"  # VM-3 LLM Adapter endpoint
+    BASE_URL = "http://localhost:8002"  # VM-1 Integrated LLM endpoint
     SCHEMA_PATH = "/home/ubuntu/nephio-intent-to-o2-demo/adapter/app/schema.json"
     ARTIFACTS_DIR = "/home/ubuntu/nephio-intent-to-o2-demo/artifacts/adapter"
     REPORT_FILE = "acc12_schema_report.json"
@@ -75,7 +75,7 @@ class TestACC12AdapterAuditor:
             # This test will FAIL initially until the endpoint is implemented
             assert response.status_code == 200, "Health endpoint should be available"
         except requests.exceptions.ConnectionError:
-            pytest.fail("LLM Adapter service is not running at http://localhost:8888")
+            pytest.fail("LLM Adapter service is not running at http://localhost:8002")
 
     def test_generate_intent_endpoint_accepts_post(self):
         """TDD RED: Test that /generate_intent accepts POST requests (will fail initially)"""

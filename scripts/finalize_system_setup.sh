@@ -19,17 +19,17 @@ cd "$PROJECT_ROOT"
 # 網路配置（根據你提供的資訊）
 export VM1_IP="172.16.0.78"
 export VM2_IP="172.16.4.45"    # Edge1
-export VM3_IP="172.16.2.10"  # LLM Adapter（已確認運行）
+export VM1_IP="172.16.0.78"  # LLM Adapter（已確認運行）
 export VM4_IP="172.16.0.89"    # Edge2
 export GITEA_URL="http://${VM1_IP}:8888"
-export LLM_ADAPTER_URL="http://${VM3_IP}:8888"
+export LLM_ADAPTER_URL="http://${VM1_IP}:8888"
 
 echo -e "${BLUE}=== 最終系統設定 - 基於實際狀態 ===${NC}"
 echo -e "${GREEN}已確認的服務：${NC}"
 echo -e "  ✅ Config Sync (RootSync/RepoSync CRDs)"
 echo -e "  ✅ O2IMS (ProvisioningRequest CRD)"
 echo -e "  ✅ Gitea (edge1-config, edge2-config 儲存庫)"
-echo -e "  ✅ LLM Adapter (${VM3_IP}:8888)"
+echo -e "  ✅ LLM Adapter (${VM1_IP}:8888)"
 
 # 步驟 1: 安裝 Porch（如果需要）
 echo -e "\n${YELLOW}[1/4] 檢查並安裝 Porch${NC}"
@@ -103,7 +103,7 @@ echo -e "\n${BLUE}測試 LLM Adapter：${NC}"
 if curl -s --connect-timeout 5 ${LLM_ADAPTER_URL}/health | grep -q "healthy"; then
     echo -e "${GREEN}✓ LLM Adapter 連線成功${NC}"
 else
-    echo -e "${YELLOW}! LLM Adapter 連線失敗 - 請確認 VM-3 服務${NC}"
+    echo -e "${YELLOW}! LLM Adapter 連線失敗 - 請確認 VM-1 (Integrated) 服務${NC}"
 fi
 
 # 測試 Gitea
@@ -128,7 +128,7 @@ echo -e "  LLM Adapter: ${LLM_ADAPTER_URL}"
 echo -e "\n${GREEN}準備執行演示：${NC}"
 echo -e "1. 設定環境變數："
 echo -e "   ${YELLOW}export VM2_IP=${VM2_IP}${NC}"
-echo -e "   ${YELLOW}export VM3_IP=${VM3_IP}${NC}"
+echo -e "   ${YELLOW}export VM1_IP=${VM1_IP}${NC}"
 echo -e "   ${YELLOW}export VM4_IP=${VM4_IP}${NC}"
 
 echo -e "\n2. 執行演示："

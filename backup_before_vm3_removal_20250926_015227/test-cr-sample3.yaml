@@ -1,0 +1,19 @@
+apiVersion: tna.tna.ai/v1alpha1
+kind: IntentDeployment
+metadata:
+  name: test-sample-3
+  namespace: default
+spec:
+  intent: |
+    {
+      "intentExpectations": [
+        {
+          "intentType": "ManagedElementIntentExpectation",
+          "targets": [{"name": "both"}],
+          "context": [{"contextType": "SliceContext", "sliceType": "mMTC"}],
+          "intentParameters": {"networkSliceRef": "slice-mmtc-003"}
+        }
+      ]
+    }
+  deliveryConfig:
+    targetSite: "both"

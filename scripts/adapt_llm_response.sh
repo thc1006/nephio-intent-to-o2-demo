@@ -1,34 +1,34 @@
 #!/usr/bin/env bash
-# Adapter script to bridge VM-3 LLM response format to VM-1 expected format
+# Adapter script to bridge VM-1 LLM response format to VM-1 expected format
 # This handles the format mismatch between the two systems
 
 set -euo pipefail
 
 # Configuration
-LLM_ADAPTER_URL="${LLM_ADAPTER_URL:-http://172.16.2.10:8888}"
+LLM_ADAPTER_URL="${LLM_ADAPTER_URL:-http://172.16.0.78:8888}"
 OUTPUT_FILE="${1:-}"
 NATURAL_LANGUAGE="${2:-Deploy eMBB slice at edge1}"
 TARGET_SITE="${3:-edge1}"
 
-# Function to call VM-3 and transform response
+# Function to call VM-1 and transform response
 call_llm_and_transform() {
     local nl_text="$1"
     local target="$2"
 
-    # Call VM-3 LLM Adapter
-    local vm3_response
-    vm3_response=$(curl -s --connect-timeout 10 \
+    # Call VM-1 LLM Adapter
+    local vm1_response
+    vm1_response=$(curl -s --connect-timeout 10 \
         -X POST \
         -H "Content-Type: application/json" \
         -d "{\"natural_language\": \"$nl_text\", \"target_site\": \"$target\"}" \
         "${LLM_ADAPTER_URL}/generate_intent" 2>/dev/null)
 
-    # Check if response has nested 'intent' object (VM-3 format)
-    if echo "$vm3_response" | jq -e '.intent' >/dev/null 2>&1; then
+    # Check if response has nested 'intent' object (VM-1 format)
+    if echo "$vm1_response" | jq -e '.intent' >/dev/null 2>&1; then
         # Extract the intent object and flatten it
-        local intent_obj=$(echo "$vm3_response" | jq '.intent')
+        local intent_obj=$(echo "$vm1_response" | jq '.intent')
 
-        # Transform VM-3 format to VM-1 expected TMF921 format
+        # Transform VM-1 format to VM-1 expected TMF921 format
         echo "$intent_obj" | jq --arg target "$target" '
         {
             "intentId": .intentId,
@@ -65,14 +65,14 @@ call_llm_and_transform() {
             },
             "intentMetadata": {
                 "createdAt": .metadata.createdAt,
-                "createdBy": "LLM-Adapter-VM3",
+                "createdBy": "LLM-Adapter-VM1",
                 "version": .metadata.version,
                 "originalRequest": .description
             }
         }'
     else
         # Response is already in correct format or error
-        echo "$vm3_response"
+        echo "$vm1_response"
     fi
 }
 

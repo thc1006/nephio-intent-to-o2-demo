@@ -73,7 +73,7 @@ RootSync Wait ← O2IMS Polling ← On-Site Validation ← Stage Tracing
 #### Edge Sites Configuration
 - **Edge1 (VM-2)**: 172.16.4.45:30090 + O2IMS :31280
 - **Edge2 (VM-4)**: 172.16.0.89:30090 + O2IMS :31280
-- **LLM Adapter (VM-3)**: TMF921 intent generation
+- **LLM Adapter (VM-1)**: TMF921 intent generation
 
 #### Service Types & Resource Profiles
 - **Enhanced Mobile Broadband (eMBB)**: 8 CPU, 16Gi RAM, 100Gi storage
@@ -251,7 +251,7 @@ This release represents a **complete, production-ready Intent-to-O2IMS automatio
 
 - **VM-1 Team**: Pipeline orchestration and automation
 - **VM-2/VM-4 Teams**: Edge site configuration and validation
-- **VM-3 Team**: LLM adapter and intent generation
+- **VM-1 Team**: LLM adapter and intent generation
 - **Integration Team**: End-to-end testing and validation
 
 ## 📞 Support

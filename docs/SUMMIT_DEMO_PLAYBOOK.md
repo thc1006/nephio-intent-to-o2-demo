@@ -27,7 +27,7 @@ source .env.production
 ### 2. 建立 SSH 隧道（用於 Web UI）
 ```bash
 # 在你的筆電執行
-ssh -L 8888:172.16.2.10:8888 ubuntu@147.251.115.143
+ssh -L 8888:172.16.0.78:8888 ubuntu@147.251.115.143
 ```
 
 ### 3. 開啟需要的終端視窗
@@ -39,7 +39,7 @@ ssh -L 8888:172.16.2.10:8888 ubuntu@147.251.115.143
 
 ### 4. 開啟 Web 介面
 在瀏覽器開啟以下頁面：
-- **VM-3 Intent Web UI**: http://localhost:8888 (透過 SSH 隧道)
+- **VM-1 Intent Web UI**: http://localhost:8002 (透過 SSH 隧道)
 - **Gitea**: http://147.251.115.143:8888 (admin/admin123)
 - **Kubernetes Dashboard**: http://147.251.115.143:30080 (如果有部署)
 
@@ -62,7 +62,7 @@ open slides/SLIDES.md  # 如果有 GUI
 **口述重點**：
 - VM-1: GitOps 編排器（我們現在的位置）
 - VM-2: Edge1 站點（5G 網路功能）
-- VM-3: LLM Adapter（Claude AI 整合）
+- VM-1: LLM Adapter（Claude AI 整合）
 - VM-4: Edge2 站點（備援站點）
 
 #### 1.3 檢查系統狀態
@@ -77,7 +77,7 @@ kubectl get nodes
 kubectl get rootsync -n config-management-system
 
 # 檢查 LLM 服務
-curl -s http://172.16.2.10:8888/health | jq '.status'
+curl -s http://172.16.0.78:8888/health | jq '.status'
 ```
 
 ---
@@ -86,8 +86,8 @@ curl -s http://172.16.2.10:8888/health | jq '.status'
 
 #### 🆕 2.1A 使用 Web UI 展示（推薦方式）
 1. **開啟瀏覽器**
-   - 訪問 `http://localhost:8888`（需先建立 SSH 隧道）
-   - 或直接訪問 `http://172.16.2.10:8888`
+   - 訪問 `http://localhost:8002`（需先建立 SSH 隧道）
+   - 或直接訪問 `http://172.16.0.78:8888`
 
 2. **在 Web UI 操作**
    - 展示專業的介面設計
@@ -102,7 +102,7 @@ curl -s http://172.16.2.10:8888/health | jq '.status'
 echo "=== 🧠 測試 LLM 自然語言理解 ==="
 
 # 測試案例 1: 中文輸入 - eMBB
-curl -X POST http://172.16.2.10:8888/generate_intent \
+curl -X POST http://172.16.0.78:8888/generate_intent \
   -H "Content-Type: application/json" \
   -d '{
     "natural_language": "部署 5G 高頻寬服務用於 4K 影片串流，需要 1Gbps 下載速度",
@@ -113,7 +113,7 @@ curl -X POST http://172.16.2.10:8888/generate_intent \
 #### 2.2 展示不同服務類型識別
 ```bash
 # 測試案例 2: URLLC (超低延遲)
-curl -X POST http://172.16.2.10:8888/generate_intent \
+curl -X POST http://172.16.0.78:8888/generate_intent \
   -H "Content-Type: application/json" \
   -d '{
     "natural_language": "Create ultra-reliable service for autonomous vehicles with 1ms latency",
@@ -121,7 +121,7 @@ curl -X POST http://172.16.2.10:8888/generate_intent \
   }' | jq '.intent | {intentId, service, targetSite}'
 
 # 測試案例 3: mMTC (大規模 IoT)
-curl -X POST http://172.16.2.10:8888/generate_intent \
+curl -X POST http://172.16.0.78:8888/generate_intent \
   -H "Content-Type: application/json" \
   -d '{
     "natural_language": "建立 IoT 感測器網路支援 50000 個裝置",
@@ -139,7 +139,7 @@ curl -X POST http://172.16.2.10:8888/generate_intent \
 echo "=== 🚀 執行 Edge1 站點部署 ==="
 
 # 設定環境變數
-export VM2_IP=172.16.4.45 VM3_IP=172.16.2.10 VM4_IP=172.16.0.89
+export VM2_IP=172.16.4.45 VM1_IP=172.16.0.78 VM4_IP=172.16.0.89
 
 # 執行演示（使用 dry-run 以節省時間）
 ./scripts/demo_llm.sh --dry-run --target edge1 --mode automated
@@ -259,7 +259,7 @@ ls -la artifacts/summit-bundle-latest/
    ```bash
    # 準備一個互動腳本
    read -p "請輸入您的網路服務需求: " USER_INPUT
-   curl -X POST http://172.16.2.10:8888/generate_intent \
+   curl -X POST http://172.16.0.78:8888/generate_intent \
      -H "Content-Type: application/json" \
      -d "{\"natural_language\": \"$USER_INPUT\", \"target_site\": \"edge1\"}" | jq '.'
    ```
@@ -267,7 +267,7 @@ ls -la artifacts/summit-bundle-latest/
 2. **展示錯誤處理**
    ```bash
    # 故意輸入無效內容
-   curl -X POST http://172.16.2.10:8888/generate_intent \
+   curl -X POST http://172.16.0.78:8888/generate_intent \
      -H "Content-Type: application/json" \
      -d '{"natural_language": "", "target_site": "invalid"}' | jq '.'
    ```
@@ -299,7 +299,7 @@ kubectl rollout restart deployment reconciler-manager -n config-management-syste
 #### 問題 3: 網路連線問題
 ```bash
 # 檢查連線
-ping -c 2 172.16.2.10  # VM-3
+ping -c 2 172.16.0.78  # VM-1
 ping -c 2 172.16.4.45  # VM-2
 ```
 
@@ -334,7 +334,7 @@ A: 使用 SHA256 檢查碼、排序的 YAML 輸出、冪等性檢查，確保相
 
 演示前請確認：
 - [ ] VM-1 可以 SSH 登入
-- [ ] VM-3 LLM 服務正常（curl http://172.16.2.10:8888/health）
+- [ ] VM-1 LLM 服務正常（curl http://172.16.0.78:8888/health）
 - [ ] Kubernetes 叢集正常（kubectl get nodes）
 - [ ] GitOps 已配置（kubectl get rootsync -A）
 - [ ] 演示腳本可執行（./scripts/demo_llm.sh --help）

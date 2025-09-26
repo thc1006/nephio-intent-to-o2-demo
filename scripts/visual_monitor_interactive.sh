@@ -16,7 +16,7 @@ NC='\033[0m'
 # Configuration
 source /home/ubuntu/nephio-intent-to-o2-demo/scripts/env.sh 2>/dev/null || true
 VM2_IP="${VM2_IP:-172.16.4.45}"
-VM3_IP="${VM3_IP:-172.16.2.10}"
+VM1_IP="${VM1_IP:-172.16.0.78}"
 VM4_IP="${VM4_IP:-172.16.4.176}"
 LLM_PORT="${LLM_PORT:-8888}"
 GITEA_PORT="${GITEA_PORT:-8888}"
@@ -62,7 +62,7 @@ display_status() {
     echo -e "${WHITE}Pipeline Flow:${NC}"
     echo -e "  ${BLUE}[User]${NC}"
     echo -e "     ↓"
-    echo -e "  ${CYAN}[Web UI]${NC} → ${YELLOW}[LLM Adapter]${NC} $(check_service "http://${VM3_IP}:${LLM_PORT}/health")"
+    echo -e "  ${CYAN}[Web UI]${NC} → ${YELLOW}[LLM Adapter]${NC} $(check_service "http://${VM1_IP}:${LLM_PORT}/health")"
     echo -e "     ↓"
     echo -e "  ${GREEN}[Intent Parser]${NC}"
     echo -e "     ↓"
@@ -75,7 +75,7 @@ display_status() {
 
     # Service Status
     draw_box "Service Status"
-    echo -e "  LLM Adapter (VM-3): $(check_service "http://${VM3_IP}:${LLM_PORT}/health")"
+    echo -e "  LLM Adapter (VM-1 (Integrated)): $(check_service "http://${VM1_IP}:${LLM_PORT}/health")"
     echo -e "  O2IMS Edge1 (VM-2): $(check_service "http://${VM2_IP}:31280")"
     echo -e "  O2IMS Edge2 (VM-4): $(check_service "http://${VM4_IP}:31280")"
     echo -e "  Gitea Repository:   $(check_service "http://localhost:${GITEA_PORT}")"
@@ -84,9 +84,9 @@ display_status() {
 
     # Quick Access URLs
     draw_box "Quick Access"
-    echo -e "  ${WHITE}Web UI:${NC} http://${VM3_IP}:${LLM_PORT}"
+    echo -e "  ${WHITE}Web UI:${NC} http://${VM1_IP}:${LLM_PORT}"
     echo -e "  ${WHITE}Gitea:${NC} http://localhost:${GITEA_PORT}"
-    echo -e "  ${WHITE}API Health:${NC} http://${VM3_IP}:${LLM_PORT}/health"
+    echo -e "  ${WHITE}API Health:${NC} http://${VM1_IP}:${LLM_PORT}/health"
     draw_box_end
     echo
 
@@ -136,7 +136,7 @@ test_deployment() {
     if curl -sf -X POST \
         -H "Content-Type: application/json" \
         -d "{\"text\":\"$test_intent\"}" \
-        "http://${VM3_IP}:${LLM_PORT}/api/v1/intent/parse" 2>/dev/null; then
+        "http://${VM1_IP}:${LLM_PORT}/api/v1/intent/parse" 2>/dev/null; then
         echo -e "   ${GREEN}✓ Intent 生成成功${NC}"
     else
         echo -e "   ${RED}✗ Intent 生成失敗${NC}"
@@ -149,7 +149,7 @@ test_deployment() {
 
 # Function to open web UI
 open_web_ui() {
-    local url="http://${VM3_IP}:${LLM_PORT}"
+    local url="http://${VM1_IP}:${LLM_PORT}"
     echo -e "${CYAN}嘗試開啟 Web UI: $url${NC}"
 
     # Try different methods to open browser

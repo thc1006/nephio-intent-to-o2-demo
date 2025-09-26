@@ -12,14 +12,14 @@
 ### 2. **docs/DEMO_QUICK_REFERENCE.md** ✅
 **更新內容：**
 - 頂部新增 Web UI 快速設定
-- Web 介面表格新增 VM-3 Web UI 項目
+- Web 介面表格新增 VM-1 Web UI 項目
 - 加入 SSH 隧道指令
 
 ### 3. **docs/SUMMIT_DEMO_PLAYBOOK.md** ✅
 **更新內容：**
 - 演示前準備新增「建立 SSH 隧道」步驟
 - 第二部分新增 2.1A Web UI 展示方式
-- Web 介面清單新增 VM-3 Intent Web UI
+- Web 介面清單新增 VM-1 Intent Web UI
 
 ### 4. **SUMMIT_DEMO_FLOW.md** ✅
 **更新內容：**
@@ -32,21 +32,21 @@
 
 ## 🆕 新增的文件
 
-### 5. **VM3_WEB_UI_DEMO_GUIDE.md** 🆕
+### 5. **VM1_WEB_UI_DEMO_GUIDE.md** 🆕
 完整的 Web UI 演示指南，包含：
 - Web UI 功能介紹
 - 詳細演示步驟
 - 視覺化優勢說明
 - 互動案例範例
 
-### 6. **VM3_INTEGRATION_VALIDATION.md** 🆕
-VM-3 整合驗證報告：
+### 6. **VM1_INTEGRATION_VALIDATION.md** 🆕
+VM-1 整合驗證報告：
 - API 測試結果
 - 效能指標驗證
 - 整合建議
 
-### 7. **VM3_VALIDATION_REPORT.md** 🆕
-VM-3 資訊驗證報告：
+### 7. **VM1_VALIDATION_REPORT.md** 🆕
+VM-1 資訊驗證報告：
 - IP 位址修正
 - 正確架構說明
 - 整合點確認
@@ -99,12 +99,12 @@ VM-4 配置說明：
 
 ### Web UI 相關：
 - [ ] SSH 隧道建立成功
-- [ ] 瀏覽器可訪問 http://localhost:8888
+- [ ] 瀏覽器可訪問 http://localhost:8002
 - [ ] Web UI 頁面正常載入
 - [ ] Generate Intent 按鈕可點擊
 
 ### 系統相關：
-- [ ] VM-3 LLM 服務健康
+- [ ] VM-1 LLM 服務健康
 - [ ] VM-1 GitOps 正常
 - [ ] 網路連線穩定
 - [ ] 演示腳本可執行
@@ -126,7 +126,7 @@ VM-4 配置說明：
 3. **IP 位址已全部更正**
    - VM-1: 172.16.0.78
    - VM-2: 172.16.4.45
-   - VM-3: 172.16.2.10
+   - VM-1: 172.16.0.78
    - VM-4: 172.16.0.89
 
 ---
@@ -135,10 +135,10 @@ VM-4 配置說明：
 
 ```bash
 # 1. 建立 SSH 隧道
-ssh -L 8888:172.16.2.10:8888 ubuntu@147.251.115.143
+ssh -L 8888:172.16.0.78:8888 ubuntu@147.251.115.143
 
 # 2. 開啟 Web UI
-open http://localhost:8888/
+open http://localhost:8002/
 
 # 3. 開始演示！
 ```

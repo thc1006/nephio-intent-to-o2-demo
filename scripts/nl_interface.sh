@@ -18,7 +18,7 @@ BOLD='\033[1m'
 # Configuration
 source /home/ubuntu/nephio-intent-to-o2-demo/scripts/env.sh 2>/dev/null || true
 VM2_IP="${VM2_IP:-172.16.4.45}"
-VM3_IP="${VM3_IP:-172.16.2.10}"
+VM1_IP="${VM1_IP:-172.16.0.78}"
 VM4_IP="${VM4_IP:-172.16.4.176}"
 LLM_PORT="${LLM_PORT:-8888}"
 
@@ -234,7 +234,7 @@ EOF
     response=$(curl -s -X POST \
         -H "Content-Type: application/json" \
         -d "$intent_json" \
-        "http://${VM3_IP}:${LLM_PORT}/api/v1/intent/parse" 2>/dev/null || echo "{\"error\": \"Failed to connect\"}")
+        "http://${VM1_IP}:${LLM_PORT}/api/v1/intent/parse" 2>/dev/null || echo "{\"error\": \"Failed to connect\"}")
 
     if [[ "$response" == *"error"* ]]; then
         show_progress "Failed to process intent" "error"
@@ -268,10 +268,10 @@ handle_status_intent() {
     echo -e "\n${WHITE}═══ Service Status ═══${NC}"
 
     # Check LLM Adapter
-    if curl -s --max-time 2 "http://${VM3_IP}:${LLM_PORT}/health" &>/dev/null; then
-        echo -e "LLM Adapter (VM-3): ${GREEN}● Online${NC}"
+    if curl -s --max-time 2 "http://${VM1_IP}:${LLM_PORT}/health" &>/dev/null; then
+        echo -e "LLM Adapter (VM-1 (Integrated)): ${GREEN}● Online${NC}"
     else
-        echo -e "LLM Adapter (VM-3): ${RED}● Offline${NC}"
+        echo -e "LLM Adapter (VM-1 (Integrated)): ${RED}● Offline${NC}"
     fi
 
     # Check Edge Sites
@@ -348,7 +348,7 @@ handle_llm_intent() {
     response=$(curl -s -X POST \
         -H "Content-Type: application/json" \
         -d "{\"text\": \"$command\"}" \
-        "http://${VM3_IP}:${LLM_PORT}/api/v1/intent/parse" 2>/dev/null)
+        "http://${VM1_IP}:${LLM_PORT}/api/v1/intent/parse" 2>/dev/null)
 
     if [[ -n "$response" ]]; then
         echo -e "\n${WHITE}LLM Response:${NC}"

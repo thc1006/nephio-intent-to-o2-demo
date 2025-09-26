@@ -1,0 +1,4 @@
+## Append samples of your project ##
+resources:
+- tna_v1alpha1_intentdeployment.yaml
+# +kubebuilder:scaffold:manifestskustomizesamples

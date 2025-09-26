@@ -3,10 +3,10 @@
 ## 🆕 Web UI 快速設定（推薦）
 ```bash
 # 在你的筆電建立 SSH 隧道
-ssh -L 8888:172.16.2.10:8888 ubuntu@147.251.115.143
+ssh -L 8888:172.16.0.78:8888 ubuntu@147.251.115.143
 
 # 開啟瀏覽器
-open http://localhost:8888/
+open http://localhost:8002/
 ```
 
 ## 🚀 快速啟動指令
@@ -31,7 +31,7 @@ source .env.production
 ### 1️⃣ 系統健康檢查
 ```bash
 # 檢查 LLM 服務
-curl -s http://172.16.2.10:8888/health | jq '.status'
+curl -s http://172.16.0.78:8888/health | jq '.status'
 
 # 檢查 Kubernetes
 kubectl get nodes
@@ -39,21 +39,21 @@ kubectl get nodes
 
 ### 2️⃣ 中文 Intent 生成
 ```bash
-curl -X POST http://172.16.2.10:8888/generate_intent \
+curl -X POST http://172.16.0.78:8888/generate_intent \
   -H "Content-Type: application/json" \
   -d '{"natural_language": "部署 5G 高頻寬服務", "target_site": "edge1"}' | jq '.'
 ```
 
 ### 3️⃣ 英文 Intent 生成
 ```bash
-curl -X POST http://172.16.2.10:8888/generate_intent \
+curl -X POST http://172.16.0.78:8888/generate_intent \
   -H "Content-Type: application/json" \
   -d '{"natural_language": "Deploy URLLC for autonomous vehicles", "target_site": "edge2"}' | jq '.'
 ```
 
 ### 4️⃣ 單站點部署
 ```bash
-export VM2_IP=172.16.4.45 VM3_IP=172.16.2.10 VM4_IP=172.16.0.89
+export VM2_IP=172.16.4.45 VM1_IP=172.16.0.78 VM4_IP=172.16.0.89
 ./scripts/demo_llm.sh --dry-run --target edge1 --mode automated
 ```
 
@@ -79,7 +79,7 @@ ls -la artifacts/summit-bundle-latest/
 
 | 服務 | URL | 帳密/說明 |
 |------|-----|---------|
-| VM-3 Web UI | http://localhost:8888 (via SSH tunnel) | Intent 生成介面 |
+| VM-1 Web UI | http://localhost:8002 (via SSH tunnel) | Intent 生成介面 |
 | Gitea | http://147.251.115.143:8888 | admin/admin123 |
 | K8s API | https://147.251.115.143:6443 | kubectl config |
 
@@ -138,7 +138,7 @@ open slides/SLIDES.md
 ```bash
 # 只展示最核心功能
 echo "=== 自然語言轉換為網路部署 ==="
-curl -X POST http://172.16.2.10:8888/generate_intent \
+curl -X POST http://172.16.0.78:8888/generate_intent \
   -d '{"natural_language": "部署 5G 服務", "target_site": "both"}' | jq
 
 echo "=== 自動化多站點部署 ==="
@@ -177,7 +177,7 @@ echo "=== 自動化多站點部署 ==="
 # 執行這個腳本做最後檢查
 echo "=== 演示前系統檢查 ==="
 echo -n "1. LLM 服務: "
-curl -s http://172.16.2.10:8888/health | jq -r '.status'
+curl -s http://172.16.0.78:8888/health | jq -r '.status'
 echo -n "2. Kubernetes: "
 kubectl get nodes --no-headers | wc -l
 echo -n "3. GitOps: "

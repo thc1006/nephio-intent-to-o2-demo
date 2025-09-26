@@ -1,0 +1,72 @@
+{
+  "id": "intent-urllc-test-001",
+  "intentType": "ServiceIntent",
+  "name": "Test URLLC Intent",
+  "description": "Test intent for TMF921 v5 to 3GPP TS 28.312 transformation",
+  "version": "1.0",
+  "lifecycleStatus": "Active",
+  "category": "Performance",
+  "priority": "High",
+  "intentSpecification": {
+    "id": "spec-urllc-test-001",
+    "name": "Test URLLC Specification",
+    "version": "1.0",
+    "intentExpectations": [
+      {
+        "id": "expectation-latency-test-001",
+        "name": "Latency Test Expectation",
+        "expectationType": "deliver",
+        "expectationObject": {
+          "objectType": "O-RAN-DU",
+          "objectInstance": "test-du-001",
+          "objectDescription": "Test O-RAN DU",
+          "objectParameters": {
+            "deployment": "edge",
+            "location": "test-cell-001",
+            "resources": {
+              "cpu": "4",
+              "memory": "8Gi",
+              "storage": "100Gi"
+            }
+          }
+        },
+        "expectationTargets": [
+          {
+            "targetName": "latency",
+            "targetCondition": "lessThan",
+            "targetValue": "10",
+            "targetUnit": "ms",
+            "targetValueType": "numeric",
+            "targetContexts": [
+              {
+                "contextAttribute": "percentile",
+                "contextCondition": "Equal",
+                "contextValueType": "number",
+                "contextValue": 95
+              }
+            ]
+          }
+        ],
+        "expectationContext": [
+          {
+            "contextParameter": "networkSlice",
+            "contextValue": "test-urllc-slice",
+            "contextDescription": "Test URLLC network slice"
+          }
+        ]
+      }
+    ]
+  },
+  "intentCharacteristic": [
+    {
+      "name": "serviceType",
+      "value": "URLLC",
+      "description": "Ultra-reliable low-latency communications"
+    },
+    {
+      "name": "priority",
+      "value": "critical"
+    }
+  ],
+  "@type": "ServiceIntent"
+}

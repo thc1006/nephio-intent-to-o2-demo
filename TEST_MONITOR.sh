@@ -25,7 +25,7 @@ test_service() {
 }
 
 # 測試所有服務
-test_service "LLM Adapter (VM-3)" "http://172.16.2.10:8888/health"
+test_service "LLM Adapter (VM-1 Integrated)" "http://localhost:8002/health"
 test_service "O2IMS Edge1 (VM-2)" "http://172.16.4.45:31280"
 test_service "O2IMS Edge2 (VM-4)" "http://172.16.4.176:31280"
 test_service "Gitea Repository" "http://localhost:8888"

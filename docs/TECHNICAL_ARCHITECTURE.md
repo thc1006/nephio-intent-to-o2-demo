@@ -17,7 +17,7 @@ graph TB
         F --> G[Evidence Collector]
     end
 
-    subgraph "VM-3: LLM Adapter"
+    subgraph "VM-1: LLM Adapter"
         H[Intent Processor] --> I[Context Engine]
         I --> J[3GPP Translator]
         J --> K[Validation Engine]
@@ -75,7 +75,7 @@ spec:
 - Distributed tracing and observability
 - Graceful degradation and circuit breakers
 
-#### **LLM Adapter (VM-3)**
+#### **LLM Adapter (VM-1)**
 ```yaml
 apiVersion: nephio.org/v1alpha1
 kind: LLMAdapter
@@ -408,7 +408,7 @@ spec:
 **Infrastructure Requirements:**
 - **VM-1**: 4 vCPU, 8GB RAM, 100GB SSD
 - **VM-2/4**: 8 vCPU, 16GB RAM, 200GB SSD
-- **VM-3**: 2 vCPU, 4GB RAM, 50GB SSD
+- **VM-1**: 2 vCPU, 4GB RAM, 50GB SSD
 - **Network**: 1Gbps inter-VM, <10ms latency
 
 ## Future Architecture Evolution

@@ -8,7 +8,7 @@ echo "Starting real-time monitoring..."
 echo
 
 # 1. Monitor LLM Adapter logs
-echo "[1] LLM Adapter Activity (VM-3):"
+echo "[1] LLM Adapter Activity (VM-1 (Integrated)):"
 tail -f llm-adapter/service.log 2>/dev/null &
 LLM_PID=$!
 

@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: oran-nfs
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: oran-services
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: monitoring

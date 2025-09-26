@@ -26,7 +26,7 @@ import requests
 class TestACC18PythonBackendTester:
     """Test suite for ACC-18: TMF921-aligned deterministic outputs"""
 
-    BASE_URL = "http://localhost:8888"  # VM-3 LLM Adapter endpoint
+    BASE_URL = "http://localhost:8002"  # VM-1 Integrated LLM endpoint
     ARTIFACTS_DIR = "/home/ubuntu/nephio-intent-to-o2-demo/artifacts/adapter"
     REPORT_FILE = "acc18_unit.json"
 

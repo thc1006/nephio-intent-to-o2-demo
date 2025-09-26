@@ -192,11 +192,11 @@ kubectl get events --field-selector involvedObject.name=<name>
 3. **Tertiary**: Use pre-rendered manifests (in artifacts/)
 
 ### 23. Q: How does the Web UI work?
-**A**: LLM Adapter at VM-3:
+**A**: LLM Adapter at VM-1:
 - Simple Flask app (llm-adapter/app.py)
 - Converts natural language to TMF921
 - Mock mode for demo (no real LLM needed)
-- Accessible at http://<VM3-IP>:5000
+- Accessible at http://<VM1-IP>:5000
 
 ### 24. Q: What metrics are collected?
 **A**: Comprehensive observability:
