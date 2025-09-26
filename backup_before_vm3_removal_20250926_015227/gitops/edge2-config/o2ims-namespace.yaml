@@ -1,8 +1,0 @@
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: o2ims-system
-  labels:
-    name: o2ims-system
-    environment: edge2
-    managed-by: config-sync

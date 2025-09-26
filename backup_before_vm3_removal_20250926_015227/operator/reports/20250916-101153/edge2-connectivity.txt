@@ -1,2 +1,0 @@
-error: unknown flag: --timeout
-See 'kubectl get --help' for usage.

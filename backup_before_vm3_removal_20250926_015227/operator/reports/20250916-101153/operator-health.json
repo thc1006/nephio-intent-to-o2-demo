@@ -1,6 +1,0 @@
-{
-  "name": "nephio-intent-operator-controller-manager-55dbdf44cc-m6nqx",
-  "status": "Running",
-  "ready": "True",
-  "image": "intent-operator:v0.1.1-alpha"
-}

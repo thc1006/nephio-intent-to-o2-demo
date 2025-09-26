@@ -1,1 +1,0 @@
-# Adapter App Package
