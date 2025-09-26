@@ -979,14 +979,22 @@ nephio-intent-to-o2-demo/
 │   ├── README.md                        # 專案主README
 │   ├── CLAUDE.md                        # Claude指引 (gitignore)
 │   ├── ARCHITECTURE_SIMPLIFIED.md       # 簡化架構
-│   ├── SYSTEM_ARCHITECTURE_HLA.md       # 高層架構 (22KB)
-│   ├── VM1_INTEGRATED_ARCHITECTURE.md   # VM-1整合架構
-│   ├── THREE_VM_INTEGRATION_PLAN.md     # 三VM整合計劃
-│   ├── SUMMIT_DEMO_GUIDE.md             # Summit演示指南
-│   ├── SUMMIT_DEMO_RUNBOOK.md           # 執行手冊
+│   ├── HOW_TO_USE.md                    # 使用指南
+│   ├── PROJECT_COMPREHENSIVE_UNDERSTANDING.md  # 完整理解文檔
+│   ├── ROOT_CLEANUP_PLAN.md             # 清理計劃
 │   ├── CHANGELOG.md                     # 版本變更記錄
-│   ├── TROUBLESHOOTING.md               # 故障排除
-│   └── AUTHORITATIVE_NETWORK_CONFIG.md  # 網路配置權威來源
+│   │
+│   ├── docs/
+│   │   ├── architecture/
+│   │   │   ├── SYSTEM_ARCHITECTURE_HLA.md       # 高層架構 (22KB)
+│   │   │   ├── VM1_INTEGRATED_ARCHITECTURE.md   # VM-1整合架構
+│   │   │   └── THREE_VM_INTEGRATION_PLAN.md     # 三VM整合計劃
+│   │   ├── operations/
+│   │   │   └── TROUBLESHOOTING.md               # 故障排除
+│   │   ├── network/
+│   │   │   └── AUTHORITATIVE_NETWORK_CONFIG.md  # 網路配置權威來源
+│   │   ├── summit-demo/                         # Summit演示材料
+│   │   └── archive/                             # 歷史文檔
 │
 ├── 🤖 Adapter (TMF921 Intent Processor)
 │   ├── app/
@@ -2080,12 +2088,13 @@ curl "http://172.16.0.78:8428/api/v1/query?query=up{edge_site='edge01'}"
 ### 內部文檔
 
 - `ARCHITECTURE_SIMPLIFIED.md` - 簡化架構
-- `SYSTEM_ARCHITECTURE_HLA.md` - 高層架構 (22KB)
-- `VM1_INTEGRATED_ARCHITECTURE.md` - VM-1整合架構
-- `SUMMIT_DEMO_GUIDE.md` - Summit演示指南
-- `SUMMIT_DEMO_RUNBOOK.md` - 執行手冊
-- `TROUBLESHOOTING.md` - 故障排除指南
-- `OPERATIONS.md` - 運維指南
+- `HOW_TO_USE.md` - 使用指南
+- `PROJECT_COMPREHENSIVE_UNDERSTANDING.md` - 完整理解文檔
+- `docs/architecture/SYSTEM_ARCHITECTURE_HLA.md` - 高層架構 (22KB)
+- `docs/architecture/VM1_INTEGRATED_ARCHITECTURE.md` - VM-1整合架構
+- `docs/summit-demo/SUMMIT_DEMO_GUIDE.md` - Summit演示指南
+- `docs/operations/TROUBLESHOOTING.md` - 故障排除指南
+- `docs/operations/OPERATIONS.md` - 運維指南
 
 ### 關鍵腳本
 
