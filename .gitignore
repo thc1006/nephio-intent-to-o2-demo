@@ -60,6 +60,11 @@ go.work.sum
 **/.coverage
 **/.pytest_cache/
 
+# Test reports (dynamically generated)
+test-reports/generated/
+test-reports/**/*.png
+test-reports/**/*.html
+
 # Temporary files
 **/*.tmp
 **/*.temp
