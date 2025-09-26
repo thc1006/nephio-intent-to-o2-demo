@@ -1,0 +1,113 @@
+version: '3.8'
+
+services:
+  # VictoriaMetrics - 輕量級 TSDB，接收 Edge Prometheus remote_write
+  victoriametrics:
+    image: victoriametrics/victoria-metrics:v1.96.0
+    container_name: victoriametrics
+    ports:
+      - "8428:8428"  # HTTP API & Web UI
+      - "8089:8089"  # InfluxDB protocol (optional)
+      - "2003:2003"  # Graphite protocol (optional)
+    volumes:
+      - vmdata:/storage
+    command:
+      - '-storageDataPath=/storage'
+      - '-retentionPeriod=90d'
+      - '-httpListenAddr=:8428'
+      - '-influxListenAddr=:8089'
+      - '-graphiteListenAddr=:2003'
+      - '-search.maxQueryDuration=600s'
+      - '-search.maxSamplesPerQuery=1000000000'
+    restart: always
+    networks:
+      - monitoring
+
+  # Grafana - 中央看板
+  grafana:
+    image: grafana/grafana:10.2.3
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel,grafana-worldmap-panel,grafana-clock-panel
+      - GF_SERVER_ROOT_URL=http://147.251.115.143:3000
+    volumes:
+      - grafana-storage:/var/lib/grafana
+      - ./grafana-provisioning:/etc/grafana/provisioning
+    depends_on:
+      - victoriametrics
+    restart: always
+    networks:
+      - monitoring
+
+  # Alertmanager - 告警路由
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    container_name: alertmanager
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./alertmanager-config.yml:/etc/alertmanager/alertmanager.yml
+      - alertmanager-data:/alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+      - '--web.external-url=http://147.251.115.143:9093'
+    restart: always
+    networks:
+      - monitoring
+
+  # vmalert - VictoriaMetrics 的告警規則引擎
+  vmalert:
+    image: victoriametrics/vmalert:v1.96.0
+    container_name: vmalert
+    ports:
+      - "8880:8880"
+    volumes:
+      - ./alert-rules:/etc/alerts
+    command:
+      - '-datasource.url=http://victoriametrics:8428'
+      - '-remoteWrite.url=http://victoriametrics:8428'
+      - '-notifier.url=http://alertmanager:9093'
+      - '-rule=/etc/alerts/*.yml'
+      - '-evaluationInterval=30s'
+    depends_on:
+      - victoriametrics
+      - alertmanager
+    restart: always
+    networks:
+      - monitoring
+
+  # Prometheus (Local scraper for VM-1 services)
+  prometheus:
+    image: prom/prometheus:v2.48.0
+    container_name: prometheus-local
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus-local.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=3d'
+      - '--web.enable-lifecycle'
+    restart: always
+    networks:
+      - monitoring
+
+volumes:
+  vmdata:
+    driver: local
+  grafana-storage:
+    driver: local
+  alertmanager-data:
+    driver: local
+  prometheus-data:
+    driver: local
+
+networks:
+  monitoring:
+    driver: bridge

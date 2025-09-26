@@ -1,0 +1,457 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: monitoring
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: prometheus
+  namespace: monitoring
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: prometheus
+rules:
+- apiGroups: [""]
+  resources:
+  - nodes
+  - nodes/metrics
+  - services
+  - endpoints
+  - pods
+  verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+  resources:
+  - configmaps
+  verbs: ["get"]
+- apiGroups: ["networking.k8s.io"]
+  resources:
+  - ingresses
+  verbs: ["get", "list", "watch"]
+- nonResourceURLs: ["/metrics"]
+  verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: prometheus
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: prometheus
+subjects:
+- kind: ServiceAccount
+  name: prometheus
+  namespace: monitoring
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: monitoring
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+      evaluation_interval: 15s
+      external_labels:
+        cluster: 'oran-orchestrator'
+        replica: '$(POD_NAME)'
+
+    # Thanos sidecar configuration
+    rule_files:
+      - /etc/prometheus/rules/*.yml
+
+    scrape_configs:
+    - job_name: 'prometheus'
+      static_configs:
+      - targets: ['localhost:9090']
+
+    - job_name: 'kubernetes-apiservers'
+      kubernetes_sd_configs:
+      - role: endpoints
+      scheme: https
+      tls_config:
+        ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+      bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+      relabel_configs:
+      - source_labels: [__meta_kubernetes_namespace, __meta_kubernetes_service_name, __meta_kubernetes_endpoint_port_name]
+        action: keep
+        regex: default;kubernetes;https
+
+    - job_name: 'kubernetes-nodes'
+      kubernetes_sd_configs:
+      - role: node
+      scheme: https
+      tls_config:
+        ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+      bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+      relabel_configs:
+      - action: labelmap
+        regex: __meta_kubernetes_node_label_(.+)
+
+    - job_name: 'kubernetes-pods'
+      kubernetes_sd_configs:
+      - role: pod
+      relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+        action: keep
+        regex: true
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+        action: replace
+        target_label: __metrics_path__
+        regex: (.+)
+      - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+        action: replace
+        regex: ([^:]+)(?::\d+)?;(\d+)
+        replacement: $1:$2
+        target_label: __address__
+      - action: labelmap
+        regex: __meta_kubernetes_pod_label_(.+)
+      - source_labels: [__meta_kubernetes_namespace]
+        action: replace
+        target_label: kubernetes_namespace
+      - source_labels: [__meta_kubernetes_pod_name]
+        action: replace
+        target_label: kubernetes_pod_name
+
+    - job_name: 'kubernetes-service-endpoints'
+      kubernetes_sd_configs:
+      - role: endpoints
+      relabel_configs:
+      - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_scrape]
+        action: keep
+        regex: true
+      - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_scheme]
+        action: replace
+        target_label: __scheme__
+        regex: (https?)
+      - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_path]
+        action: replace
+        target_label: __metrics_path__
+        regex: (.+)
+      - source_labels: [__address__, __meta_kubernetes_service_annotation_prometheus_io_port]
+        action: replace
+        target_label: __address__
+        regex: ([^:]+)(?::\d+)?;(\d+)
+        replacement: $1:$2
+      - action: labelmap
+        regex: __meta_kubernetes_service_label_(.+)
+      - source_labels: [__meta_kubernetes_namespace]
+        target_label: kubernetes_namespace
+      - source_labels: [__meta_kubernetes_service_name]
+        target_label: kubernetes_name
+
+    # Remote write to edge Prometheus instances
+    remote_write:
+    - url: "http://172.16.4.45:9090/api/v1/write"
+      queue_config:
+        capacity: 10000
+        max_shards: 30
+        max_samples_per_send: 500
+      metadata_config:
+        send: true
+        send_interval: 30s
+      write_relabel_configs:
+      - source_labels: [__name__]
+        regex: 'edge01_.*'
+        action: keep
+
+    - url: "http://172.16.4.176:9090/api/v1/write"
+      queue_config:
+        capacity: 10000
+        max_shards: 30
+        max_samples_per_send: 500
+      metadata_config:
+        send: true
+        send_interval: 30s
+      write_relabel_configs:
+      - source_labels: [__name__]
+        regex: 'edge02_.*'
+        action: keep
+
+  rules.yml: |
+    groups:
+    - name: intent_slo
+      interval: 30s
+      rules:
+      - record: intent:processing:success_rate
+        expr: |
+          sum(rate(intent_processing_success_total[5m])) /
+          sum(rate(intent_processing_total[5m]))
+
+      - record: intent:processing:p95_duration
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(intent_processing_duration_seconds_bucket[5m])) by (le)
+          )
+
+      - record: intent:deployment:success_rate
+        expr: |
+          sum(rate(intent_deployment_success_total[10m])) /
+          sum(rate(intent_deployment_total[10m]))
+
+      - alert: IntentProcessingHighLatency
+        expr: intent:processing:p95_duration > 5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High intent processing latency"
+          description: "95th percentile latency is {{ $value }}s (threshold: 5s)"
+
+      - alert: IntentDeploymentFailureRate
+        expr: 1 - intent:deployment:success_rate > 0.1
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High intent deployment failure rate"
+          description: "Deployment failure rate is {{ $value | humanizePercentage }}"
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: prometheus
+  namespace: monitoring
+spec:
+  serviceName: prometheus
+  replicas: 2
+  selector:
+    matchLabels:
+      app: prometheus
+  template:
+    metadata:
+      labels:
+        app: prometheus
+        thanos-store-api: "true"
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+    spec:
+      serviceAccountName: prometheus
+      containers:
+      - name: prometheus
+        image: prom/prometheus:v2.48.0
+        args:
+        - --config.file=/etc/prometheus/prometheus.yml
+        - --storage.tsdb.path=/prometheus
+        - --storage.tsdb.retention.time=15d
+        - --storage.tsdb.min-block-duration=2h
+        - --storage.tsdb.max-block-duration=2h
+        - --web.enable-lifecycle
+        - --web.enable-admin-api
+        ports:
+        - containerPort: 9090
+          name: http
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        volumeMounts:
+        - name: config
+          mountPath: /etc/prometheus
+        - name: data
+          mountPath: /prometheus
+        resources:
+          requests:
+            cpu: 500m
+            memory: 2Gi
+          limits:
+            cpu: 2000m
+            memory: 4Gi
+
+      - name: thanos-sidecar
+        image: quay.io/thanos/thanos:v0.33.0
+        args:
+        - sidecar
+        - --tsdb.path=/prometheus
+        - --prometheus.url=http://localhost:9090
+        - --grpc-address=0.0.0.0:10901
+        - --http-address=0.0.0.0:10902
+        - --objstore.config-file=/etc/thanos/objstore.yml
+        ports:
+        - containerPort: 10901
+          name: grpc
+        - containerPort: 10902
+          name: http
+        volumeMounts:
+        - name: data
+          mountPath: /prometheus
+        - name: objstore-config
+          mountPath: /etc/thanos
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+
+      volumes:
+      - name: config
+        configMap:
+          name: prometheus-config
+      - name: objstore-config
+        secret:
+          secretName: thanos-objstore-config
+
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 50Gi
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: thanos-objstore-config
+  namespace: monitoring
+stringData:
+  objstore.yml: |
+    type: s3
+    config:
+      bucket: thanos-metrics
+      endpoint: minio.storage:9000
+      access_key: admin
+      secret_key: admin123
+      insecure: true
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus
+  namespace: monitoring
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "9090"
+spec:
+  type: NodePort
+  ports:
+  - port: 9090
+    targetPort: 9090
+    nodePort: 30090
+    name: http
+  selector:
+    app: prometheus
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: thanos-store-api
+  namespace: monitoring
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+  - port: 10901
+    targetPort: 10901
+    name: grpc
+  selector:
+    thanos-store-api: "true"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: thanos-query
+  namespace: monitoring
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: thanos-query
+  template:
+    metadata:
+      labels:
+        app: thanos-query
+    spec:
+      containers:
+      - name: thanos-query
+        image: quay.io/thanos/thanos:v0.33.0
+        args:
+        - query
+        - --http-address=0.0.0.0:9090
+        - --grpc-address=0.0.0.0:10901
+        - --store=dnssrv+_grpc._tcp.thanos-store-api.monitoring.svc.cluster.local
+        - --store=172.16.4.45:10901    # Edge01 Thanos sidecar
+        - --store=172.16.4.176:10901   # Edge02 Thanos sidecar
+        - --query.replica-label=replica
+        - --query.auto-downsampling
+        ports:
+        - containerPort: 9090
+          name: http
+        - containerPort: 10901
+          name: grpc
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: thanos-query
+  namespace: monitoring
+spec:
+  type: NodePort
+  ports:
+  - port: 9090
+    targetPort: 9090
+    nodePort: 30091
+    name: http
+  selector:
+    app: thanos-query
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: thanos-compact
+  namespace: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: thanos-compact
+  template:
+    metadata:
+      labels:
+        app: thanos-compact
+    spec:
+      containers:
+      - name: thanos-compact
+        image: quay.io/thanos/thanos:v0.33.0
+        args:
+        - compact
+        - --data-dir=/data
+        - --objstore.config-file=/etc/thanos/objstore.yml
+        - --wait
+        - --retention.resolution-raw=30d
+        - --retention.resolution-5m=90d
+        - --retention.resolution-1h=1y
+        volumeMounts:
+        - name: data
+          mountPath: /data
+        - name: objstore-config
+          mountPath: /etc/thanos
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 1Gi
+      volumes:
+      - name: data
+        emptyDir: {}
+      - name: objstore-config
+        secret:
+          secretName: thanos-objstore-config

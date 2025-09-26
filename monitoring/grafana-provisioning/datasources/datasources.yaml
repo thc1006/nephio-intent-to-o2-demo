@@ -1,0 +1,35 @@
+apiVersion: 1
+
+datasources:
+  - name: VictoriaMetrics
+    type: prometheus
+    access: proxy
+    url: http://victoriametrics:8428
+    isDefault: true
+    editable: false
+    jsonData:
+      timeInterval: "15s"
+      queryTimeout: "300s"
+
+  - name: Prometheus-Local
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    editable: false
+
+  # Direct connections to Edge sites (when available)
+  - name: Edge01-Prometheus
+    type: prometheus
+    access: proxy
+    url: http://172.16.4.45:30090
+    editable: false
+    jsonData:
+      tlsSkipVerify: true
+
+  - name: Edge02-Prometheus
+    type: prometheus
+    access: proxy
+    url: http://172.16.4.176:30090
+    editable: false
+    jsonData:
+      tlsSkipVerify: true

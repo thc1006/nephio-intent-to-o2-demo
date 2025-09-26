@@ -1,0 +1,58 @@
+groups:
+  - name: intent_slo
+    interval: 30s
+    rules:
+      # Intent Processing SLO
+      - alert: IntentProcessingHighLatency
+        expr: histogram_quantile(0.95, sum(rate(intent_processing_duration_seconds_bucket[5m])) by (le)) > 5
+        for: 5m
+        labels:
+          severity: warning
+          component: intent-processor
+        annotations:
+          summary: "Intent processing P95 latency > 5s"
+          description: "95th percentile latency is {{ $value }}s (threshold: 5s)"
+
+      - alert: IntentProcessingFailureRate
+        expr: (1 - sum(rate(intent_processing_success_total[5m])) / sum(rate(intent_processing_total[5m]))) > 0.01
+        for: 10m
+        labels:
+          severity: critical
+          component: intent-processor
+        annotations:
+          summary: "Intent processing failure rate > 1%"
+          description: "Failure rate is {{ $value | humanizePercentage }}"
+
+      # Edge Site Health
+      - alert: EdgeSiteUnreachable
+        expr: up{site=~"edge.*"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          component: edge-site
+        annotations:
+          summary: "Edge site {{ $labels.site }} is unreachable"
+          description: "Cannot receive metrics from {{ $labels.site }}"
+
+      # Service-specific SLOs
+      - alert: URLLCLatencyViolation
+        expr: histogram_quantile(0.99, sum(rate(http_request_duration_milliseconds_bucket{service="urllc"}[1m])) by (le, site)) > 1
+        for: 1m
+        labels:
+          severity: critical
+          service: urllc
+          slo: latency
+        annotations:
+          summary: "URLLC latency SLO violation at {{ $labels.site }}"
+          description: "P99 latency is {{ $value }}ms (SLO: 1ms)"
+
+      - alert: eMBBBandwidthDegradation
+        expr: rate(container_network_transmit_bytes_total{service="embb"}[1m]) * 8 / 1000000 < 100
+        for: 5m
+        labels:
+          severity: warning
+          service: embb
+          slo: bandwidth
+        annotations:
+          summary: "eMBB bandwidth below target at {{ $labels.site }}"
+          description: "Current bandwidth: {{ $value }}Mbps (target: 100Mbps)"

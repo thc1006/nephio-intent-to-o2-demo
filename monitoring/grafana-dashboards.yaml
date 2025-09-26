@@ -1,0 +1,396 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards
+  namespace: monitoring
+data:
+  intent-pipeline.json: |
+    {
+      "dashboard": {
+        "id": null,
+        "uid": "intent-pipeline",
+        "title": "Intent-Driven O-RAN Pipeline",
+        "tags": ["oran", "intent", "tmf921"],
+        "timezone": "browser",
+        "schemaVersion": 39,
+        "version": 1,
+        "refresh": "10s",
+        "panels": [
+          {
+            "id": 1,
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+            "type": "graph",
+            "title": "Intent Processing Rate",
+            "datasource": "Thanos",
+            "targets": [
+              {
+                "expr": "sum(rate(intent_processing_total[5m])) by (intent_type)",
+                "legendFormat": "{{ intent_type }}",
+                "refId": "A"
+              }
+            ],
+            "yaxes": [
+              {"format": "ops", "show": true},
+              {"format": "short", "show": false}
+            ]
+          },
+          {
+            "id": 2,
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+            "type": "graph",
+            "title": "Intent Processing Latency (P95)",
+            "datasource": "Thanos",
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.95, sum(rate(intent_processing_duration_seconds_bucket[5m])) by (le, intent_type))",
+                "legendFormat": "{{ intent_type }}",
+                "refId": "A"
+              }
+            ],
+            "yaxes": [
+              {"format": "s", "show": true},
+              {"format": "short", "show": false}
+            ]
+          },
+          {
+            "id": 3,
+            "gridPos": {"h": 8, "w": 24, "x": 0, "y": 8},
+            "type": "heatmap",
+            "title": "Intent Processing Heatmap",
+            "datasource": "Thanos",
+            "targets": [
+              {
+                "expr": "sum(increase(intent_processing_duration_seconds_bucket[1m])) by (le)",
+                "format": "heatmap",
+                "legendFormat": "{{ le }}",
+                "refId": "A"
+              }
+            ],
+            "dataFormat": "timeseries",
+            "yAxis": {
+              "format": "s",
+              "decimals": 1,
+              "logBase": 2
+            }
+          },
+          {
+            "id": 4,
+            "gridPos": {"h": 8, "w": 8, "x": 0, "y": 16},
+            "type": "stat",
+            "title": "Intent Success Rate",
+            "datasource": "Thanos",
+            "targets": [
+              {
+                "expr": "sum(rate(intent_processing_success_total[5m])) / sum(rate(intent_processing_total[5m])) * 100",
+                "refId": "A"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "unit": "percent",
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {"value": 0, "color": "red"},
+                    {"value": 95, "color": "yellow"},
+                    {"value": 99, "color": "green"}
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "id": 5,
+            "gridPos": {"h": 8, "w": 8, "x": 8, "y": 16},
+            "type": "stat",
+            "title": "Active Deployments",
+            "datasource": "Thanos",
+            "targets": [
+              {
+                "expr": "sum(kube_deployment_status_replicas_available{namespace=~\"oran.*\"})",
+                "refId": "A"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "unit": "short",
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {"value": 0, "color": "red"},
+                    {"value": 1, "color": "yellow"},
+                    {"value": 5, "color": "green"}
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "id": 6,
+            "gridPos": {"h": 8, "w": 8, "x": 16, "y": 16},
+            "type": "stat",
+            "title": "SLO Compliance",
+            "datasource": "Thanos",
+            "targets": [
+              {
+                "expr": "(1 - (sum(rate(intent_slo_violations_total[1h])) / sum(rate(intent_processing_total[1h])))) * 100",
+                "refId": "A"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "unit": "percent",
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {"value": 0, "color": "red"},
+                    {"value": 99, "color": "yellow"},
+                    {"value": 99.9, "color": "green"}
+                  ]
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+
+  edge-sites.json: |
+    {
+      "dashboard": {
+        "id": null,
+        "uid": "edge-sites",
+        "title": "Edge Sites Overview",
+        "tags": ["oran", "edge", "multi-site"],
+        "timezone": "browser",
+        "schemaVersion": 39,
+        "version": 1,
+        "refresh": "30s",
+        "panels": [
+          {
+            "id": 1,
+            "gridPos": {"h": 10, "w": 12, "x": 0, "y": 0},
+            "type": "geomap",
+            "title": "Edge Site Locations",
+            "datasource": "Thanos",
+            "targets": [
+              {
+                "expr": "up{job=\"edge-prometheus\"}",
+                "legendFormat": "{{ site }}",
+                "refId": "A"
+              }
+            ],
+            "options": {
+              "view": {
+                "id": "coords",
+                "lat": 37.7749,
+                "lon": -122.4194,
+                "zoom": 10
+              },
+              "layers": [
+                {
+                  "type": "markers",
+                  "name": "Edge Sites",
+                  "config": {
+                    "showLegend": true
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "id": 2,
+            "gridPos": {"h": 10, "w": 12, "x": 12, "y": 0},
+            "type": "table",
+            "title": "Site Health Status",
+            "datasource": "Thanos",
+            "targets": [
+              {
+                "expr": "up{job=\"edge-prometheus\"} == 1",
+                "format": "table",
+                "instant": true,
+                "refId": "A"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "custom": {
+                  "align": "auto",
+                  "displayMode": "color-background"
+                }
+              }
+            }
+          },
+          {
+            "id": 3,
+            "gridPos": {"h": 8, "w": 8, "x": 0, "y": 10},
+            "type": "gauge",
+            "title": "Edge01 Resource Usage",
+            "datasource": "Thanos",
+            "targets": [
+              {
+                "expr": "100 - (avg(rate(container_cpu_usage_seconds_total{site=\"edge01\"}[5m])) * 100)",
+                "refId": "CPU"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "unit": "percent",
+                "min": 0,
+                "max": 100,
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {"value": 0, "color": "red"},
+                    {"value": 20, "color": "yellow"},
+                    {"value": 50, "color": "green"}
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "id": 4,
+            "gridPos": {"h": 8, "w": 8, "x": 8, "y": 10},
+            "type": "gauge",
+            "title": "Edge02 Resource Usage",
+            "datasource": "Thanos",
+            "targets": [
+              {
+                "expr": "100 - (avg(rate(container_cpu_usage_seconds_total{site=\"edge02\"}[5m])) * 100)",
+                "refId": "CPU"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "unit": "percent",
+                "min": 0,
+                "max": 100,
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {"value": 0, "color": "red"},
+                    {"value": 20, "color": "yellow"},
+                    {"value": 50, "color": "green"}
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "id": 5,
+            "gridPos": {"h": 8, "w": 8, "x": 16, "y": 10},
+            "type": "timeseries",
+            "title": "Cross-Site Network Latency",
+            "datasource": "Thanos",
+            "targets": [
+              {
+                "expr": "probe_duration_seconds{job=\"blackbox\", target=~\"edge.*\"}",
+                "legendFormat": "{{ source }} → {{ target }}",
+                "refId": "A"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "unit": "s",
+                "custom": {
+                  "lineInterpolation": "smooth",
+                  "showPoints": "never"
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+
+  canary-deployments.json: |
+    {
+      "dashboard": {
+        "id": null,
+        "uid": "canary-deployments",
+        "title": "Canary Deployments",
+        "tags": ["oran", "canary", "flagger"],
+        "timezone": "browser",
+        "schemaVersion": 39,
+        "version": 1,
+        "refresh": "10s",
+        "panels": [
+          {
+            "id": 1,
+            "gridPos": {"h": 8, "w": 24, "x": 0, "y": 0},
+            "type": "graph",
+            "title": "Canary Traffic Distribution",
+            "datasource": "Thanos",
+            "targets": [
+              {
+                "expr": "sum(rate(istio_request_duration_milliseconds_count{destination_workload=~\".*-canary\"}[1m])) by (destination_workload)",
+                "legendFormat": "{{ destination_workload }}",
+                "refId": "Canary"
+              },
+              {
+                "expr": "sum(rate(istio_request_duration_milliseconds_count{destination_workload!~\".*-canary\"}[1m])) by (destination_workload)",
+                "legendFormat": "{{ destination_workload }}",
+                "refId": "Primary"
+              }
+            ],
+            "yaxes": [
+              {"format": "reqps", "show": true},
+              {"format": "short", "show": false}
+            ],
+            "stack": true
+          },
+          {
+            "id": 2,
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+            "type": "stat",
+            "title": "Canary Success Rate",
+            "datasource": "Thanos",
+            "targets": [
+              {
+                "expr": "sum(rate(istio_request_duration_milliseconds_count{destination_workload=~\".*-canary\", response_code!~\"5..\"}[5m])) / sum(rate(istio_request_duration_milliseconds_count{destination_workload=~\".*-canary\"}[5m])) * 100",
+                "refId": "A"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "unit": "percent",
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {"value": 0, "color": "red"},
+                    {"value": 95, "color": "yellow"},
+                    {"value": 99, "color": "green"}
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "id": 3,
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+            "type": "bargauge",
+            "title": "Canary Weights",
+            "datasource": "Thanos",
+            "targets": [
+              {
+                "expr": "flagger_canary_weight",
+                "legendFormat": "{{ name }}",
+                "refId": "A"
+              }
+            ],
+            "options": {
+              "orientation": "horizontal",
+              "displayMode": "gradient"
+            },
+            "fieldConfig": {
+              "defaults": {
+                "unit": "percent",
+                "min": 0,
+                "max": 100
+              }
+            }
+          }
+        ]
+      }
+    }

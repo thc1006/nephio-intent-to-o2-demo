@@ -1,0 +1,541 @@
+# Complete Edge Site Stack for VM-2 (edge01) and VM-4 (edge02)
+# Includes: Config Sync, Prometheus, Flagger, Thanos Sidecar
+
+---
+# 1. Config Sync RootSync (Already exists, for reference)
+apiVersion: configsync.gke.io/v1beta1
+kind: RootSync
+metadata:
+  name: EDGE_NAME-root-sync  # Replace EDGE_NAME with edge01 or edge02
+  namespace: config-management-system
+spec:
+  sourceFormat: unstructured
+  sourceType: git
+  git:
+    repo: http://172.16.0.78:8888/gitops/EDGE_NAME-configs
+    branch: main
+    auth: none
+    period: 30s
+  sync:
+    preventDeletion: false
+    prune: true
+    resyncPeriod: 60s
+
+---
+# 2. Prometheus for Local Metrics Collection
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: monitoring
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: monitoring
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+      evaluation_interval: 15s
+      external_labels:
+        cluster: 'EDGE_NAME'  # edge01 or edge02
+        site: 'EDGE_NAME'
+
+    # Remote write to VM-1 for centralized observability
+    remote_write:
+    - url: "http://172.16.0.78:9090/api/v1/write"
+      queue_config:
+        capacity: 10000
+        max_shards: 30
+        max_samples_per_send: 500
+      metadata_config:
+        send: true
+        send_interval: 30s
+
+    scrape_configs:
+    # O-RAN Network Function Metrics
+    - job_name: 'oran-nf'
+      static_configs:
+      - targets:
+        - localhost:9100  # UPF exporter
+        - localhost:9101  # SMF exporter
+        - localhost:9102  # RAN exporter
+        labels:
+          component: 'oran'
+
+    # Kubernetes Metrics
+    - job_name: 'kubernetes-nodes'
+      kubernetes_sd_configs:
+      - role: node
+      relabel_configs:
+      - action: labelmap
+        regex: __meta_kubernetes_node_label_(.+)
+
+    - job_name: 'kubernetes-pods'
+      kubernetes_sd_configs:
+      - role: pod
+      relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+        action: keep
+        regex: true
+
+    # cAdvisor Metrics
+    - job_name: 'cadvisor'
+      kubernetes_sd_configs:
+      - role: node
+      relabel_configs:
+      - target_label: __address__
+        replacement: kubernetes.default.svc:443
+      - source_labels: [__meta_kubernetes_node_name]
+        regex: (.+)
+        target_label: __metrics_path__
+        replacement: /api/v1/nodes/${1}/proxy/metrics/cadvisor
+
+    # Blackbox Exporter for RTT/Connectivity
+    - job_name: 'blackbox'
+      metrics_path: /probe
+      params:
+        module: [http_2xx]
+      static_configs:
+      - targets:
+        - http://172.16.0.78:8888  # VM-1 Gitea
+        - http://172.16.0.78:8002  # VM-1 Claude API
+      relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: localhost:9115  # Blackbox exporter
+
+    # iperf3 Bandwidth Testing
+    - job_name: 'iperf3'
+      static_configs:
+      - targets: ['localhost:9089']
+        labels:
+          test_type: 'bandwidth'
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus
+  namespace: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prometheus
+  template:
+    metadata:
+      labels:
+        app: prometheus
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+    spec:
+      containers:
+      # Prometheus Container
+      - name: prometheus
+        image: prom/prometheus:v2.48.0
+        args:
+        - --config.file=/etc/prometheus/prometheus.yml
+        - --storage.tsdb.path=/prometheus
+        - --storage.tsdb.retention.time=7d
+        - --storage.tsdb.min-block-duration=2h
+        - --storage.tsdb.max-block-duration=2h
+        - --web.enable-lifecycle
+        - --web.enable-admin-api
+        ports:
+        - containerPort: 9090
+          name: http
+        volumeMounts:
+        - name: config
+          mountPath: /etc/prometheus
+        - name: data
+          mountPath: /prometheus
+        resources:
+          requests:
+            cpu: 250m
+            memory: 512Mi
+          limits:
+            cpu: 1000m
+            memory: 2Gi
+
+      # Thanos Sidecar for Long-term Storage
+      - name: thanos-sidecar
+        image: quay.io/thanos/thanos:v0.33.0
+        args:
+        - sidecar
+        - --tsdb.path=/prometheus
+        - --prometheus.url=http://localhost:9090
+        - --grpc-address=0.0.0.0:10901
+        - --http-address=0.0.0.0:10902
+        ports:
+        - containerPort: 10901
+          name: grpc
+        - containerPort: 10902
+          name: http-sidecar
+        volumeMounts:
+        - name: data
+          mountPath: /prometheus
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+
+      volumes:
+      - name: config
+        configMap:
+          name: prometheus-config
+      - name: data
+        emptyDir: {}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus
+  namespace: monitoring
+spec:
+  type: NodePort
+  ports:
+  - port: 9090
+    targetPort: 9090
+    nodePort: 30090
+    name: http
+  selector:
+    app: prometheus
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: thanos-sidecar
+  namespace: monitoring
+spec:
+  type: ClusterIP
+  ports:
+  - port: 10901
+    targetPort: 10901
+    name: grpc
+  - port: 10902
+    targetPort: 10902
+    name: http
+  selector:
+    app: prometheus
+
+---
+# 3. O-RAN Exporters
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: oran-exporters
+  namespace: monitoring
+spec:
+  selector:
+    matchLabels:
+      app: oran-exporters
+  template:
+    metadata:
+      labels:
+        app: oran-exporters
+    spec:
+      containers:
+      # UPF Exporter
+      - name: upf-exporter
+        image: oran/upf-exporter:latest
+        ports:
+        - containerPort: 9100
+        env:
+        - name: UPF_ENDPOINT
+          value: "localhost:8080"
+
+      # SMF Exporter
+      - name: smf-exporter
+        image: oran/smf-exporter:latest
+        ports:
+        - containerPort: 9101
+        env:
+        - name: SMF_ENDPOINT
+          value: "localhost:8081"
+
+      # RAN Exporter
+      - name: ran-exporter
+        image: oran/ran-exporter:latest
+        ports:
+        - containerPort: 9102
+        env:
+        - name: RAN_ENDPOINT
+          value: "localhost:8082"
+
+---
+# 4. Blackbox Exporter for Connectivity Testing
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: blackbox-exporter
+  namespace: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: blackbox-exporter
+  template:
+    metadata:
+      labels:
+        app: blackbox-exporter
+    spec:
+      containers:
+      - name: blackbox-exporter
+        image: prom/blackbox-exporter:v0.24.0
+        ports:
+        - containerPort: 9115
+        volumeMounts:
+        - name: config
+          mountPath: /config
+        args:
+        - --config.file=/config/blackbox.yml
+      volumes:
+      - name: config
+        configMap:
+          name: blackbox-config
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: blackbox-config
+  namespace: monitoring
+data:
+  blackbox.yml: |
+    modules:
+      http_2xx:
+        prober: http
+        timeout: 5s
+        http:
+          valid_status_codes: []
+          method: GET
+      icmp:
+        prober: icmp
+        timeout: 5s
+      tcp_connect:
+        prober: tcp
+        timeout: 5s
+
+---
+# 5. Flagger for Progressive Delivery
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: flagger-system
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flagger
+  namespace: flagger-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: flagger
+  template:
+    metadata:
+      labels:
+        app: flagger
+    spec:
+      serviceAccountName: flagger
+      containers:
+      - name: flagger
+        image: ghcr.io/fluxcd/flagger:1.35.0
+        ports:
+        - name: http
+          containerPort: 8080
+        command:
+        - ./flagger
+        - -log-level=info
+        - -metrics-server=http://prometheus.monitoring:9090
+        - -mesh-provider=kubernetes
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+
+---
+# 6. Flagger Canary for O-RAN Services
+apiVersion: flagger.app/v1beta1
+kind: Canary
+metadata:
+  name: oran-service-canary
+  namespace: default
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: oran-service
+  progressDeadlineSeconds: 300
+  service:
+    port: 8080
+    targetPort: 8080
+  analysis:
+    interval: 1m
+    threshold: 5
+    maxWeight: 50
+    stepWeight: 10
+    metrics:
+    # Check Success Rate
+    - name: request-success-rate
+      thresholdRange:
+        min: 99
+      interval: 1m
+      query: |
+        sum(
+          rate(
+            http_requests_total{
+              job="oran-nf",
+              status!~"5.."
+            }[1m]
+          )
+        ) /
+        sum(
+          rate(
+            http_requests_total{
+              job="oran-nf"
+            }[1m]
+          )
+        ) * 100
+
+    # Check Latency
+    - name: request-duration
+      thresholdRange:
+        max: 500  # 500ms for eMBB, adjust for URLLC (1ms)
+      interval: 30s
+      query: |
+        histogram_quantile(
+          0.99,
+          sum(
+            rate(
+              http_request_duration_milliseconds_bucket{
+                job="oran-nf"
+              }[30s]
+            )
+          ) by (le)
+        )
+
+    # Check SLO Compliance
+    - name: slo-compliance
+      thresholdRange:
+        min: 99.9
+      interval: 1m
+      query: |
+        (1 - (
+          sum(rate(slo_violations_total[1m])) /
+          sum(rate(requests_total[1m]))
+        )) * 100
+
+    webhooks:
+    # Load Testing
+    - name: load-test
+      type: pre-rollout
+      url: http://flagger-loadtester.flagger-system/
+      timeout: 30s
+      metadata:
+        type: cmd
+        cmd: "hey -z 2m -q 10 -c 2 http://oran-service-canary:8080/"
+
+    # Rollback Notification to VM-1
+    - name: rollback-hook
+      type: rollback
+      url: http://172.16.0.78:8002/webhook/rollback
+      metadata:
+        site: "EDGE_NAME"
+        service: "oran-service"
+
+---
+# 7. ServiceAccount and RBAC for Flagger
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: flagger
+  namespace: flagger-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: flagger
+rules:
+- apiGroups: [""]
+  resources: ["events", "configmaps", "secrets", "services", "pods"]
+  verbs: ["*"]
+- apiGroups: ["apps"]
+  resources: ["deployments", "daemonsets", "replicasets"]
+  verbs: ["*"]
+- apiGroups: ["flagger.app"]
+  resources: ["canaries", "canaries/status", "metrictemplates", "alertproviders"]
+  verbs: ["*"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: flagger
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: flagger
+subjects:
+- kind: ServiceAccount
+  name: flagger
+  namespace: flagger-system
+
+---
+# 8. iperf3 for Bandwidth Testing
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: iperf3-server
+  namespace: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: iperf3-server
+  template:
+    metadata:
+      labels:
+        app: iperf3-server
+    spec:
+      containers:
+      - name: iperf3
+        image: networkstatic/iperf3
+        args: ["-s"]
+        ports:
+        - containerPort: 5201
+          name: iperf3
+      - name: iperf3-exporter
+        image: mlabbe/iperf3_exporter:latest
+        ports:
+        - containerPort: 9089
+          name: metrics
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: iperf3-server
+  namespace: monitoring
+spec:
+  type: ClusterIP
+  ports:
+  - port: 5201
+    targetPort: 5201
+    name: iperf3
+  - port: 9089
+    targetPort: 9089
+    name: metrics
+  selector:
+    app: iperf3-server

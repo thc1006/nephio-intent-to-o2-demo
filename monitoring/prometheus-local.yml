@@ -1,0 +1,57 @@
+# Prometheus configuration for VM-1 local services
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'orchestrator'
+    site: 'vm1'
+
+# Remote write to VictoriaMetrics (local)
+remote_write:
+- url: "http://victoriametrics:8428/api/v1/write"
+  queue_config:
+    capacity: 10000
+    max_shards: 30
+
+scrape_configs:
+  # Scrape VM-1 services
+  - job_name: 'gitea'
+    static_configs:
+    - targets: ['host.docker.internal:8888']
+      labels:
+        service: 'gitea'
+
+  - job_name: 'claude-api'
+    static_configs:
+    - targets: ['host.docker.internal:8002']
+      labels:
+        service: 'claude-headless'
+
+  - job_name: 'realtime-monitor'
+    static_configs:
+    - targets: ['host.docker.internal:8001']
+      labels:
+        service: 'monitor'
+
+  - job_name: 'tmux-bridge'
+    static_configs:
+    - targets: ['host.docker.internal:8004']
+      labels:
+        service: 'tmux-websocket'
+
+  # Self monitoring
+  - job_name: 'prometheus'
+    static_configs:
+    - targets: ['localhost:9090']
+
+  - job_name: 'victoriametrics'
+    static_configs:
+    - targets: ['victoriametrics:8428']
+
+  - job_name: 'grafana'
+    static_configs:
+    - targets: ['grafana:3000']
+
+  - job_name: 'alertmanager'
+    static_configs:
+    - targets: ['alertmanager:9093']

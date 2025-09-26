@@ -1,0 +1,92 @@
+apiVersion: porch.kpt.dev/v1alpha1
+kind: Repository
+metadata:
+  name: intent-packages
+  namespace: porch-system
+spec:
+  description: "Intent-driven KRM packages for O-RAN deployment"
+  type: git
+  content: Package
+  deployment: false
+  git:
+    repo: "http://172.16.0.78:3000/gitops/intent-packages"
+    branch: "main"
+    createBranch: true
+---
+apiVersion: porch.kpt.dev/v1alpha1
+kind: Repository
+metadata:
+  name: edge01-deployment
+  namespace: porch-system
+spec:
+  description: "Edge01 deployment repository"
+  type: git
+  content: Deployment
+  deployment: true
+  git:
+    repo: "http://172.16.0.78:3000/gitops/edge01-configs"
+    branch: "main"
+---
+apiVersion: porch.kpt.dev/v1alpha1
+kind: Repository
+metadata:
+  name: edge02-deployment
+  namespace: porch-system
+spec:
+  description: "Edge02 deployment repository"
+  type: git
+  content: Deployment
+  deployment: true
+  git:
+    repo: "http://172.16.0.78:3000/gitops/edge02-configs"
+    branch: "main"
+---
+apiVersion: porch.kpt.dev/v1alpha1
+kind: PackageRevision
+metadata:
+  name: intent-base-v1
+  namespace: porch-system
+spec:
+  repository: intent-packages
+  packageName: intent-base
+  revision: v1
+  lifecycle: Published
+---
+apiVersion: porch.kpt.dev/v1alpha1
+kind: PackageRevision
+metadata:
+  name: embb-intent-v1
+  namespace: porch-system
+spec:
+  repository: intent-packages
+  packageName: embb-intent
+  revision: v1
+  lifecycle: Published
+  parent:
+    name: intent-base-v1
+---
+apiVersion: porch.kpt.dev/v1alpha1
+kind: PackageRevision
+metadata:
+  name: urllc-intent-v1
+  namespace: porch-system
+spec:
+  repository: intent-packages
+  packageName: urllc-intent
+  revision: v1
+  lifecycle: Published
+  parent:
+    name: intent-base-v1
+---
+apiVersion: porch.kpt.dev/v1alpha1
+kind: PackageRevision
+metadata:
+  name: mmtc-intent-v1
+  namespace: porch-system
+spec:
+  repository: intent-packages
+  packageName: mmtc-intent
+  revision: v1
+  lifecycle: Published
+  parent:
+    name: intent-base-v1

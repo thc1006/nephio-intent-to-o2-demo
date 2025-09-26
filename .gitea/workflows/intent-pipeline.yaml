@@ -1,0 +1,176 @@
+name: Intent-Driven GitOps Pipeline
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'intents/**'
+      - 'configs/**'
+  workflow_dispatch:
+    inputs:
+      intent:
+        description: 'Intent JSON'
+        required: true
+        type: string
+
+jobs:
+  validate-intent:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup kpt
+        run: |
+          curl -L https://github.com/kptdev/kpt/releases/download/v1.0.0-beta.44/kpt_linux_amd64 -o /tmp/kpt
+          chmod +x /tmp/kpt
+          sudo mv /tmp/kpt /usr/local/bin/
+
+      - name: Validate TMF921 Schema
+        run: |
+          python3 -m pip install jsonschema pyyaml
+          python3 scripts/validate_intent.py "${{ github.event.inputs.intent || 'intents/latest.json' }}"
+
+      - name: Run KRM Pipeline
+        run: |
+          kpt fn eval --image gcr.io/kpt-fn/set-namespace:v0.4.1 -- namespace=oran-intent
+          kpt fn eval --image localhost:5000/intent-compiler:latest
+
+  compile-intent:
+    needs: validate-intent
+    runs-on: ubuntu-latest
+    outputs:
+      manifests: ${{ steps.compile.outputs.manifests }}
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Compile Intent to KRM
+        id: compile
+        run: |
+          ./scripts/intent-compiler/compile.sh "${{ github.event.inputs.intent || 'intents/latest.json' }}"
+          echo "manifests=$(cat output/manifests.yaml | base64 -w 0)" >> $GITHUB_OUTPUT
+
+      - name: Upload Manifests
+        uses: actions/upload-artifact@v3
+        with:
+          name: krm-manifests
+          path: output/
+
+  deploy-to-edge:
+    needs: compile-intent
+    strategy:
+      matrix:
+        site: [edge01, edge02]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Download Manifests
+        uses: actions/download-artifact@v3
+        with:
+          name: krm-manifests
+          path: manifests/
+
+      - name: Deploy to ${{ matrix.site }}
+        run: |
+          # Push to site-specific branch
+          git config user.name "GitOps Bot"
+          git config user.email "gitops@summit-demo.local"
+
+          # Create site-specific deployment
+          mkdir -p deployments/${{ matrix.site }}
+          cp manifests/*.yaml deployments/${{ matrix.site }}/
+
+          # Add site-specific configuration
+          cat > deployments/${{ matrix.site }}/kustomization.yaml << EOF
+          apiVersion: kustomize.config.k8s.io/v1beta1
+          kind: Kustomization
+          namespace: oran-${{ matrix.site }}
+          resources:
+          $(ls manifests/*.yaml | sed 's/manifests\//- /')
+          patches:
+          - patch: |
+              - op: add
+                path: /metadata/labels/site
+                value: ${{ matrix.site }}
+            target:
+              labelSelector: "app.kubernetes.io/part-of=intent-driven-oran"
+          EOF
+
+          git add deployments/${{ matrix.site }}
+          git commit -m "Deploy intent to ${{ matrix.site }}"
+          git push origin HEAD:${{ matrix.site }}-deployment
+
+  progressive-rollout:
+    needs: deploy-to-edge
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Configure Flagger Canary
+        run: |
+          cat > flagger-canary.yaml << EOF
+          apiVersion: flagger.app/v1beta1
+          kind: Canary
+          metadata:
+            name: intent-rollout
+            namespace: oran-intent
+          spec:
+            targetRef:
+              apiVersion: apps/v1
+              kind: Deployment
+              name: intent-service
+            progressDeadlineSeconds: 300
+            service:
+              port: 8080
+              targetPort: 8080
+            analysis:
+              interval: 1m
+              threshold: 5
+              maxWeight: 50
+              stepWeight: 10
+              metrics:
+              - name: request-success-rate
+                thresholdRange:
+                  min: 99
+                interval: 1m
+              - name: request-duration
+                thresholdRange:
+                  max: 500
+                interval: 30s
+              webhooks:
+              - name: load-test
+                url: http://flagger-loadtester.oran-system/
+                timeout: 5s
+                metadata:
+                  cmd: "hey -z 1m -q 10 -c 2 http://intent-service-canary.oran-intent:8080/"
+          EOF
+
+          kubectl apply -f flagger-canary.yaml
+
+  monitor-deployment:
+    needs: progressive-rollout
+    runs-on: ubuntu-latest
+    steps:
+      - name: Monitor Metrics
+        run: |
+          # Query Prometheus for deployment metrics
+          curl -X POST http://172.16.0.78:9090/api/v1/query \
+            -d 'query=rate(intent_processing_duration_seconds[5m])'
+
+      - name: Check SLO Compliance
+        run: |
+          python3 scripts/check_slo.py
+
+      - name: Generate Report
+        run: |
+          timestamp=$(date +%Y%m%d-%H%M%S)
+          mkdir -p reports/$timestamp
+
+          # Collect metrics and generate report
+          ./scripts/generate_deployment_report.sh > reports/$timestamp/deployment.md
+
+          # Upload report
+          git add reports/$timestamp
+          git commit -m "Deployment report for $timestamp"
+          git push

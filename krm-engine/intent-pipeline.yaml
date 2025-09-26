@@ -1,0 +1,151 @@
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: intent-pipeline
+  annotations:
+    config.kubernetes.io/local-config: "true"
+info:
+  description: "KRM function pipeline for intent-driven O-RAN deployment"
+  emails:
+    - summit-demo@example.com
+  keywords:
+    - intent
+    - oran
+    - tmf921
+    - krm
+pipeline:
+  mutators:
+    - image: gcr.io/kpt-fn/set-namespace:v0.4.1
+      configPath: namespace-config.yaml
+      name: set-namespace
+    - image: gcr.io/kpt-fn/set-labels:v0.2.0
+      configMap:
+        app.kubernetes.io/managed-by: porch
+        app.kubernetes.io/part-of: intent-driven-oran
+      name: set-labels
+    - image: gcr.io/kpt-fn/apply-replacements:v0.1.1
+      configPath: replacements.yaml
+      name: apply-replacements
+    - image: localhost:5000/intent-compiler:latest
+      configPath: intent-config.yaml
+      name: compile-intent
+    - image: gcr.io/kpt-fn/search-replace:v0.2.0
+      configMap:
+        by-path: spec.serviceProfile
+        by-file-path: "**/*intent*.yaml"
+      name: process-service-profile
+  validators:
+    - image: gcr.io/kpt-fn/kubeval:v0.3.0
+      name: validate-manifests
+    - image: gcr.io/kpt-fn/gatekeeper:v0.2.1
+      configPath: gatekeeper-config.yaml
+      name: policy-validation
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: namespace-config
+  annotations:
+    config.kubernetes.io/local-config: "true"
+data:
+  namespace: oran-intent
+---
+apiVersion: fn.kpt.dev/v1alpha1
+kind: ApplyReplacements
+metadata:
+  name: replacements
+  annotations:
+    config.kubernetes.io/local-config: "true"
+replacements:
+  - source:
+      kind: Intent
+      fieldPath: spec.targetSites
+    targets:
+      - select:
+          kind: Deployment
+        fieldPaths:
+          - metadata.labels.[deployment.site]
+  - source:
+      kind: Intent
+      fieldPath: spec.serviceProfile.bandwidth
+    targets:
+      - select:
+          kind: ConfigMap
+          name: service-config
+        fieldPaths:
+          - data.bandwidth
+  - source:
+      kind: Intent
+      fieldPath: spec.serviceProfile.latency
+    targets:
+      - select:
+          kind: ConfigMap
+          name: service-config
+        fieldPaths:
+          - data.latency
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: intent-config
+  annotations:
+    config.kubernetes.io/local-config: "true"
+data:
+  tmf921-schema: |
+    {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "required": ["intentId", "intentType", "serviceProfile"],
+      "properties": {
+        "intentId": {"type": "string"},
+        "intentType": {"enum": ["eMBB", "URLLC", "mMTC"]},
+        "targetSites": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "serviceProfile": {
+          "type": "object",
+          "properties": {
+            "bandwidth": {"type": "string"},
+            "latency": {"type": "string"},
+            "reliability": {"type": "string"},
+            "deviceDensity": {"type": "string"}
+          }
+        }
+      }
+    }
+  compiler-config: |
+    mode: tmf921-to-krm
+    validation: strict
+    output-format: kubernetes-manifests
+---
+apiVersion: templates.gatekeeper.sh/v1beta1
+kind: ConstraintTemplate
+metadata:
+  name: intentvalidation
+  annotations:
+    config.kubernetes.io/local-config: "true"
+spec:
+  crd:
+    spec:
+      names:
+        kind: IntentValidation
+      validation:
+        openAPIV3Schema:
+          type: object
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package intentvalidation
+
+        violation[{"msg": msg}] {
+          input.review.object.kind == "Intent"
+          not input.review.object.spec.intentType
+          msg := "Intent must have intentType specified"
+        }
+
+        violation[{"msg": msg}] {
+          input.review.object.kind == "Intent"
+          not input.review.object.spec.serviceProfile
+          msg := "Intent must have serviceProfile specified"
+        }

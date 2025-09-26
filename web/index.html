@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Intent-to-O2 Terminal Interface</title>
+    <link href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: white;
+        }
+
+        .logo svg {
+            width: 40px;
+            height: 40px;
+        }
+
+        .title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+        }
+
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #10b981;
+            animation: pulse 2s infinite;
+        }
+
+        .status-indicator.disconnected {
+            background: #ef4444;
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(1.1); }
+        }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            padding: 20px;
+            gap: 20px;
+        }
+
+        .left-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .terminal-container {
+            flex: 1;
+            background: #0a0e27;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        #terminal {
+            height: 100%;
+            min-height: 400px;
+        }
+
+        .input-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .input-field {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 12px 16px;
+            color: white;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #60a5fa;
+            background: rgba(0, 0, 0, 0.4);
+        }
+
+        .input-field::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .send-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 8px;
+            padding: 12px 24px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .send-button:hover {
+            transform: translateY(-2px);
+        }
+
+        .send-button:active {
+            transform: translateY(0);
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .quick-action {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            padding: 8px 16px;
+            color: white;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .quick-action:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .right-panel {
+            width: 350px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .pipeline-monitor {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .panel-title {
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pipeline-stages {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .stage {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .stage-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .stage.active {
+            background: rgba(59, 130, 246, 0.2);
+            border: 1px solid rgba(59, 130, 246, 0.5);
+        }
+
+        .stage.active .stage-icon {
+            background: #3b82f6;
+            animation: rotate 1s linear infinite;
+        }
+
+        .stage.completed .stage-icon {
+            background: #10b981;
+        }
+
+        .stage.error .stage-icon {
+            background: #ef4444;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .stage-info {
+            flex: 1;
+            color: white;
+        }
+
+        .stage-name {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .stage-status {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .metrics-panel {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .metric-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .metric-item:last-child {
+            border-bottom: none;
+        }
+
+        .metric-label {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+        }
+
+        .metric-value {
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .metric-value.success {
+            color: #10b981;
+        }
+
+        .metric-value.warning {
+            color: #f59e0b;
+        }
+
+        .metric-value.error {
+            color: #ef4444;
+        }
+
+        .floating-button {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s;
+        }
+
+        .floating-button:hover {
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2L2 7V12C2 16.5 4.23 20.68 7.62 23.15L12 24L16.38 23.15C19.77 20.68 22 16.5 22 12V7L12 2Z" stroke="white" stroke-width="2"/>
+                <path d="M12 7V17M7 12H17" stroke="white" stroke-width="2"/>
+            </svg>
+            <div>
+                <div class="title">Intent-to-O2 Orchestrator</div>
+                <div style="color: rgba(255,255,255,0.6); font-size: 12px;">VM-1 Terminal Interface</div>
+            </div>
+        </div>
+        <div class="connection-status">
+            <div class="status-indicator" id="statusIndicator"></div>
+            <span style="color: white; font-size: 14px;" id="statusText">Connecting...</span>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="left-panel">
+            <div class="terminal-container">
+                <div id="terminal"></div>
+            </div>
+
+            <div class="input-container">
+                <div class="input-wrapper">
+                    <input type="text"
+                           id="commandInput"
+                           class="input-field"
+                           placeholder="輸入自然語言指令 (例如: Deploy eMBB service on edge01 with 100Mbps)"
+                           autofocus>
+                    <button class="send-button" onclick="sendCommand()">發送</button>
+                </div>
+                <div class="quick-actions">
+                    <button class="quick-action" onclick="quickCommand('Deploy eMBB service on edge01 with 100Mbps bandwidth')">
+                        📡 eMBB Edge01
+                    </button>
+                    <button class="quick-action" onclick="quickCommand('Deploy URLLC service with 1ms latency requirement')">
+                        ⚡ URLLC 低延遲
+                    </button>
+                    <button class="quick-action" onclick="quickCommand('Deploy mMTC for 10000 IoT devices on edge02')">
+                        🌐 mMTC IoT
+                    </button>
+                    <button class="quick-action" onclick="quickCommand('Show current pipeline status')">
+                        📊 查看狀態
+                    </button>
+                    <button class="quick-action" onclick="quickCommand('Check SLO compliance for all services')">
+                        ✅ 檢查 SLO
+                    </button>
+                    <button class="quick-action" onclick="clearTerminal()">
+                        🗑️ 清空終端
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="right-panel">
+            <div class="pipeline-monitor">
+                <div class="panel-title">
+                    🔄 Pipeline 狀態
+                </div>
+                <div class="pipeline-stages">
+                    <div class="stage" id="stage-input">
+                        <div class="stage-icon">📝</div>
+                        <div class="stage-info">
+                            <div class="stage-name">自然語言輸入</div>
+                            <div class="stage-status">等待輸入...</div>
+                        </div>
+                    </div>
+                    <div class="stage" id="stage-parse">
+                        <div class="stage-icon">🔍</div>
+                        <div class="stage-info">
+                            <div class="stage-name">Intent 解析</div>
+                            <div class="stage-status">準備就緒</div>
+                        </div>
+                    </div>
+                    <div class="stage" id="stage-validate">
+                        <div class="stage-icon">✅</div>
+                        <div class="stage-info">
+                            <div class="stage-name">TMF921 驗證</div>
+                            <div class="stage-status">準備就緒</div>
+                        </div>
+                    </div>
+                    <div class="stage" id="stage-compile">
+                        <div class="stage-icon">⚙️</div>
+                        <div class="stage-info">
+                            <div class="stage-name">KRM 編譯</div>
+                            <div class="stage-status">準備就緒</div>
+                        </div>
+                    </div>
+                    <div class="stage" id="stage-deploy">
+                        <div class="stage-icon">🚀</div>
+                        <div class="stage-info">
+                            <div class="stage-name">GitOps 部署</div>
+                            <div class="stage-status">準備就緒</div>
+                        </div>
+                    </div>
+                    <div class="stage" id="stage-monitor">
+                        <div class="stage-icon">📊</div>
+                        <div class="stage-info">
+                            <div class="stage-name">監控驗證</div>
+                            <div class="stage-status">準備就緒</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="metrics-panel">
+                <div class="panel-title">
+                    📈 即時指標
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Intent 處理率</span>
+                    <span class="metric-value" id="processing-rate">0/min</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">成功率</span>
+                    <span class="metric-value success" id="success-rate">100%</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">平均延遲</span>
+                    <span class="metric-value" id="avg-latency">0ms</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">活躍部署</span>
+                    <span class="metric-value" id="active-deployments">0</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">SLO 合規</span>
+                    <span class="metric-value success" id="slo-compliance">100%</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="floating-button" onclick="toggleHelp()">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/>
+        </svg>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.js"></script>
+    <script>
+        let ws = null;
+        let term = null;
+        let fitAddon = null;
+
+        // 初始化 xterm
+        function initTerminal() {
+            term = new Terminal({
+                cursorBlink: true,
+                fontSize: 14,
+                fontFamily: 'Menlo, Monaco, "Courier New", monospace',
+                theme: {
+                    background: '#0a0e27',
+                    foreground: '#00ff00',
+                    cursor: '#00ff00',
+                    black: '#000000',
+                    red: '#ff5555',
+                    green: '#50fa7b',
+                    yellow: '#f1fa8c',
+                    blue: '#6272a4',
+                    magenta: '#ff79c6',
+                    cyan: '#8be9fd',
+                    white: '#f8f8f2'
+                }
+            });
+
+            fitAddon = new FitAddon.FitAddon();
+            term.loadAddon(fitAddon);
+            term.open(document.getElementById('terminal'));
+            fitAddon.fit();
+
+            window.addEventListener('resize', () => fitAddon.fit());
+        }
+
+        // WebSocket 連接
+        function connectWebSocket() {
+            const wsUrl = `ws://${window.location.hostname}:8004/ws`;
+            ws = new WebSocket(wsUrl);
+
+            ws.onopen = () => {
+                console.log('Connected to TMux bridge');
+                updateConnectionStatus(true);
+                term.writeln('\r\n\x1b[1;32m✓ Connected to Claude Intent Terminal\x1b[0m\r\n');
+            };
+
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                handleMessage(data);
+            };
+
+            ws.onerror = (error) => {
+                console.error('WebSocket error:', error);
+                term.writeln('\r\n\x1b[1;31m✗ Connection error\x1b[0m\r\n');
+                updateConnectionStatus(false);
+            };
+
+            ws.onclose = () => {
+                updateConnectionStatus(false);
+                term.writeln('\r\n\x1b[1;33m⚠ Disconnected. Reconnecting...\x1b[0m\r\n');
+                setTimeout(connectWebSocket, 3000);
+            };
+        }
+
+        // 處理 WebSocket 訊息
+        function handleMessage(data) {
+            switch(data.type) {
+                case 'output':
+                    // 顯示輸出到終端
+                    const lines = data.content.split('\n');
+                    lines.forEach(line => {
+                        term.writeln(line.replace(/\n/g, '\r\n'));
+                    });
+                    break;
+
+                case 'event':
+                    handlePipelineEvent(data.event);
+                    break;
+
+                case 'command_received':
+                    term.writeln(`\r\n\x1b[1;36m> ${data.command}\x1b[0m\r\n`);
+                    updateStage('input', 'active', '處理中...');
+                    break;
+
+                case 'metrics':
+                    updateMetrics(data.metrics);
+                    break;
+
+                case 'pipeline_status':
+                    updatePipelineStatus(data.status);
+                    break;
+            }
+        }
+
+        // 發送命令
+        function sendCommand() {
+            const input = document.getElementById('commandInput');
+            const command = input.value.trim();
+
+            if (!command) return;
+
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    type: 'command',
+                    content: command
+                }));
+                input.value = '';
+                resetStages();
+                updateStage('input', 'active', '接收命令...');
+            } else {
+                term.writeln('\r\n\x1b[1;31m✗ Not connected. Please wait...\x1b[0m\r\n');
+            }
+        }
+
+        // 快速命令
+        function quickCommand(cmd) {
+            document.getElementById('commandInput').value = cmd;
+            sendCommand();
+        }
+
+        // 清空終端
+        function clearTerminal() {
+            term.clear();
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: 'clear' }));
+            }
+        }
+
+        // 更新連接狀態
+        function updateConnectionStatus(connected) {
+            const indicator = document.getElementById('statusIndicator');
+            const text = document.getElementById('statusText');
+
+            if (connected) {
+                indicator.classList.remove('disconnected');
+                text.textContent = 'Connected';
+            } else {
+                indicator.classList.add('disconnected');
+                text.textContent = 'Disconnected';
+            }
+        }
+
+        // 更新 Pipeline 階段
+        function updateStage(stageId, status, message = '') {
+            const stage = document.getElementById(`stage-${stageId}`);
+            if (!stage) return;
+
+            // 移除所有狀態類
+            stage.classList.remove('active', 'completed', 'error');
+
+            // 添加新狀態
+            if (status) {
+                stage.classList.add(status);
+            }
+
+            // 更新狀態文字
+            if (message) {
+                const statusEl = stage.querySelector('.stage-status');
+                if (statusEl) {
+                    statusEl.textContent = message;
+                }
+            }
+        }
+
+        // 處理 Pipeline 事件
+        function handlePipelineEvent(event) {
+            switch(event) {
+                case 'parsing':
+                    updateStage('input', 'completed', '完成');
+                    updateStage('parse', 'active', '解析中...');
+                    break;
+                case 'validating':
+                    updateStage('parse', 'completed', '完成');
+                    updateStage('validate', 'active', '驗證中...');
+                    break;
+                case 'compiling':
+                    updateStage('validate', 'completed', '完成');
+                    updateStage('compile', 'active', '編譯中...');
+                    break;
+                case 'deploying':
+                    updateStage('compile', 'completed', '完成');
+                    updateStage('deploy', 'active', '部署中...');
+                    break;
+                case 'monitoring':
+                    updateStage('deploy', 'completed', '完成');
+                    updateStage('monitor', 'active', '監控中...');
+                    break;
+                case 'completed':
+                    updateStage('monitor', 'completed', '完成');
+                    break;
+                case 'error':
+                    // 找到當前活躍的階段並標記為錯誤
+                    const activeStage = document.querySelector('.stage.active');
+                    if (activeStage) {
+                        activeStage.classList.remove('active');
+                        activeStage.classList.add('error');
+                        const statusEl = activeStage.querySelector('.stage-status');
+                        if (statusEl) {
+                            statusEl.textContent = '錯誤';
+                        }
+                    }
+                    break;
+            }
+        }
+
+        // 重置所有階段
+        function resetStages() {
+            const stages = ['input', 'parse', 'validate', 'compile', 'deploy', 'monitor'];
+            stages.forEach(stage => {
+                updateStage(stage, '', '準備就緒');
+            });
+        }
+
+        // 更新指標
+        function updateMetrics(metrics) {
+            if (metrics.processingRate !== undefined) {
+                document.getElementById('processing-rate').textContent = `${metrics.processingRate}/min`;
+            }
+            if (metrics.successRate !== undefined) {
+                const el = document.getElementById('success-rate');
+                el.textContent = `${metrics.successRate}%`;
+                el.className = metrics.successRate >= 99 ? 'metric-value success' :
+                              metrics.successRate >= 95 ? 'metric-value warning' : 'metric-value error';
+            }
+            if (metrics.avgLatency !== undefined) {
+                document.getElementById('avg-latency').textContent = `${metrics.avgLatency}ms`;
+            }
+            if (metrics.activeDeployments !== undefined) {
+                document.getElementById('active-deployments').textContent = metrics.activeDeployments;
+            }
+            if (metrics.sloCompliance !== undefined) {
+                const el = document.getElementById('slo-compliance');
+                el.textContent = `${metrics.sloCompliance}%`;
+                el.className = metrics.sloCompliance >= 99.9 ? 'metric-value success' :
+                              metrics.sloCompliance >= 99 ? 'metric-value warning' : 'metric-value error';
+            }
+        }
+
+        // 鍵盤快捷鍵
+        document.getElementById('commandInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendCommand();
+            }
+        });
+
+        // 切換幫助
+        function toggleHelp() {
+            term.writeln('\r\n\x1b[1;36m=== Intent-to-O2 Help ===\x1b[0m');
+            term.writeln('\x1b[1;33mNatural Language Commands:\x1b[0m');
+            term.writeln('  Deploy [service] on [site] - Deploy a service');
+            term.writeln('  Show status - Display pipeline status');
+            term.writeln('  Check SLO - Verify SLO compliance');
+            term.writeln('\x1b[1;33mService Types:\x1b[0m');
+            term.writeln('  eMBB - Enhanced Mobile Broadband');
+            term.writeln('  URLLC - Ultra-Reliable Low Latency');
+            term.writeln('  mMTC - Massive Machine Type Communications');
+            term.writeln('\x1b[1;33mKeyboard Shortcuts:\x1b[0m');
+            term.writeln('  Enter - Send command');
+            term.writeln('  Ctrl+L - Clear terminal\r\n');
+        }
+
+        // 初始化
+        initTerminal();
+        connectWebSocket();
+
+        // 定期更新指標
+        setInterval(() => {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: 'get_metrics' }));
+            }
+        }, 5000);
+
+        // 心跳
+        setInterval(() => {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: 'ping' }));
+            }
+        }, 30000);
+    </script>
+</body>
+</html>

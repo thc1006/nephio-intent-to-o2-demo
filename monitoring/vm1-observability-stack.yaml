@@ -1,0 +1,563 @@
+# VM-1 Central Observability Stack
+# VictoriaMetrics + Grafana + Alertmanager
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: observability
+---
+
+# 1. VictoriaMetrics - Lightweight TSDB with Prometheus Compatibility
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: victoriametrics
+  namespace: observability
+spec:
+  serviceName: victoriametrics
+  replicas: 1
+  selector:
+    matchLabels:
+      app: victoriametrics
+  template:
+    metadata:
+      labels:
+        app: victoriametrics
+    spec:
+      containers:
+      - name: victoriametrics
+        image: victoriametrics/victoria-metrics:v1.96.0
+        args:
+        - -storageDataPath=/storage
+        - -retentionPeriod=90d  # 3 months retention for demo
+        - -httpListenAddr=:8428
+        - -influxListenAddr=:8089  # Optional: InfluxDB protocol support
+        - -graphiteListenAddr=:2003  # Optional: Graphite protocol support
+        - -search.maxQueryDuration=600s
+        - -search.maxSamplesPerQuery=1e9
+        ports:
+        - containerPort: 8428
+          name: http
+        - containerPort: 8089
+          name: influx
+        - containerPort: 2003
+          name: graphite
+        volumeMounts:
+        - name: storage
+          mountPath: /storage
+        resources:
+          requests:
+            cpu: 500m
+            memory: 1Gi
+          limits:
+            cpu: 2000m
+            memory: 4Gi
+        livenessProbe:
+          httpGet:
+            path: /metrics
+            port: 8428
+          initialDelaySeconds: 30
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /metrics
+            port: 8428
+          initialDelaySeconds: 5
+          periodSeconds: 5
+  volumeClaimTemplates:
+  - metadata:
+      name: storage
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 50Gi
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: victoriametrics
+  namespace: observability
+spec:
+  type: NodePort
+  ports:
+  - port: 8428
+    targetPort: 8428
+    nodePort: 30428
+    name: http
+  selector:
+    app: victoriametrics
+
+---
+# 2. VMAuth - Optional Auth Proxy for VictoriaMetrics
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vmauth-config
+  namespace: observability
+data:
+  auth.yml: |
+    users:
+    - username: "edge01"
+      password: "edge01-metrics"
+      url_prefix: "http://victoriametrics:8428/api/v1/write?extra_label=site=edge01"
+    - username: "edge02"
+      password: "edge02-metrics"
+      url_prefix: "http://victoriametrics:8428/api/v1/write?extra_label=site=edge02"
+    - username: "reader"
+      password: "read-only"
+      url_prefix: "http://victoriametrics:8428"
+
+---
+# 3. Grafana for Visualization
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-datasources
+  namespace: observability
+data:
+  datasources.yaml: |
+    apiVersion: 1
+    datasources:
+    - name: VictoriaMetrics
+      type: prometheus
+      access: proxy
+      url: http://victoriametrics:8428
+      isDefault: true
+      editable: false
+      jsonData:
+        timeInterval: "15s"
+        queryTimeout: "300s"
+    - name: Edge01-Direct
+      type: prometheus
+      access: proxy
+      url: http://172.16.4.45:30090
+      editable: false
+    - name: Edge02-Direct
+      type: prometheus
+      access: proxy
+      url: http://172.16.4.176:30090
+      editable: false
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards-config
+  namespace: observability
+data:
+  dashboards.yaml: |
+    apiVersion: 1
+    providers:
+    - name: 'default'
+      orgId: 1
+      folder: ''
+      type: file
+      disableDeletion: false
+      updateIntervalSeconds: 10
+      allowUiUpdates: true
+      options:
+        path: /var/lib/grafana/dashboards
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+  namespace: observability
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      containers:
+      - name: grafana
+        image: grafana/grafana:10.2.3
+        ports:
+        - containerPort: 3000
+          name: http
+        env:
+        - name: GF_SECURITY_ADMIN_PASSWORD
+          value: "admin123"
+        - name: GF_INSTALL_PLUGINS
+          value: "grafana-piechart-panel,grafana-worldmap-panel,grafana-clock-panel"
+        - name: GF_SERVER_ROOT_URL
+          value: "http://147.251.115.143:3000"
+        volumeMounts:
+        - name: datasources
+          mountPath: /etc/grafana/provisioning/datasources
+        - name: dashboards-config
+          mountPath: /etc/grafana/provisioning/dashboards
+        - name: dashboards
+          mountPath: /var/lib/grafana/dashboards
+        - name: storage
+          mountPath: /var/lib/grafana
+        resources:
+          requests:
+            cpu: 250m
+            memory: 256Mi
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+      volumes:
+      - name: datasources
+        configMap:
+          name: grafana-datasources
+      - name: dashboards-config
+        configMap:
+          name: grafana-dashboards-config
+      - name: dashboards
+        configMap:
+          name: grafana-dashboards
+      - name: storage
+        emptyDir: {}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana
+  namespace: observability
+spec:
+  type: NodePort
+  ports:
+  - port: 3000
+    targetPort: 3000
+    nodePort: 30300
+    name: http
+  selector:
+    app: grafana
+
+---
+# 4. Alertmanager for Alert Routing
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alertmanager-config
+  namespace: observability
+data:
+  alertmanager.yml: |
+    global:
+      resolve_timeout: 5m
+      smtp_smarthost: 'localhost:25'
+      smtp_from: 'alertmanager@summit-demo.local'
+
+    route:
+      group_by: ['alertname', 'cluster', 'service', 'site']
+      group_wait: 10s
+      group_interval: 10s
+      repeat_interval: 12h
+      receiver: 'default'
+      routes:
+      - match:
+          severity: critical
+        receiver: 'critical'
+        continue: true
+      - match:
+          site: edge01
+        receiver: 'edge01-team'
+      - match:
+          site: edge02
+        receiver: 'edge02-team'
+
+    receivers:
+    - name: 'default'
+      webhook_configs:
+      - url: 'http://localhost:8002/webhook/alert'
+        send_resolved: true
+
+    - name: 'critical'
+      webhook_configs:
+      - url: 'http://localhost:8002/webhook/critical'
+        send_resolved: true
+
+    - name: 'edge01-team'
+      webhook_configs:
+      - url: 'http://172.16.4.45:8080/alert'
+        send_resolved: true
+
+    - name: 'edge02-team'
+      webhook_configs:
+      - url: 'http://172.16.4.176:8080/alert'
+        send_resolved: true
+
+    templates:
+    - '/etc/alertmanager/templates/*.tmpl'
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alertmanager
+  namespace: observability
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: alertmanager
+  template:
+    metadata:
+      labels:
+        app: alertmanager
+    spec:
+      containers:
+      - name: alertmanager
+        image: prom/alertmanager:v0.27.0
+        args:
+        - --config.file=/config/alertmanager.yml
+        - --storage.path=/alertmanager
+        - --web.external-url=http://147.251.115.143:9093
+        ports:
+        - containerPort: 9093
+          name: http
+        volumeMounts:
+        - name: config
+          mountPath: /config
+        - name: storage
+          mountPath: /alertmanager
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+      volumes:
+      - name: config
+        configMap:
+          name: alertmanager-config
+      - name: storage
+        emptyDir: {}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: alertmanager
+  namespace: observability
+spec:
+  type: NodePort
+  ports:
+  - port: 9093
+    targetPort: 9093
+    nodePort: 30093
+    name: http
+  selector:
+    app: alertmanager
+
+---
+# 5. vmalert - Alert Rules Engine for VictoriaMetrics
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vmalert-rules
+  namespace: observability
+data:
+  intent-slo.yml: |
+    groups:
+    - name: intent_slo
+      interval: 30s
+      rules:
+      # Intent Processing SLO
+      - alert: IntentProcessingHighLatency
+        expr: histogram_quantile(0.95, sum(rate(intent_processing_duration_seconds_bucket[5m])) by (le)) > 5
+        for: 5m
+        labels:
+          severity: warning
+          component: intent-processor
+        annotations:
+          summary: "Intent processing P95 latency > 5s"
+          description: "95th percentile latency is {{ $value }}s (threshold: 5s)"
+
+      - alert: IntentProcessingFailureRate
+        expr: (1 - sum(rate(intent_processing_success_total[5m])) / sum(rate(intent_processing_total[5m]))) > 0.01
+        for: 10m
+        labels:
+          severity: critical
+          component: intent-processor
+        annotations:
+          summary: "Intent processing failure rate > 1%"
+          description: "Failure rate is {{ $value | humanizePercentage }}"
+
+      # Edge Site Health
+      - alert: EdgeSiteDown
+        expr: up{job="edge-prometheus"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          component: edge-site
+        annotations:
+          summary: "Edge site {{ $labels.site }} is down"
+          description: "Cannot reach Prometheus at {{ $labels.site }}"
+
+      - alert: EdgeSiteHighMemory
+        expr: (1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) > 0.9
+        for: 10m
+        labels:
+          severity: warning
+          component: edge-site
+        annotations:
+          summary: "High memory usage at {{ $labels.site }}"
+          description: "Memory usage is {{ $value | humanizePercentage }}"
+
+      # O-RAN Service SLOs
+      - alert: URLLCLatencyViolation
+        expr: histogram_quantile(0.99, sum(rate(http_request_duration_milliseconds_bucket{service="urllc"}[1m])) by (le, site)) > 1
+        for: 1m
+        labels:
+          severity: critical
+          service: urllc
+          slo: latency
+        annotations:
+          summary: "URLLC latency SLO violation at {{ $labels.site }}"
+          description: "P99 latency is {{ $value }}ms (SLO: 1ms)"
+
+      - alert: eMBBBandwidthDegradation
+        expr: rate(container_network_transmit_bytes_total{service="embb"}[1m]) * 8 / 1000000 < 100
+        for: 5m
+        labels:
+          severity: warning
+          service: embb
+          slo: bandwidth
+        annotations:
+          summary: "eMBB bandwidth below target at {{ $labels.site }}"
+          description: "Current bandwidth: {{ $value }}Mbps (target: 100Mbps)"
+
+      - alert: mMTCDeviceDensity
+        expr: mmtc_connected_devices{service="mmtc"} < 9000
+        for: 10m
+        labels:
+          severity: warning
+          service: mmtc
+          slo: density
+        annotations:
+          summary: "mMTC device count below target at {{ $labels.site }}"
+          description: "Connected devices: {{ $value }} (target: 10000)"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vmalert
+  namespace: observability
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vmalert
+  template:
+    metadata:
+      labels:
+        app: vmalert
+    spec:
+      containers:
+      - name: vmalert
+        image: victoriametrics/vmalert:v1.96.0
+        args:
+        - -datasource.url=http://victoriametrics:8428
+        - -remoteWrite.url=http://victoriametrics:8428
+        - -notifier.url=http://alertmanager:9093
+        - -rule=/config/*.yml
+        - -evaluationInterval=30s
+        ports:
+        - containerPort: 8880
+          name: http
+        volumeMounts:
+        - name: rules
+          mountPath: /config
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 256Mi
+      volumes:
+      - name: rules
+        configMap:
+          name: vmalert-rules
+
+---
+# 6. Grafana Dashboard for Intent-to-O2
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards
+  namespace: observability
+data:
+  intent-overview.json: |
+    {
+      "dashboard": {
+        "title": "Intent-to-O2 Overview",
+        "panels": [
+          {
+            "title": "Intent Processing Rate",
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "sum(rate(intent_processing_total[5m])) by (site)",
+                "legendFormat": "{{ site }}"
+              }
+            ]
+          },
+          {
+            "title": "Cross-Site Latency Heatmap",
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+            "type": "heatmap",
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.99, sum(rate(http_request_duration_milliseconds_bucket[5m])) by (le, site))"
+              }
+            ]
+          },
+          {
+            "title": "Edge Sites Health",
+            "gridPos": {"h": 6, "w": 24, "x": 0, "y": 8},
+            "type": "table",
+            "targets": [
+              {
+                "expr": "up{job=~\"edge.*\"}"
+              }
+            ]
+          },
+          {
+            "title": "SLO Compliance by Service",
+            "gridPos": {"h": 8, "w": 8, "x": 0, "y": 14},
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "(1 - sum(rate(slo_violations_total[1h])) by (service) / sum(rate(requests_total[1h])) by (service)) * 100"
+              }
+            ]
+          },
+          {
+            "title": "Active Canary Deployments",
+            "gridPos": {"h": 8, "w": 8, "x": 8, "y": 14},
+            "type": "bargauge",
+            "targets": [
+              {
+                "expr": "flagger_canary_weight"
+              }
+            ]
+          },
+          {
+            "title": "Resource Usage by Site",
+            "gridPos": {"h": 8, "w": 8, "x": 16, "y": 14},
+            "type": "piechart",
+            "targets": [
+              {
+                "expr": "sum(container_memory_usage_bytes) by (site)"
+              }
+            ]
+          }
+        ]
+      }
+    }

@@ -1,0 +1,259 @@
+apiVersion: flagger.app/v1beta1
+kind: Canary
+metadata:
+  name: embb-canary
+  namespace: oran-intent
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: embb-service
+  progressDeadlineSeconds: 600
+  service:
+    port: 8080
+    targetPort: 8080
+  analysis:
+    interval: 1m
+    threshold: 5
+    maxWeight: 60
+    stepWeight: 20
+    stepWeightPromotion: 10
+    metrics:
+    - name: request-success-rate
+      interval: 1m
+      thresholdRange:
+        min: 99
+      query: |
+        sum(
+          rate(
+            istio_request_duration_milliseconds_count{
+              destination_workload="embb-service",
+              response_code!~"5.."
+            }[1m]
+          )
+        ) /
+        sum(
+          rate(
+            istio_request_duration_milliseconds_count{
+              destination_workload="embb-service"
+            }[1m]
+          )
+        ) * 100
+    - name: request-duration-p99
+      interval: 1m
+      thresholdRange:
+        max: 500
+      query: |
+        histogram_quantile(
+          0.99,
+          sum(
+            rate(
+              istio_request_duration_milliseconds_bucket{
+                destination_workload="embb-service"
+              }[1m]
+            )
+          ) by (le)
+        )
+    - name: bandwidth-utilization
+      interval: 30s
+      thresholdRange:
+        max: 80
+      query: |
+        avg(
+          rate(container_network_transmit_bytes_total{pod=~"embb-service.*"}[30s]) * 8
+        ) / 1000000000 * 100 / 100  # Convert to percentage of 100Gbps capacity
+    webhooks:
+    - name: load-test
+      type: pre-rollout
+      url: http://flagger-loadtester.flagger-system/
+      timeout: 30s
+      metadata:
+        type: cmd
+        cmd: "hey -z 2m -q 50 -c 10 http://embb-service-canary.oran-intent:8080/"
+    - name: acceptance-test
+      type: pre-rollout
+      url: http://flagger-loadtester.flagger-system/
+      timeout: 60s
+      metadata:
+        type: bash
+        cmd: |
+          curl -sf http://embb-service-canary.oran-intent:8080/health || exit 1
+          response=$(curl -sf http://embb-service-canary.oran-intent:8080/api/v1/status)
+          if [[ "$response" != *"ready"* ]]; then exit 1; fi
+    - name: rollback-notification
+      type: rollback
+      url: http://webhook.oran-system/rollback
+      metadata:
+        message: "eMBB canary deployment rolled back"
+---
+apiVersion: flagger.app/v1beta1
+kind: Canary
+metadata:
+  name: urllc-canary
+  namespace: oran-intent
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: urllc-service
+  progressDeadlineSeconds: 300
+  service:
+    port: 8080
+    targetPort: 8080
+  analysis:
+    interval: 30s
+    threshold: 3
+    maxWeight: 50
+    stepWeight: 25
+    stepWeightPromotion: 5
+    metrics:
+    - name: latency-p99
+      interval: 30s
+      thresholdRange:
+        max: 1  # 1ms for URLLC
+      query: |
+        histogram_quantile(
+          0.99,
+          sum(
+            rate(
+              http_request_duration_milliseconds_bucket{
+                job="urllc-service"
+              }[30s]
+            )
+          ) by (le)
+        )
+    - name: reliability
+      interval: 30s
+      thresholdRange:
+        min: 99.999  # Five nines reliability for URLLC
+      query: |
+        sum(
+          rate(
+            http_requests_total{
+              job="urllc-service",
+              status!~"5.."
+            }[30s]
+          )
+        ) /
+        sum(
+          rate(
+            http_requests_total{
+              job="urllc-service"
+            }[30s]
+          )
+        ) * 100
+    - name: packet-loss
+      interval: 30s
+      thresholdRange:
+        max: 0.001  # 0.001% packet loss
+      query: |
+        rate(network_packet_loss_total{service="urllc"}[30s]) * 100
+    webhooks:
+    - name: latency-test
+      type: pre-rollout
+      url: http://flagger-loadtester.flagger-system/
+      timeout: 30s
+      metadata:
+        type: cmd
+        cmd: |
+          for i in {1..100}; do
+            latency=$(curl -w "%{time_total}" -o /dev/null -s http://urllc-service-canary.oran-intent:8080/ping)
+            if (( $(echo "$latency > 0.001" | bc -l) )); then
+              echo "Latency exceeded 1ms: ${latency}s"
+              exit 1
+            fi
+          done
+---
+apiVersion: flagger.app/v1beta1
+kind: Canary
+metadata:
+  name: mmtc-canary
+  namespace: oran-intent
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: mmtc-service
+  progressDeadlineSeconds: 900
+  service:
+    port: 8080
+    targetPort: 8080
+  analysis:
+    interval: 2m
+    threshold: 10
+    maxWeight: 80
+    stepWeight: 20
+    metrics:
+    - name: device-connections
+      interval: 2m
+      thresholdRange:
+        min: 10000  # Minimum 10K device connections
+      query: |
+        sum(mmtc_connected_devices{service="mmtc-service"})
+    - name: message-throughput
+      interval: 1m
+      thresholdRange:
+        min: 1000  # Minimum 1K messages/sec
+      query: |
+        sum(rate(mmtc_messages_processed_total[1m]))
+    - name: cpu-usage
+      interval: 1m
+      thresholdRange:
+        max: 80
+      query: |
+        avg(
+          rate(container_cpu_usage_seconds_total{pod=~"mmtc-service.*"}[1m])
+        ) * 100
+    webhooks:
+    - name: scale-test
+      type: pre-rollout
+      url: http://flagger-loadtester.flagger-system/
+      timeout: 5m
+      metadata:
+        type: bash
+        cmd: |
+          # Simulate IoT device connections
+          for i in {1..1000}; do
+            curl -X POST http://mmtc-service-canary.oran-intent:8080/connect \
+              -H "Content-Type: application/json" \
+              -d "{\"device_id\": \"iot-$i\", \"type\": \"sensor\"}" &
+          done
+          wait
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: flagger-alerts
+  namespace: flagger-system
+data:
+  alerting-rules.yaml: |
+    groups:
+    - name: flagger
+      interval: 30s
+      rules:
+      - alert: CanaryProgressDeadlineExceeded
+        expr: flagger_canary_status{phase="progressing"} == 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Canary {{ $labels.name }} in {{ $labels.namespace }} is stuck"
+          description: "Canary deployment has been progressing for more than 5 minutes"
+
+      - alert: CanaryFailed
+        expr: flagger_canary_status{phase="failed"} == 1
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Canary {{ $labels.name }} in {{ $labels.namespace }} failed"
+          description: "Canary deployment failed and was rolled back"
+
+      - alert: HighCanaryFailureRate
+        expr: rate(flagger_canary_status{phase="failed"}[1h]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High canary failure rate"
+          description: "More than 10% of canary deployments have failed in the last hour"

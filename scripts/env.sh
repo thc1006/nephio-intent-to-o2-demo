@@ -1,10 +1,6 @@
 export VM1_IP="172.16.0.78"
 export VM2_IP="172.16.4.45"
-export GITEA_URL="http://172.18.0.2:30924"
-export EDGE_REPO_NAME="edge1-config"
-export EDGE_REPO_DIR="$HOME/repos/$EDGE_REPO_NAME"
-export KUBECONFIG_EDGE="/tmp/kubeconfig-edge.yaml"
-# Git identity for commits
-git config --global user.name "thc1006"
-git config --global user.email "thc1006@users.noreply.github.com"
-export GITEA_TOKEN="1b5ea0b27add59e71980ba3f7612a3bfed1487b7"
+export VM3_IP="172.16.2.10"  # VM-3 實際 IP
+export VM4_IP="172.16.4.176"
+export LLM_ADAPTER_URL="http://172.16.2.10:8888"
+export GITEA_URL="http://localhost:8888"
