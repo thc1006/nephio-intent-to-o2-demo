@@ -1,0 +1,156 @@
+% Figure 1: System Architecture Overview - Four-Layer Architecture
+% Compile with: pdflatex figure1_architecture.tex
+% Required packages: tikz, positioning, shapes, arrows
+
+\documentclass[border=5pt]{standalone}
+\usepackage{tikz}
+\usetikzlibrary{positioning,shapes.geometric,arrows.meta,fit,backgrounds,calc}
+
+\begin{document}
+
+\tikzset{
+    % Layer box style
+    layer/.style={
+        rectangle,
+        draw=black,
+        thick,
+        fill=blue!10,
+        minimum width=12cm,
+        minimum height=2cm,
+        text centered,
+        font=\bfseries\large
+    },
+    % Component box style
+    component/.style={
+        rectangle,
+        draw=black,
+        thick,
+        fill=white,
+        minimum width=2.5cm,
+        minimum height=1cm,
+        text centered,
+        font=\small
+    },
+    % Service box style
+    service/.style={
+        rectangle,
+        draw=black,
+        thick,
+        fill=green!10,
+        minimum width=2cm,
+        minimum height=0.8cm,
+        text centered,
+        font=\scriptsize
+    },
+    % Database style
+    database/.style={
+        cylinder,
+        draw=black,
+        thick,
+        fill=yellow!20,
+        shape border rotate=90,
+        aspect=0.3,
+        minimum width=1.5cm,
+        minimum height=1cm,
+        text centered,
+        font=\scriptsize
+    },
+    % Arrow style
+    arrow/.style={
+        ->,
+        >=Stealth,
+        thick
+    }
+}
+
+\begin{tikzpicture}[node distance=0.5cm and 0.3cm]
+
+% Layer 1: UI Layer (Top)
+\node[layer] (ui_layer) at (0,0) {UI Layer};
+
+\node[component, below=0.3cm of ui_layer.north, xshift=-4cm] (web_ui) {Web Interface};
+\node[component, right=of web_ui] (rest_api) {REST API};
+\node[component, right=of rest_api] (cli_tool) {CLI Tools};
+
+% Layer 2: Intent Layer
+\node[layer, below=1.5cm of ui_layer] (intent_layer) {Intent Layer};
+
+\node[component, below=0.3cm of intent_layer.north, xshift=-5cm] (llm_processor) {LLM Processor\\(Claude Code)};
+\node[component, right=of llm_processor] (tmf921_adapter) {TMF921\\Adapter};
+\node[component, right=of tmf921_adapter] (intent_validator) {Intent\\Validator};
+\node[component, right=of intent_validator] (fallback) {Fallback\\Engine};
+
+% Layer 3: Orchestration Layer
+\node[layer, below=1.5cm of intent_layer] (orch_layer) {Orchestration Layer};
+
+\node[component, below=0.3cm of orch_layer.north, xshift=-5.5cm] (krm_compiler) {KRM\\Compiler};
+\node[component, right=of krm_compiler] (kpt_render) {kpt\\Renderer};
+\node[component, right=of kpt_render] (gitops_mgr) {GitOps\\Manager};
+\node[component, right=of gitops_mgr] (slo_validator) {SLO\\Validator};
+\node[component, right=of slo_validator] (rollback_ctrl) {Rollback\\Controller};
+
+% Layer 4: Infrastructure Layer
+\node[layer, below=1.5cm of orch_layer] (infra_layer) {Infrastructure Layer};
+
+\node[component, below=0.3cm of infra_layer.north, xshift=-5cm] (vm1_orch) {VM-1\\Orchestrator};
+\node[component, right=of vm1_orch] (vm2_edge1) {VM-2\\Edge Site 1};
+\node[component, right=of vm2_edge1] (vm4_edge2) {VM-4\\Edge Site 2};
+\node[component, right=of vm4_edge2] (o2ims) {O2IMS\\Services};
+
+% Services in Infrastructure Layer
+\node[service, below=0.2cm of vm1_orch] (k3s) {K3s};
+\node[service, below=0.2cm of vm2_edge1] (k8s1) {K8s};
+\node[service, below=0.2cm of vm4_edge2] (k8s2) {K8s};
+\node[service, below=0.2cm of o2ims] (prom) {Prometheus};
+
+% Database
+\node[database, right=0.5cm of rollback_ctrl, yshift=-0.8cm] (git_repo) {Git\\Repository};
+
+% Arrows - Layer connections
+\draw[arrow] (web_ui.south) -- (llm_processor.north);
+\draw[arrow] (rest_api.south) -- (tmf921_adapter.north);
+\draw[arrow] (cli_tool.south) -- (intent_validator.north);
+
+\draw[arrow] (llm_processor.south) -- (krm_compiler.north);
+\draw[arrow] (tmf921_adapter.south) -- (krm_compiler.north);
+\draw[arrow] (intent_validator.south) -- (kpt_render.north);
+\draw[arrow] (fallback.south) -- (krm_compiler.north);
+
+\draw[arrow] (krm_compiler.south) -- (vm1_orch.north);
+\draw[arrow] (kpt_render.south) -- (gitops_mgr.north);
+\draw[arrow] (gitops_mgr.south) -- (vm2_edge1.north);
+\draw[arrow] (gitops_mgr.south) -- (vm4_edge2.north);
+\draw[arrow] (slo_validator.south) -- (vm2_edge1.north);
+\draw[arrow] (slo_validator.south) -- (vm4_edge2.north);
+
+% Git integration
+\draw[arrow, dashed] (gitops_mgr.east) -- (git_repo.west);
+\draw[arrow, dashed] (rollback_ctrl.east) -- (git_repo.west);
+
+% Feedback loop (Rollback)
+\draw[arrow, red, thick, dashed] (slo_validator.west) -- ++(-0.5,0) |- (rollback_ctrl.west);
+
+% O2IMS connections
+\draw[arrow, dashed] (o2ims.south) -- (k8s1.east);
+\draw[arrow, dashed] (o2ims.south) -- (k8s2.east);
+
+% Layer labels on the left
+\node[left=0.5cm of ui_layer, font=\bfseries] {Layer 1};
+\node[left=0.5cm of intent_layer, font=\bfseries] {Layer 2};
+\node[left=0.5cm of orch_layer, font=\bfseries] {Layer 3};
+\node[left=0.5cm of infra_layer, font=\bfseries] {Layer 4};
+
+% Legend
+\begin{scope}[shift={(8,-8)}]
+    \node[component] (legend_comp) at (0,0) {Component};
+    \node[service, right=0.2cm of legend_comp] (legend_svc) {Service};
+    \node[database, right=0.2cm of legend_svc] (legend_db) {Storage};
+
+    \draw[arrow] (1.8,-0.5) -- (2.3,-0.5) node[right, font=\scriptsize] {Data flow};
+    \draw[arrow, dashed] (1.8,-0.8) -- (2.3,-0.8) node[right, font=\scriptsize] {Control};
+    \draw[arrow, red, thick, dashed] (1.8,-1.1) -- (2.3,-1.1) node[right, font=\scriptsize] {Rollback};
+\end{scope}
+
+\end{tikzpicture}
+
+\end{document}

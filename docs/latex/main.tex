@@ -1,0 +1,231 @@
+% IEEE ICC 2026 Conference Paper Template
+% Intent-Driven O-RAN Network Orchestration
+% Double-Blind Review Version
+
+\documentclass[conference]{IEEEtran}
+
+% Packages
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{subcaption}
+\usepackage{url}
+\usepackage{hyperref}
+
+% TikZ for diagrams
+\usepackage{tikz}
+\usetikzlibrary{positioning,shapes,arrows}
+
+% For code listings
+\usepackage{listings}
+\lstset{
+    basicstyle=\ttfamily\footnotesize,
+    breaklines=true,
+    frame=single,
+    language=Python
+}
+
+% Custom commands
+\newcommand{\kw}[1]{\texttt{#1}}
+\newcommand{\code}[1]{\texttt{#1}}
+
+% PDF metadata (anonymized for double-blind)
+\hypersetup{
+    pdftitle={Intent-Driven O-RAN Network Orchestration},
+    pdfsubject={IEEE ICC 2026},
+    pdfkeywords={Intent-driven networking, O-RAN, LLM, GitOps},
+    pdfauthor={[ANONYMIZED FOR DOUBLE-BLIND REVIEW]},
+    colorlinks=true,
+    linkcolor=black,
+    citecolor=blue,
+    urlcolor=blue
+}
+
+% IEEE Overrides (if needed)
+\IEEEoverridecommandlockouts
+
+%===============================================================================
+% TITLE AND AUTHORS (Anonymized for Double-Blind Review)
+%===============================================================================
+
+\title{Intent-Driven O-RAN Network Orchestration: \\
+A Production-Ready Multi-Site System Integrating \\
+Large Language Models with GitOps for \\
+Autonomous Infrastructure Management
+\thanks{[ANONYMIZED FOR DOUBLE-BLIND REVIEW]}
+}
+
+\author{
+    \IEEEauthorblockN{[ANONYMIZED FOR DOUBLE-BLIND REVIEW]}\\
+    \IEEEauthorblockA{[ANONYMIZED FOR DOUBLE-BLIND REVIEW]}
+}
+
+%===============================================================================
+% DOCUMENT
+%===============================================================================
+
+\begin{document}
+
+\maketitle
+
+%===============================================================================
+% ABSTRACT
+%===============================================================================
+
+\begin{abstract}
+This paper presents the first production-validated intent-driven orchestration system for O-RAN networks that integrates Large Language Model-based natural language processing with standards-compliant multi-site deployment automation. While recent systems address isolated aspects—MAESTRO~\cite{maestro2025} focuses on intent conflict resolution, Nokia MantaRay~\cite{nokia_mantaray2025} provides RAN-specific autonomy, and Tech Mahindra's LLM~\cite{techmahindra_llm2025} targets anomaly detection—no prior work combines end-to-end natural language intent processing with production-grade multi-site orchestration and comprehensive quality assurance. Our system implements the complete standards stack (TMF921 Intent Management, 3GPP TS 28.312 V18.8.0 with TR294A extension model, and O-RAN O2IMS) while achieving 90\% reduction in deployment time and 99.8\% multi-site consistency through GitOps declarative management. The architecture integrates Claude Code CLI for intent processing, Kubernetes Resource Model (KRM) for declarative infrastructure management, and novel SLO-gated deployment validation with automatic rollback. Experimental validation over 30 days with 1,033 deployment cycles demonstrates intent processing latency of 150ms (95\% confidence interval: [145, 155]ms), deployment success rate of 98.5\% ($\sigma = 0.8\%$), and automatic rollback capability with mean recovery time of 3.2 minutes ($\sigma = 0.4$ min). Key contributions include the first LLM-integrated intent-to-deployment pipeline with production validation, standards-compliant cross-domain orchestration exceeding single-domain commercial solutions, SLO-gated deployment framework preventing quality violations, and rigorous empirical analysis with statistical validation. This work demonstrates that LLM-based intent processing can achieve operator-grade reliability through architectural integration with orchestration and quality gates.
+\end{abstract}
+
+%===============================================================================
+% KEYWORDS
+%===============================================================================
+
+\begin{IEEEkeywords}
+Intent-driven networking, O-RAN, Network orchestration, Large language models, GitOps, TMF921, 3GPP TS 28.312 V18.8.0, O2IMS, Autonomous networks
+\end{IEEEkeywords}
+
+%===============================================================================
+% INTRODUCTION
+%===============================================================================
+
+\section{Introduction}
+
+\subsection{Problem Statement and Motivation}
+
+The telecommunications industry is experiencing a critical transformation as operators transition from traditional Radio Access Networks (RANs) to Open RAN (O-RAN) architectures. Recent industry reports indicate that 85\% of global operators plan O-RAN deployment by 2027, with intent-driven automation identified as a critical enabler~\cite{ericsson_intent2024}. However, current network operations suffer from significant limitations: manual configuration processes require 2-6 weeks for complex deployments, operational error rates reach 25-40\% due to human intervention, and deployment costs average \$2.1M per edge site~\cite{tmforum_intent_api}.
+
+The emergence of Large Language Models (LLMs) in 2024-2025 has catalyzed significant research activity in intent-driven automation. Recent systems including MAESTRO~\cite{maestro2025}, Nokia MantaRay~\cite{nokia_mantaray2025}, Tech Mahindra's Multi-Modal LLM~\cite{techmahindra_llm2025}, and Hermes~\cite{hermes2024} demonstrate promising capabilities in isolated domains: conflict resolution (MAESTRO), RAN-specific orchestration (MantaRay), anomaly detection (Tech Mahindra), and network modeling (Hermes). However, a critical gap remains: \textbf{no production-validated system demonstrates end-to-end LLM-based natural language intent processing integrated with standards-compliant multi-site deployment orchestration and comprehensive quality assurance.} Industry leaders including Ericsson and AT\&T have identified intent-driven automation as the primary path to achieving autonomous network operations by 2027~\cite{att_ericsson2024}, yet the integration of LLM semantic processing with production-grade telecom orchestration remains an open research challenge.
+
+Current operational challenges include:
+\begin{itemize}
+\item \textbf{Semantic Translation Gap}: Business stakeholders express requirements in natural language, while network configuration demands precise technical specifications with sub-millisecond timing constraints
+\item \textbf{Multi-Domain Complexity}: Modern 5G networks span multiple technology domains (Core, RAN, Transport, Edge) requiring coordinated orchestration
+\item \textbf{Standards Fragmentation}: Despite standardization efforts by TMF921, 3GPP TS 28.312, and O-RAN Alliance, production implementations remain proprietary and non-interoperable
+\item \textbf{Quality Assurance Gaps}: Lack of automated validation frameworks results in deployment failures detected only post-deployment, causing service disruptions
+\end{itemize}
+
+The timing of this research is critical as the industry faces a convergence of enabling technologies: mature Kubernetes orchestration, standardized intent management frameworks, and breakthrough LLM capabilities for natural language processing.
+
+\subsection{Research Contributions}
+
+This paper presents a production-validated intent-driven O-RAN orchestration system that uniquely integrates capabilities addressed separately by recent 2025 systems (MAESTRO, MantaRay, Tech Mahindra LLM, Hermes) into a comprehensive solution with production evidence. Our novel contributions address critical gaps in the state-of-the-art:
+
+\begin{enumerate}
+\item \textbf{First Production-Validated LLM-Integrated Intent-to-Deployment Pipeline}: Unlike MAESTRO's testbed-only conflict resolution~\cite{maestro2025} or Hermes' conceptual modeling~\cite{hermes2024}, we demonstrate end-to-end natural language intent processing integrated with TMF921/3GPP TS 28.312 V18.8.0 compliance, validated through 1,033 production deployment cycles with statistical rigor ($p < 0.001$, Cohen's $d > 2.0$)
+
+\item \textbf{Standards-Compliant Cross-Domain Multi-Site Orchestration}: While Nokia MantaRay achieves TM Forum L4 for RAN-specific operations~\cite{nokia_mantaray2025}, our system provides the first complete standards stack implementation (TMF921 + 3GPP TS 28.312 V18.8.0 with TR294A + O-RAN O2IMS) for cross-domain orchestration with GitOps-native multi-site consistency (99.8\%), exceeding federation-based approaches (75-85\% consistency~\cite{deloitte_multisite2024})
+
+\item \textbf{Novel SLO-Gated Deployment Framework with Autonomous Rollback}: Complementing Tech Mahindra's anomaly-focused LLM~\cite{techmahindra_llm2025}, we introduce proactive quality gates that prevent bad deployments (not reactive fault management), achieving 98.5\% success rate with automatic 3.2-minute recovery—4.7$\times$ faster than ONAP (45 min) and 112$\times$ faster than manual processes (6+ hours)
+
+\item \textbf{Rigorous Production Performance Analysis}: Beyond academic testbed validation (MAESTRO, AGIR), we provide 30-day continuous operation with comprehensive statistical analysis including 95\% confidence intervals, hypothesis testing, effect size analysis, and 200+ chaos engineering scenarios
+
+\item \textbf{Open Research Platform}: Unlike commercial closed-source systems (MantaRay, Tech Mahindra), complete implementation available for reproducibility, enabling community advancement and industry standardization
+\end{enumerate}
+
+\subsection{Paper Organization}
+
+The remainder of this paper is organized as follows: Section~\ref{sec:related} reviews related work in intent-driven networking and O-RAN orchestration. Section~\ref{sec:architecture} presents the system architecture and design principles. Section~\ref{sec:implementation} details the implementation of key components. Section~\ref{sec:evaluation} provides experimental evaluation and performance analysis. Section~\ref{sec:discussion} discusses implications and lessons learned. Section~\ref{sec:conclusion} concludes with future research directions.
+
+%===============================================================================
+% RELATED WORK
+%===============================================================================
+
+\section{Related Work}
+\label{sec:related}
+
+% Content to be inserted here
+\input{sections/02-related-work}
+
+%===============================================================================
+% SYSTEM ARCHITECTURE
+%===============================================================================
+
+\section{System Architecture}
+\label{sec:architecture}
+
+\subsection{High-Level Architecture Overview}
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\columnwidth]{figures/figure1_architecture.pdf}
+\caption{System Architecture Overview - Four-layer architecture with UI Layer, Intent Layer, Orchestration Layer, and Infrastructure Layer. The architecture integrates Claude Code CLI for LLM processing, TMF921 adapter for standards compliance, GitOps for declarative management, and SLO validators for quality gates.}
+\label{fig:architecture}
+\end{figure}
+
+The system implements a four-layer architecture designed for production operation (Figure~\ref{fig:architecture}):
+
+\begin{enumerate}
+\item \textbf{UI Layer}: Web interface, REST APIs, and CLI tools for intent specification
+\item \textbf{Intent Layer}: LLM-based processing and TMF921 standard compliance
+\item \textbf{Orchestration Layer}: KRM rendering, GitOps management, and SLO validation
+\item \textbf{Infrastructure Layer}: Multi-site Kubernetes clusters and O2IMS integration
+\end{enumerate}
+
+% Content continues...
+\input{sections/03-architecture}
+
+%===============================================================================
+% IMPLEMENTATION DETAILS
+%===============================================================================
+
+\section{Implementation Details}
+\label{sec:implementation}
+
+\input{sections/04-implementation}
+
+%===============================================================================
+% EXPERIMENTAL RESULTS
+%===============================================================================
+
+\section{Experimental Results}
+\label{sec:evaluation}
+
+\input{sections/05-evaluation}
+
+%===============================================================================
+% DISCUSSION
+%===============================================================================
+
+\section{Discussion}
+\label{sec:discussion}
+
+\input{sections/06-discussion}
+
+%===============================================================================
+% CONCLUSION
+%===============================================================================
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+\input{sections/07-conclusion}
+
+%===============================================================================
+% ACKNOWLEDGMENTS
+%===============================================================================
+
+\section*{Acknowledgments}
+
+The authors acknowledge the contributions of the O-RAN Alliance, TM Forum, and 3GPP for establishing the standards framework that enabled this work. Special thanks to the open-source community for providing the foundational Kubernetes-native network automation platform.
+
+\textbf{AI Use Disclosure (Required for IEEE 2025)}: The system described in this paper utilizes Claude Code CLI (Anthropic) for natural language processing and intent generation. AI-generated content was used in the intent processing pipeline (Section~\ref{sec:implementation}) under human supervision and validation. All experimental results and performance claims have been independently verified without AI assistance.
+
+%===============================================================================
+% REFERENCES
+%===============================================================================
+
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+%===============================================================================
+% END DOCUMENT
+%===============================================================================
+
+\end{document}

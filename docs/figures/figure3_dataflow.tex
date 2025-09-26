@@ -1,0 +1,172 @@
+% Figure 3: Data Flow Diagram - 7-Stage Intent-to-Deployment Pipeline
+% Compile with: pdflatex figure3_dataflow.tex
+% Required packages: tikz, positioning, shapes, arrows
+
+\documentclass[border=5pt]{standalone}
+\usepackage{tikz}
+\usetikzlibrary{positioning,shapes.geometric,arrows.meta,fit,backgrounds,calc,decorations.pathreplacing}
+
+\begin{document}
+
+\tikzset{
+    % Stage box style
+    stage/.style={
+        rectangle,
+        draw=black,
+        very thick,
+        fill=blue!20,
+        rounded corners=3pt,
+        minimum width=3cm,
+        minimum height=1.5cm,
+        text centered,
+        font=\small\bfseries
+    },
+    % Process node
+    process/.style={
+        rectangle,
+        draw=black,
+        thick,
+        fill=green!15,
+        minimum width=2.5cm,
+        minimum height=0.8cm,
+        text centered,
+        font=\scriptsize
+    },
+    % Decision node
+    decision/.style={
+        diamond,
+        draw=black,
+        thick,
+        fill=yellow!20,
+        aspect=2,
+        minimum width=2cm,
+        minimum height=1cm,
+        text centered,
+        font=\scriptsize
+    },
+    % Data store
+    datastore/.style={
+        cylinder,
+        draw=black,
+        thick,
+        fill=orange!20,
+        shape border rotate=90,
+        aspect=0.3,
+        minimum width=1.5cm,
+        minimum height=0.8cm,
+        text centered,
+        font=\scriptsize
+    },
+    % Arrow style
+    arrow/.style={
+        ->,
+        >=Stealth,
+        thick
+    },
+    % Success path
+    success/.style={
+        ->,
+        >=Stealth,
+        thick,
+        green!60!black
+    },
+    % Failure path
+    failure/.style={
+        ->,
+        >=Stealth,
+        thick,
+        red,
+        dashed
+    }
+}
+
+\begin{tikzpicture}[node distance=0.8cm and 1cm]
+
+% Stage 1: Natural Language Input
+\node[stage] (stage1) {Stage 1\\Natural Language\\Input};
+\node[process, below=0.3cm of stage1] (user_intent) {User provides\\business intent};
+
+% Stage 2: Intent Generation
+\node[stage, right=1.5cm of stage1] (stage2) {Stage 2\\Intent Generation};
+\node[process, below=0.3cm of stage2] (llm_process) {LLM processes\\to TMF921 format};
+\node[process, below=0.1cm of llm_process] (validate_intent) {Validate intent\\schema};
+
+% Stage 3: KRM Compilation
+\node[stage, right=1.5cm of stage2] (stage3) {Stage 3\\KRM Compilation};
+\node[process, below=0.3cm of stage3] (krm_gen) {Generate\\KRM resources};
+\node[process, below=0.1cm of krm_gen] (kpt_render) {kpt fn render};
+
+% Stage 4: GitOps Push
+\node[stage, below=2.5cm of stage1] (stage4) {Stage 4\\GitOps Push};
+\node[process, below=0.3cm of stage4] (git_commit) {Commit to\\Git repo};
+\node[datastore, below=0.1cm of git_commit] (git_repo) {Git Repo};
+
+% Stage 5: Edge Synchronization
+\node[stage, right=1.5cm of stage4] (stage5) {Stage 5\\Edge Sync};
+\node[process, below=0.3cm of stage5] (config_sync) {Config Sync\\pulls updates};
+\node[process, below=0.1cm of config_sync] (apply_krm) {Apply KRM\\to clusters};
+
+% Stage 6: SLO Validation
+\node[stage, right=1.5cm of stage5] (stage6) {Stage 6\\SLO Validation};
+\node[decision, below=0.3cm of stage6] (slo_check) {SLO\\Pass?};
+\node[process, below=0.1cm of slo_check, yshift=-0.3cm] (metrics_check) {Check latency\\throughput\\availability};
+
+% Stage 7: Rollback (if needed)
+\node[stage, below=2.5cm of stage4, fill=red!20] (stage7) {Stage 7\\Rollback\\(on failure)};
+\node[process, below=0.3cm of stage7] (git_revert) {Git revert to\\last good commit};
+\node[process, below=0.1cm of git_revert] (force_sync) {Force Config\\Sync update};
+
+% Success endpoint
+\node[process, right=1cm of stage6, fill=green!30, minimum height=1.2cm] (success) {\textbf{Deployment\\Success}\\✓};
+
+% Main flow arrows
+\draw[arrow] (stage1) -- (stage2) node[midway, above, font=\tiny] {NL text};
+\draw[arrow] (stage2) -- (stage3) node[midway, above, font=\tiny] {TMF921 JSON};
+\draw[arrow] (stage3) -- (stage4) node[midway, right, font=\tiny] {KRM YAML};
+\draw[arrow] (stage4) -- (stage5) node[midway, above, font=\tiny] {15s poll};
+\draw[arrow] (stage5) -- (stage6) node[midway, above, font=\tiny] {K8s apply};
+
+% SLO decision paths
+\draw[success] (slo_check.east) -- (success.west) node[midway, above, font=\tiny] {YES};
+\draw[failure] (slo_check.south) -- (stage7.north) node[midway, right, font=\tiny] {NO};
+
+% Rollback loop
+\draw[failure] (stage7.west) -- ++(-1.5,0) |- (stage5.west) node[near start, left, font=\tiny] {Retry};
+
+% Feedback annotations
+\node[draw, dashed, thick, fit=(slo_check) (metrics_check), inner sep=0.2cm, label=above:{\tiny Quality Gates}] {};
+
+% Timeline annotations
+\draw[decorate, decoration={brace, amplitude=5pt, mirror}]
+    (stage1.south west) -- (stage3.south east) node[midway, below, yshift=-0.3cm, font=\scriptsize] {Intent Processing: 150ms};
+
+\draw[decorate, decoration={brace, amplitude=5pt, mirror}]
+    (stage4.south west) -- (stage6.south east) node[midway, below, yshift=-0.3cm, font=\scriptsize] {Deployment: 35ms sync + validation};
+
+\node[below=0.2cm of stage7, font=\scriptsize, align=center] {Rollback: 3.2 min\\(MTTR)};
+
+% Legend
+\begin{scope}[shift={(-3.5,-7)}]
+    \node[font=\small\bfseries] (legend_title) {Legend:};
+    \draw[arrow] (0,-0.4) -- (1,-0.4) node[right, font=\scriptsize] {Normal flow};
+    \draw[success] (0,-0.7) -- (1,-0.7) node[right, font=\scriptsize] {Success path};
+    \draw[failure] (0,-1.0) -- (1,-1.0) node[right, font=\scriptsize] {Failure/Rollback};
+
+    \node[process, right=2cm of legend_title] (proc_ex) {Process};
+    \node[decision, right=0.2cm of proc_ex] (dec_ex) {Decision};
+    \node[datastore, right=0.2cm of dec_ex] (data_ex) {Storage};
+\end{scope}
+
+% Performance metrics box
+\node[draw, thick, fill=blue!5, rounded corners, font=\scriptsize, align=left,
+      above=0.5cm of stage1.north west, anchor=south west] (metrics_box) {
+    \textbf{Pipeline Performance:}\\
+    • Intent Processing: 150ms (avg)\\
+    • Deployment Success: 98.5\%\\
+    • Rollback Success: 100\%\\
+    • MTTR: 3.2 minutes
+};
+
+\end{tikzpicture}
+
+\end{document}

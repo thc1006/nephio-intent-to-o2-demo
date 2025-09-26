@@ -1,0 +1,147 @@
+% Figure 2: Network Topology - VM Interconnections and Service Endpoints
+% Compile with: pdflatex figure2_topology.tex
+% Required packages: tikz, positioning, shapes, arrows
+
+\documentclass[border=5pt]{standalone}
+\usepackage{tikz}
+\usetikzlibrary{positioning,shapes.geometric,arrows.meta,fit,backgrounds,calc,decorations.pathmorphing}
+
+\begin{document}
+
+\tikzset{
+    % VM node style
+    vm/.style={
+        rectangle,
+        draw=black,
+        very thick,
+        fill=blue!20,
+        rounded corners=5pt,
+        minimum width=4cm,
+        minimum height=5cm,
+        text centered
+    },
+    % Service box style
+    service/.style={
+        rectangle,
+        draw=black,
+        thick,
+        fill=white,
+        minimum width=3.5cm,
+        minimum height=0.6cm,
+        text centered,
+        font=\small
+    },
+    % Network cloud
+    cloud/.style={
+        cloud,
+        draw=black,
+        thick,
+        fill=gray!20,
+        cloud puffs=10,
+        cloud puff arc=120,
+        aspect=2,
+        minimum width=3cm,
+        minimum height=1.5cm
+    },
+    % Network line
+    netline/.style={
+        thick,
+        -
+    },
+    % Bidirectional arrow
+    bidir/.style={
+        <->,
+        >=Stealth,
+        thick
+    }
+}
+
+\begin{tikzpicture}[node distance=1cm and 2cm]
+
+% Network Cloud
+\node[cloud] (network) at (0,0) {\textbf{Internal\\Network}\\1 Gbps};
+
+% VM-1: Orchestrator (Left side)
+\node[vm, left=3cm of network] (vm1) {};
+\node[above=0.1cm of vm1.north, font=\bfseries\large] {VM-1 Orchestrator};
+\node[below=0.2cm of vm1.north, font=\scriptsize] {XXX.XXX.X.XX};
+
+% VM-1 Services
+\node[service, below=0.3cm of vm1.north, yshift=-0.5cm] (claude) {Claude Code CLI :8002};
+\node[service, below=0.1cm of claude] (tmf) {TMF921 Adapter :8889};
+\node[service, below=0.1cm of tmf] (gitea) {Gitea/GitOps :8888};
+\node[service, below=0.1cm of gitea] (k3s) {K3s :6444};
+\node[service, below=0.1cm of k3s] (victoria) {VictoriaMetrics :8428};
+\node[service, below=0.1cm of victoria] (grafana) {Grafana :3000};
+
+% VM-2: Edge Site 1 (Upper right)
+\node[vm, above right=1cm and 3cm of network] (vm2) {};
+\node[above=0.1cm of vm2.north, font=\bfseries\large] {VM-2 Edge Site 1};
+\node[below=0.2cm of vm2.north, font=\scriptsize] {XXX.XXX.X.XX};
+
+% VM-2 Services
+\node[service, below=0.3cm of vm2.north, yshift=-0.5cm] (k8s1) {Kubernetes :6443};
+\node[service, below=0.1cm of k8s1] (configsync1) {Config Sync};
+\node[service, below=0.1cm of configsync1] (o2ims1) {O2IMS :31280};
+\node[service, below=0.1cm of o2ims1] (prom1) {Prometheus :30090};
+\node[service, below=0.1cm of prom1] (workload1) {NF Workloads};
+
+% VM-4: Edge Site 2 (Lower right)
+\node[vm, below right=1cm and 3cm of network] (vm4) {};
+\node[above=0.1cm of vm4.north, font=\bfseries\large] {VM-4 Edge Site 2};
+\node[below=0.2cm of vm4.north, font=\scriptsize] {XXX.XXX.X.XX};
+
+% VM-4 Services
+\node[service, below=0.3cm of vm4.north, yshift=-0.5cm] (k8s2) {Kubernetes :6443};
+\node[service, below=0.1cm of k8s2] (configsync2) {Config Sync};
+\node[service, below=0.1cm of configsync2] (o2ims2) {O2IMS :31280};
+\node[service, below=0.1cm of o2ims2] (prom2) {Prometheus :30090};
+\node[service, below=0.1cm of prom2] (workload2) {NF Workloads};
+
+% Network connections
+\draw[netline] (vm1.east) -- (network.west);
+\draw[netline] (network.north east) -- (vm2.south west);
+\draw[netline] (network.south east) -- (vm4.north west);
+
+% Data flow arrows with labels
+\draw[bidir, blue] (vm1.east) ++(0.5,1) -- ++(1.5,0) node[midway, above, font=\scriptsize] {GitOps Pull};
+\draw[bidir, green!60!black] (vm1.east) ++(0.5,0) -- ++(1.5,0) node[midway, above, font=\scriptsize] {Metrics};
+\draw[bidir, red] (vm1.east) ++(0.5,-1) -- ++(1.5,0) node[midway, above, font=\scriptsize] {Control};
+
+% Connection annotations
+\node[below=0.3cm of network, font=\scriptsize\itshape, align=center]
+    {GitOps: Config Sync pulls from Gitea\\
+     Metrics: Prometheus remote\_write\\
+     Control: kubectl, O2IMS API};
+
+% VM Specifications (bottom)
+\begin{scope}[shift={(-6,-8)}]
+    \node[font=\small, align=left] (vm1_spec) {
+        \textbf{VM-1:} 4 vCPU, 8GB RAM, 100GB SSD\\
+        \textbf{VM-2:} 8 vCPU, 16GB RAM, 200GB SSD\\
+        \textbf{VM-4:} 8 vCPU, 16GB RAM, 200GB SSD
+    };
+\end{scope}
+
+% Legend
+\begin{scope}[shift={(6,-8)}]
+    \node[font=\small\bfseries] (legend_title) {Data Flows:};
+    \draw[bidir, blue] (0,-0.4) -- (1,-0.4) node[right, font=\scriptsize] {GitOps (Pull)};
+    \draw[bidir, green!60!black] (0,-0.7) -- (1,-0.7) node[right, font=\scriptsize] {Metrics};
+    \draw[bidir, red] (0,-1.0) -- (1,-1.0) node[right, font=\scriptsize] {Control Plane};
+\end{scope}
+
+% Key ports annotation
+\node[draw, thick, fill=yellow!10, rounded corners, font=\scriptsize, align=left,
+      below=0.2cm of vm1.south] (ports_note) {
+    Key Ports:\\
+    8002: LLM Service\\
+    8888: Git Repository\\
+    6443/6444: API Server\\
+    31280: O2IMS\\
+    30090: Metrics
+};
+
+\end{tikzpicture}
+
+\end{document}
