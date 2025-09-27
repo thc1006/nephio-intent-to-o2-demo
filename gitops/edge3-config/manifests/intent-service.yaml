@@ -2,6 +2,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: intent-embb-upf-service
+  namespace: ran-slice-a
   labels:
     app: upf
     site-name: edge3
