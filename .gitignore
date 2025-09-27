@@ -91,9 +91,11 @@ memory/
 **/*.log
 **/*.pid
 
-# Backup files
+# Backup files and old versions
 **/*.backup*
 **/*.bak*
+**/*_OLD.md
+**/*_OLD.*
 
 # Temporary files
 **/waiting_for_*.txt

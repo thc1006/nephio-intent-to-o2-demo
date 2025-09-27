@@ -39,7 +39,7 @@ initialize_test_environment() {
 
     # Set environment variables for consistent testing
     export VM2_IP="${VM2_IP:-172.16.4.45}"
-    export VM4_IP="${VM4_IP:-172.16.0.89}"
+    export VM4_IP="${VM4_IP:-172.16.4.176}"
     export REPORT_DIR="$TEST_REPORTS_DIR"
     export ROLLBACK_DIR="$TEST_REPORTS_DIR/rollback"
     export COLLECT_EVIDENCE="true"

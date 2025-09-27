@@ -18,7 +18,7 @@ data:
       - name: O2IMS-Metrics
         type: prometheus
         access: proxy
-        url: http://172.16.0.89:31280/metrics
+        url: http://172.16.4.176:31280/metrics
         editable: false
         jsonData:
           customQueryParameters: "site=edge2"

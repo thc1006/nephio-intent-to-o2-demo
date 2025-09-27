@@ -10,7 +10,7 @@ readonly LOG_FILE="$PROJECT_ROOT/artifacts/postcheck-update-$(date +%Y%m%d-%H%M%
 
 # 站點配置 - 2025 年多站點標準
 readonly VM1_IP="172.16.0.78"
-readonly EDGE2_IP="172.16.0.89"
+readonly EDGE2_IP="172.16.4.176"
 readonly EDGE1_IP="172.16.4.45"
 readonly SLO_PORT="30090"
 readonly O2IMS_PORT="31280"
@@ -65,16 +65,16 @@ readonly LOG_FILE="$PROJECT_ROOT/artifacts/postcheck-2025-$(date +%Y%m%d-%H%M%S)
 
 # 2025 多站點配置 (從 OTel Collector 獲取)
 declare -A SITES=(
-    [edge2]="172.16.0.89:30090"
+    [edge2]="172.16.4.176:30090"
     [edge1]="172.16.4.45:30090"
 )
 
 declare -A O2IMS_SITES=(
-    [edge2]="http://172.16.0.89:31280"
+    [edge2]="http://172.16.4.176:31280"
 )
 
 declare -A K8S_ENDPOINTS=(
-    [edge2]="https://172.16.0.89:6443"
+    [edge2]="https://172.16.4.176:6443"
 )
 
 # 2025 SLO 閾值 (更嚴格)
@@ -554,7 +554,7 @@ create_multisite_tools() {
 
 set -euo pipefail
 
-readonly SITES=("edge2:172.16.0.89:30090" "edge1:172.16.4.45:30090")
+readonly SITES=("edge2:172.16.4.176:30090" "edge1:172.16.4.45:30090")
 readonly CHECK_INTERVAL=30
 readonly LOG_FILE="/tmp/multisite-health.log"
 
@@ -603,7 +603,7 @@ MONITOR_EOF
 
 set -euo pipefail
 
-readonly EDGE2_IP="172.16.0.89"
+readonly EDGE2_IP="172.16.4.176"
 readonly EDGE1_IP="172.16.4.45"
 readonly TEST_COUNT=10
 

@@ -10,7 +10,7 @@ readonly GITOPS_NAMESPACE="config-management-system"
 readonly LOG_FILE="$PROJECT_ROOT/artifacts/zerotrust-setup-$(date +%Y%m%d-%H%M%S).log"
 
 # 網路配置
-readonly EDGE2_IP="172.16.0.89"
+readonly EDGE2_IP="172.16.4.176"
 readonly EDGE1_IP="172.16.4.45"
 readonly VM1_IP="172.16.0.78"
 readonly SLO_PORT="30090"
@@ -233,7 +233,7 @@ spec:
     - matchName: "*.edge2.local"
     - matchName: "edge2.nephio.local"
   - toCIDR:
-    - "172.16.0.89/32"  # Edge2 精確 IP
+    - "172.16.4.176/32"  # Edge2 精確 IP
     - "172.16.4.45/32"  # Edge1 精確 IP
   - toPorts:
     - ports:
@@ -370,7 +370,7 @@ data:
         description: "管理網段 - SMO/VM-1"
 
       edge2:
-        cidr: "172.16.0.89/32"
+        cidr: "172.16.4.176/32"
         allowed_ports: [30090, 31280]
         description: "邊緣站點 2 - VM-4"
 
@@ -422,8 +422,8 @@ data:
     iptables -A OUTPUT -m state --state ESTABLISHED -j ACCEPT
 
     # 允許到 Edge2 的連接
-    iptables -A OUTPUT -d 172.16.0.89 -p tcp --dport 30090 -j ACCEPT
-    iptables -A OUTPUT -d 172.16.0.89 -p tcp --dport 31280 -j ACCEPT
+    iptables -A OUTPUT -d 172.16.4.176 -p tcp --dport 30090 -j ACCEPT
+    iptables -A OUTPUT -d 172.16.4.176 -p tcp --dport 31280 -j ACCEPT
 
     # 允許到 Edge1 的連接
     iptables -A OUTPUT -d 172.16.4.45 -p tcp --dport 30090 -j ACCEPT

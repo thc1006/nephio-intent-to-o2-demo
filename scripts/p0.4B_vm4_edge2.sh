@@ -12,7 +12,7 @@ readonly EDGE_CLUSTER_NAME="edge2"
 readonly VM1_GITEA_URL="http://172.16.0.78:8888"
 readonly GITEA_USER="admin1"
 readonly GITEA_REPO="edge2-config"
-readonly VM4_IP="172.16.0.89"
+readonly VM4_IP="172.16.4.176"
 readonly LOG_FILE="/tmp/${SCRIPT_NAME}_$(date +%Y%m%d_%H%M%S).log"
 readonly ARTIFACTS_DIR="./artifacts/p0.4B_edge2"
 

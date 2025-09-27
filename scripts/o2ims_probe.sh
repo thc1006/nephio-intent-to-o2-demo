@@ -7,7 +7,7 @@ set -euo pipefail
 # Sites configuration (both VM-2 and VM-4 ready)
 declare -A SITES=(
     [edge1]="http://172.16.4.45:31280"
-    [edge2]="http://172.16.0.89:31280"
+    [edge2]="http://172.16.4.176:31280"
 )
 
 # Configuration defaults

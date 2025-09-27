@@ -18,7 +18,7 @@ ROOTSYNC_NAMESPACE="${ROOTSYNC_NAMESPACE:-config-management-system}"
 
 # Network configuration - use environment variables (no hardcoded IPs)
 VM2_IP="${VM2_IP:-172.16.4.45}"
-VM4_IP="${VM4_IP:-172.16.0.89}"
+VM4_IP="${VM4_IP:-172.16.4.176}"
 
 # Multi-site configuration (support for 4 edge sites)
 declare -A SITES=(

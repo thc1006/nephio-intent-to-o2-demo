@@ -5,7 +5,7 @@
 set -euo pipefail
 
 # 配置
-readonly EDGE2_IP="172.16.0.89"      # 使用內網 IP (已驗證可用)
+readonly EDGE2_IP="172.16.4.176"      # 使用內網 IP (已驗證可用)
 readonly EDGE2_PORT="30090"
 readonly TIMEOUT="10"
 

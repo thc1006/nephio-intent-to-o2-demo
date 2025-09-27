@@ -10,7 +10,7 @@ PIPELINE_ID="${PIPELINE_ID:-unknown}"
 # Validation endpoints
 declare -A EDGE_ENDPOINTS=(
     [edge1]="172.16.4.45"
-    [edge2]="172.16.0.89"
+    [edge2]="172.16.4.176"
 )
 
 # Validation checks

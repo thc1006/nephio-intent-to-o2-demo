@@ -56,8 +56,8 @@ check_prerequisites() {
     kubectl create namespace "$MONITORING_NAMESPACE" --dry-run=client -o yaml | kubectl apply -f -
 
     # 檢查網路連通性到 VM-4
-    if ! curl -s --max-time 5 http://172.16.0.89:30090/health &>/dev/null; then
-        log "WARNING: 無法連接到 VM-4 Edge2 (172.16.0.89:30090)，將在稍後重試"
+    if ! curl -s --max-time 5 http://172.16.4.176:30090/health &>/dev/null; then
+        log "WARNING: 無法連接到 VM-4 Edge2 (172.16.4.176:30090)，將在稍後重試"
     fi
 
     log "✅ 前置條件檢查完成"
@@ -81,7 +81,7 @@ data:
           scrape_configs:
           - job_name: 'edge2-slo'
             static_configs:
-            - targets: ['172.16.0.89:30090']
+            - targets: ['172.16.4.176:30090']
               labels:
                 site: 'edge2'
                 cluster: 'vm-4-edge2'
@@ -230,7 +230,7 @@ data:
         cluster_type: "edge"
         region: "region-1"
       edge2:
-        endpoint: "172.16.0.89:30090"
+        endpoint: "172.16.4.176:30090"
         cluster_type: "edge"
         region: "region-1"
     smo_sites:

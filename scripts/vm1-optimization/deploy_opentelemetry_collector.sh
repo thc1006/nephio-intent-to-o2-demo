@@ -9,7 +9,7 @@ readonly MONITORING_NAMESPACE="monitoring"
 readonly LOG_FILE="$PROJECT_ROOT/artifacts/otel-deployment-$(date +%Y%m%d-%H%M%S).log"
 
 # Edge 站點配置
-readonly EDGE2_IP="172.16.0.89"
+readonly EDGE2_IP="172.16.4.176"
 readonly EDGE1_IP="172.16.4.45"
 readonly SLO_PORT="30090"
 readonly O2IMS_PORT="31280"
@@ -73,7 +73,7 @@ data:
             scrape_interval: 15s
             metrics_path: '/metrics/api/v1/slo'
             static_configs:
-            - targets: ['172.16.0.89:30090']
+            - targets: ['172.16.4.176:30090']
               labels:
                 site: 'edge2'
                 cluster: 'vm-4-edge2'
@@ -83,7 +83,7 @@ data:
             scrape_interval: 30s
             metrics_path: '/o2ims/measurement/v1/metrics'
             static_configs:
-            - targets: ['172.16.0.89:31280']
+            - targets: ['172.16.4.176:31280']
               labels:
                 site: 'edge2'
                 service: 'o2ims'

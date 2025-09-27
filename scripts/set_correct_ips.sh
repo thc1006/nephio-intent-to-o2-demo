@@ -9,7 +9,7 @@ export LLM_ADAPTER_URL=http://172.16.0.78:8888
 export VM2_IP=172.16.4.45
 
 # VM-4 Edge2 - 如果有的話
-export VM4_IP=172.16.0.89
+export VM4_IP=172.16.4.176
 
 echo "環境變數已設定："
 echo "  VM1_IP (LLM Adapter): $VM1_IP ✅"

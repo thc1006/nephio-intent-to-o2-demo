@@ -20,7 +20,7 @@ cd "$PROJECT_ROOT"
 export VM1_IP="172.16.0.78"
 export VM2_IP="172.16.4.45"    # Edge1
 export VM1_IP="172.16.0.78"  # LLM Adapter
-export VM4_IP="172.16.0.89"    # Edge2
+export VM4_IP="172.16.4.176"    # Edge2
 export GITEA_URL="http://${VM1_IP}:8888"
 export LLM_ADAPTER_URL="http://${VM1_IP}:8888"
 
