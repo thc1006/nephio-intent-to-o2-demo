@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: intent-test-002-edge3
+  namespace: edge3
+  labels:
+    intent-id: test-002
+    target-site: edge3
+data:
+  intent.json: |-
+    {
+      "intentId": "test-002",
+      "serviceType": "massive-machine-type",
+      "targetSite": "both",
+      "resourceProfile": "standard",
+      "sla": {
+        "availability": 99.9,
+        "connections": 1000000
+      }
+    }
+  site: edge3
+  serviceType: massive-machine-type

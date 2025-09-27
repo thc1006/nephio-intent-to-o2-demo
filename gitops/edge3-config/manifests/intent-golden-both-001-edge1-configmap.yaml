@@ -1,0 +1,79 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: intent-golden-both-001-edge3
+  namespace: edge3
+  labels:
+    intent-id: golden-both-001
+    target-site: edge3
+data:
+  intent.json: |-
+    {
+      "id": "golden-both-001",
+      "intentType": "NetworkSliceIntent",
+      "state": "acknowledged",
+      "name": "Golden Multi-Site mMTC Service",
+      "description": "Massive Machine Type Communication service for multi-site deployment",
+      "priority": 3,
+      "version": "1.0.0",
+      "creationDate": "2025-09-13T00:00:00Z",
+      "lastModified": "2025-09-13T00:00:00Z",
+      "@baseType": "Intent",
+      "@type": "NetworkSliceIntent",
+      "@schemaLocation": "https://schemas.tmforum.org/Intent/v5.0.0/schema/Intent.schema.json",
+      "intentId": "golden-both-001",
+      "serviceType": "massive-machine-type",
+      "targetSite": "both",
+      "resourceProfile": "standard",
+      "characteristic": [
+        {
+          "name": "serviceType",
+          "value": "massive-machine-type",
+          "valueType": "string"
+        },
+        {
+          "name": "sliceType",
+          "value": "mMTC",
+          "valueType": "string"
+        },
+        {
+          "name": "maxUEs",
+          "value": 100000,
+          "valueType": "integer"
+        },
+        {
+          "name": "maxConnections",
+          "value": 500000,
+          "valueType": "integer"
+        },
+        {
+          "name": "connectionDensity",
+          "value": "1000000/km2",
+          "valueType": "string"
+        }
+      ],
+      "expectation": [
+        {
+          "id": "scale-exp-003",
+          "name": "Massive Scale Support",
+          "expectationType": "PerformanceExpectation",
+          "targetCondition": "connectionDensity >= 1M/km2",
+          "targetValue": {
+            "value": "1000000",
+            "unit": "connections/km2"
+          }
+        }
+      ],
+      "sla": {
+        "availability": 99.0,
+        "latency": 100,
+        "throughput": 100,
+        "connections": 500000
+      },
+      "validFor": {
+        "startDateTime": "2025-01-01T00:00:00Z",
+        "endDateTime": "2025-12-31T23:59:59Z"
+      }
+    }
+  site: edge3
+  serviceType: massive-machine-type

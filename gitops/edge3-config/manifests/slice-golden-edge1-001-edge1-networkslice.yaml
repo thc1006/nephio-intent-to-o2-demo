@@ -1,0 +1,17 @@
+apiVersion: workload.nephio.org/v1alpha1
+kind: NetworkSlice
+metadata:
+  name: slice-golden-edge3-001-edge3
+  namespace: edge3
+  labels:
+    intent-id: golden-edge3-001
+    service-type: enhanced-mobile-broadband
+    target-site: edge3
+spec:
+  sliceType: eMBB
+  plmn:
+    mcc: '001'
+    mnc: '01'
+  qos:
+    5qi: 5
+    gfbr: 1000Mbps

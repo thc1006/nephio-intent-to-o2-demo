@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: intent-test-001-edge3
+  namespace: edge3
+  labels:
+    intent-id: test-001
+    target-site: edge3
+data:
+  intent.json: |-
+    {
+      "intentId": "test-001",
+      "serviceType": "enhanced-mobile-broadband",
+      "targetSite": "edge3",
+      "resourceProfile": "standard",
+      "sla": {
+        "availability": 99.99,
+        "latency": 10,
+        "throughput": 1000
+      }
+    }
+  site: edge3
+  serviceType: enhanced-mobile-broadband
