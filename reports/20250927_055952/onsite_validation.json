@@ -1,0 +1,13 @@
+/home/ubuntu/nephio-intent-to-o2-demo/scripts/onsite_validation.sh: line 19: EDGE_ENDPOINTS[$site]: unbound variable
+{
+  "timestamp": "2025-09-27T05:59:53+00:00",
+  "pipeline_id": "e2e-1758952792",
+  "target_site": "edge3",
+  "status": "PASS",
+  "validations": [],
+  "summary": {
+    "overall": "PASS",
+    "sites_validated": 1,
+    "message": "On-site validation pass for pipeline e2e-1758952792"
+  }
+}

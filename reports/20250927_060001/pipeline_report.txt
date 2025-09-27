@@ -1,0 +1,36 @@
+
+======================================
+Pipeline Execution Trace Report
+======================================
+Pipeline ID: e2e-1758952801
+Status: completed
+Start Time: 2025-09-27T06:00:01+00:00
+Duration: 20757ms
+
+Stages Summary:
+  Completed: 3
+  Failed: 1
+
+Stage Details:
+-------------------------------------
+intent_generation:
+  Status: success
+  Duration: 10ms
+  Message: 
+
+krm_translation:
+  Status: success
+  Duration: 58ms
+  Message: 
+
+kpt_validation:
+  Status: success
+  Duration: 18935ms
+  Message: 
+
+kpt_pipeline:
+  Status: failed
+  Duration: 0ms
+  Message: Pipeline failed for one or more sites
+
+======================================

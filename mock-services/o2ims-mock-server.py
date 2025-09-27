@@ -17,10 +17,10 @@ from typing import Dict, List, Optional, Any, Union
 from enum import Enum
 
 import uvicorn
-from fastapi import FastAPI, HTTPException, Query, Request, Response
+from fastapi import FastAPI, HTTPException, Query, Request, Response, Path
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 from pydantic.types import UUID4
 
 
@@ -554,7 +554,7 @@ async def get_resource_pools(
 @app.get("/o2ims_infrastructureInventory/v1/deploymentManagers/{dmId}/o2ims_infrastructureProvisioningRequest",
          response_model=List[InfrastructureProvisioningRequest], tags=["O2IMS"])
 async def get_infrastructure_provisioning_requests(
-    dmId: str = Field(..., description="Deployment Manager ID"),
+    dmId: str = Path(..., description="Deployment Manager ID"),
     filter: Optional[str] = Query(None, description="Filter expression"),
     limit: Optional[int] = Query(100, ge=1, le=1000, description="Maximum number of items to return"),
     offset: Optional[int] = Query(0, ge=0, description="Number of items to skip"),

@@ -1,0 +1,30 @@
+{
+  "pipeline_id": "e2e-1758951979",
+  "metrics": {
+    "total_duration_ms": 1779,
+    "stages_completed": 3,
+    "stages_failed": 1
+  },
+  "stage_metrics": [
+    {
+      "name": "intent_generation",
+      "status": "success",
+      "duration_ms": 6
+    },
+    {
+      "name": "krm_translation",
+      "status": "success",
+      "duration_ms": 56
+    },
+    {
+      "name": "kpt_validation",
+      "status": "success",
+      "duration_ms": 3
+    },
+    {
+      "name": "kpt_pipeline",
+      "status": "failed",
+      "duration_ms": 0
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "pipeline_id": "e2e-1758951953",
+  "start_time": "2025-09-27T05:45:53+00:00",
+  "status": "completed",
+  "stages": [
+    {
+      "name": "intent_generation",
+      "start_time": "2025-09-27T05:45:53+00:00",
+      "status": "success",
+      "message": "",
+      "end_time": "2025-09-27T05:45:53+00:00",
+      "duration_ms": 7
+    },
+    {
+      "name": "krm_translation",
+      "start_time": "2025-09-27T05:45:53+00:00",
+      "status": "success",
+      "message": "",
+      "end_time": "2025-09-27T05:45:53+00:00",
+      "duration_ms": 55
+    },
+    {
+      "name": "kpt_validation",
+      "start_time": "2025-09-27T05:45:53+00:00",
+      "status": "success",
+      "message": "",
+      "end_time": "2025-09-27T05:46:11+00:00",
+      "duration_ms": 18011
+    },
+    {
+      "name": "kpt_pipeline",
+      "start_time": "2025-09-27T05:46:11+00:00",
+      "status": "failed",
+      "message": "Pipeline failed for one or more sites",
+      "end_time": "2025-09-27T05:46:11+00:00",
+      "duration_ms": 0
+    }
+  ],
+  "metrics": {
+    "total_duration_ms": 19132,
+    "stages_completed": 3,
+    "stages_failed": 1
+  },
+  "end_time": "2025-09-27T05:46:12+00:00"
+}

@@ -1,0 +1,11 @@
+{
+  "pipeline_id": "e2e-1758952205",
+  "start_time": "2025-09-27T05:50:05+00:00",
+  "status": "running",
+  "stages": [],
+  "metrics": {
+    "total_duration_ms": 0,
+    "stages_completed": 0,
+    "stages_failed": 0
+  }
+}

@@ -1,0 +1,273 @@
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: Node
+  metadata:
+    annotations:
+      node.alpha.kubernetes.io/ttl: "0"
+      volumes.kubernetes.io/controller-managed-attach-detach: "true"
+    creationTimestamp: "2025-09-16T15:36:54Z"
+    labels:
+      beta.kubernetes.io/arch: amd64
+      beta.kubernetes.io/os: linux
+      ingress-ready: "true"
+      kubernetes.io/arch: amd64
+      kubernetes.io/hostname: nephio-demo-control-plane
+      kubernetes.io/os: linux
+      node-role.kubernetes.io/control-plane: ""
+    name: nephio-demo-control-plane
+    resourceVersion: "1206061"
+    uid: 3dbdf544-a313-4e92-9648-9059deb92b64
+  spec:
+    podCIDR: 10.244.0.0/24
+    podCIDRs:
+    - 10.244.0.0/24
+    providerID: kind://docker/nephio-demo/nephio-demo-control-plane
+  status:
+    addresses:
+    - address: 172.18.0.3
+      type: InternalIP
+    - address: nephio-demo-control-plane
+      type: Hostname
+    allocatable:
+      cpu: "16"
+      ephemeral-storage: 203056560Ki
+      hugepages-1Gi: "0"
+      hugepages-2Mi: "0"
+      memory: 30796096Ki
+      pods: "110"
+    capacity:
+      cpu: "16"
+      ephemeral-storage: 203056560Ki
+      hugepages-1Gi: "0"
+      hugepages-2Mi: "0"
+      memory: 30796096Ki
+      pods: "110"
+    conditions:
+    - lastHeartbeatTime: "2025-09-27T06:00:11Z"
+      lastTransitionTime: "2025-09-16T15:36:54Z"
+      message: kubelet has sufficient memory available
+      reason: KubeletHasSufficientMemory
+      status: "False"
+      type: MemoryPressure
+    - lastHeartbeatTime: "2025-09-27T06:00:11Z"
+      lastTransitionTime: "2025-09-16T15:36:54Z"
+      message: kubelet has no disk pressure
+      reason: KubeletHasNoDiskPressure
+      status: "False"
+      type: DiskPressure
+    - lastHeartbeatTime: "2025-09-27T06:00:11Z"
+      lastTransitionTime: "2025-09-16T15:36:54Z"
+      message: kubelet has sufficient PID available
+      reason: KubeletHasSufficientPID
+      status: "False"
+      type: PIDPressure
+    - lastHeartbeatTime: "2025-09-27T06:00:11Z"
+      lastTransitionTime: "2025-09-16T15:37:25Z"
+      message: kubelet is posting ready status
+      reason: KubeletReady
+      status: "True"
+      type: Ready
+    daemonEndpoints:
+      kubeletEndpoint:
+        Port: 10250
+    features:
+      supplementalGroupsPolicy: true
+    images:
+    - names:
+      - docker.io/nephio/porch-function-runner@sha256:ac34e70e1d917e7f4d848d7cbe121c2190a5f0bdef102de4a65f90920bcf55e9
+      - docker.io/nephio/porch-function-runner:v1.5.3
+      sizeBytes: 125018417
+    - names:
+      - docker.io/nephio/porch-function-runner@sha256:5b2b21cd982496249e9e4d69ba689dd41b89715f41906c3c8a677562b702d823
+      - docker.io/nephio/porch-function-runner:latest
+      sizeBytes: 115962603
+    - names:
+      - docker.io/prom/prometheus@sha256:b440bc0e8aa5bab44a782952c09516b6a50f9d7b2325c1ffafac7bc833298e2e
+      - docker.io/prom/prometheus:v2.48.0
+      sizeBytes: 98718836
+    - names:
+      - gcr.io/kpt-fn/kubeval@sha256:bb88cbcc2c0ca15be9f72b1438530a45e8c84fb91825921eb66afdba5cc96037
+      - gcr.io/kpt-fn/kubeval:v0.2.0
+      sizeBytes: 98007075
+    - names:
+      - registry.k8s.io/kube-apiserver-amd64:v1.34.0
+      - registry.k8s.io/kube-apiserver:v1.34.0
+      sizeBytes: 89044732
+    - names:
+      - registry.k8s.io/kube-controller-manager-amd64:v1.34.0
+      - registry.k8s.io/kube-controller-manager:v1.34.0
+      sizeBytes: 75998818
+    - names:
+      - registry.k8s.io/etcd:3.6.4-0
+      sizeBytes: 74311308
+    - names:
+      - registry.k8s.io/kube-proxy-amd64:v1.34.0
+      - registry.k8s.io/kube-proxy:v1.34.0
+      sizeBytes: 73135815
+    - names:
+      - docker.io/nephio/porch-server@sha256:15a23d5bb1f31eae273e0f45cb9476ae188e6c4174a9dc32c163c609a373e7f5
+      - docker.io/nephio/porch-server:v1.5.3
+      sizeBytes: 57375754
+    - names:
+      - registry.k8s.io/kube-scheduler-amd64:v1.34.0
+      - registry.k8s.io/kube-scheduler:v1.34.0
+      sizeBytes: 53839458
+    - names:
+      - docker.io/nephio/porch-server@sha256:7a10531e80fa3c0d91b4756bb138cd75714de113fec26ff82e2d189ff54a9635
+      - docker.io/nephio/porch-server:latest
+      sizeBytes: 51176027
+    - names:
+      - docker.io/kindest/kindnetd:v20250512-df8de77b
+      sizeBytes: 44375501
+    - names:
+      - gcr.io/kpt-fn/generate-folders@sha256:4511c5177c07bc58a9d197bbd983c4632f8bbd636d94bc54373af4fb56ff4190
+      - gcr.io/kpt-fn/generate-folders:v0.1.1
+      sizeBytes: 40380138
+    - names:
+      - docker.io/nephio/porch-controllers@sha256:1699bb2927c0b78dcb20f8d5eeccc676bad3bc0b39e388fa8449be8f216e6c81
+      - docker.io/nephio/porch-controllers:v1.5.3
+      sizeBytes: 33960311
+    - names:
+      - docker.io/nephio/porch-controllers@sha256:00cb6f9d9559365cdd5a74151fd71ed7776ec1ec1a586c3c886b41568ee06223
+      - docker.io/nephio/porch-controllers:latest
+      sizeBytes: 30507061
+    - names:
+      - docker.io/nephio/porch-wrapper-server@sha256:3b41d17be0574374cc5a913da698c52402d6ed492c43834b96d40c571de5373f
+      - docker.io/nephio/porch-wrapper-server:latest
+      sizeBytes: 26296076
+    - names:
+      - gcr.io/kpt-fn/gatekeeper@sha256:a1c193183dd838625036cb7082c3bbf6d8a39968d2a1082cb1e3c6afcc61d386
+      - gcr.io/kpt-fn/gatekeeper:v0.2.1
+      sizeBytes: 25384426
+    - names:
+      - docker.io/kindest/local-path-provisioner:v20250214-acbabc1a
+      sizeBytes: 22540870
+    - names:
+      - docker.io/library/nginx@sha256:42a516af16b852e33b7682d5ef8acbd5d13fe08fecadc7ed98605ba5e3b26ab8
+      - docker.io/library/nginx:alpine
+      sizeBytes: 22477192
+    - names:
+      - registry.k8s.io/coredns/coredns:v1.12.1
+      sizeBytes: 22384805
+    - names:
+      - quay.io/jetstack/cert-manager-controller@sha256:81316365dc0b713eddddfbf9b8907b2939676e6c0e12beec0f9625f202a36d16
+      - quay.io/jetstack/cert-manager-controller:v1.18.2
+      sizeBytes: 21889705
+    - names:
+      - ghcr.io/fluxcd/flagger@sha256:4647fee2ed7e18e40a1ca0664e6b5a94dbe3a3a2992e3d4ae59a75c73f5736e8
+      - ghcr.io/fluxcd/flagger:1.35.0
+      sizeBytes: 19330436
+    - names:
+      - quay.io/jetstack/cert-manager-webhook@sha256:9431f0d8b5103b06cc6138564f471ac02c6b2638c2fa399d81e28a01d817ae73
+      - quay.io/jetstack/cert-manager-webhook:v1.18.2
+      sizeBytes: 18891327
+    - names:
+      - quay.io/jetstack/cert-manager-cainjector@sha256:af59e01ad9756a1034fbf948330e75702e5d79b3577f323f6a9947707ba262fc
+      - quay.io/jetstack/cert-manager-cainjector:v1.18.2
+      sizeBytes: 16005870
+    - names:
+      - gcr.io/kpt-fn/starlark@sha256:6ba3971c64abcd6c3d93039d45721bb5ab496c7fbbc9ac1e685b11577f368ce0
+      - gcr.io/kpt-fn/starlark:v0.4.3
+      sizeBytes: 15687045
+    - names:
+      - gcr.io/kpt-fn/ensure-name-substring@sha256:33ff7d9abe6007b0ae3794367f91948f3882d19f8d1e541cd6130df01bc7179f
+      - gcr.io/kpt-fn/ensure-name-substring:v0.2.0
+      sizeBytes: 12833499
+    - names:
+      - gcr.io/kpt-fn/export-terraform@sha256:571fedd35ab21f745a97903b01a11294ea79ff7f34266462e66464c290383283
+      - gcr.io/kpt-fn/export-terraform:v0.1.0
+      sizeBytes: 12105553
+    - names:
+      - docker.io/prom/node-exporter@sha256:4cb2b9019f1757be8482419002cb7afe028fdba35d47958829e4cfeaf6246d80
+      - docker.io/prom/node-exporter:v1.7.0
+      sizeBytes: 11777109
+    - names:
+      - gcr.io/kpt-fn/apply-replacements@sha256:85913d4ec8db62053eb060ff1b7e26d13ff8853b75cae4d0461b8a1c7ddd4947
+      - gcr.io/kpt-fn/apply-replacements:v0.1.1
+      sizeBytes: 9973494
+    - names:
+      - gcr.io/kpt-fn/set-namespace@sha256:f930d9248001fa763799cc81cf2d89bbf83954fc65de0db20ab038a21784f323
+      - gcr.io/kpt-fn/set-namespace:v0.4.1
+      sizeBytes: 9678349
+    - names:
+      - gcr.io/kpt-fn/create-setters@sha256:0220cc87f29ff9abfa3a3b5643aa50f18d355d5e9dc9e1f518119633ddc4895c
+      - gcr.io/kpt-fn/create-setters:v0.1.0
+      sizeBytes: 8894004
+    - names:
+      - gcr.io/kpt-fn/set-labels@sha256:0dfc3c8aba8b791d0c45fe7eafbc8cf3c5920a09f69848f46dcc270ae3423641
+      - gcr.io/kpt-fn/set-labels:v0.1.5
+      sizeBytes: 8846275
+    - names:
+      - gcr.io/kpt-fn/set-annotations@sha256:76d65ebddf6ce9c2c00bbcb3c0e963a2d856685bdcf2f1072386f41ca9b563e5
+      - gcr.io/kpt-fn/set-annotations:v0.1.4
+      sizeBytes: 8842975
+    - names:
+      - gcr.io/kpt-fn/enable-gcp-services@sha256:a56558d5af1faffc68d0b83f9670b76c56139a251a1529c4b7e43b7705450d09
+      - gcr.io/kpt-fn/enable-gcp-services:v0.1.0
+      sizeBytes: 8840201
+    - names:
+      - gcr.io/kpt-fn/set-enforcement-action@sha256:aea09be38ebfca51819c527ec17706065a34c29c67119dcaa4f22541933d1391
+      - gcr.io/kpt-fn/set-enforcement-action:v0.1.0
+      sizeBytes: 8798641
+    - names:
+      - gcr.io/kpt-fn/remove-local-config-resources@sha256:2825914ea94e5d944e7d0cfd91728d5572da8af65b4e8a64760ff296aa1ecde0
+      - gcr.io/kpt-fn/remove-local-config-resources:v0.1.0
+      sizeBytes: 8780334
+    - names:
+      - gcr.io/kpt-fn/set-project-id@sha256:966c9e51163bce52274dfa0406ae580283712cb38625660cd2f66e9f13d2c01b
+      - gcr.io/kpt-fn/set-project-id:v0.2.0
+      sizeBytes: 8754442
+    - names:
+      - gcr.io/kpt-fn/search-replace@sha256:6864b06bf654fbdff3efb666a0a75fa14da2ba405f33187b60648e0b74bc2272
+      - gcr.io/kpt-fn/search-replace:v0.2.0
+      sizeBytes: 8536907
+    - names:
+      - gcr.io/kpt-fn/upsert-resource@sha256:77196bdb9e33e4259d530ee1996a05c40bbefe39b80d52dcb66c32f7b85a62f1
+      - gcr.io/kpt-fn/upsert-resource:v0.2.0
+      sizeBytes: 8529384
+    - names:
+      - gcr.io/kpt-fn/apply-setters@sha256:4d4295727183396f0c3c6a75d2560254c2f9041a39e95dc1e5beffeb49cc1a12
+      - gcr.io/kpt-fn/apply-setters:v0.2.0
+      sizeBytes: 8523622
+    - names:
+      - gcr.io/kpt-fn/set-image@sha256:49c7a46682d15e17203d5db7105543cf751f1a07c6922e1d5c80fc6812ebf7b9
+      - gcr.io/kpt-fn/set-image:v0.1.1
+      sizeBytes: 6247146
+    - names:
+      - docker.io/kindest/local-path-helper:v20241212-8ac705d0
+      sizeBytes: 3084671
+    - names:
+      - docker.io/library/busybox@sha256:ab33eacc8251e3807b85bb6dba570e4698c3998eca6f0fc2ccb60575a563ea74
+      - docker.io/library/busybox:latest
+      sizeBytes: 2223685
+    - names:
+      - registry.k8s.io/pause:3.10
+      sizeBytes: 320368
+    nodeInfo:
+      architecture: amd64
+      bootID: 94396ad4-7775-46eb-b9ec-59f12c8cb7fb
+      containerRuntimeVersion: containerd://2.1.3
+      kernelVersion: 5.15.0-156-generic
+      kubeProxyVersion: ""
+      kubeletVersion: v1.34.0
+      machineID: 2ebf20cea4784b6cae9ae39d181fce0c
+      operatingSystem: linux
+      osImage: Debian GNU/Linux 12 (bookworm)
+      systemUUID: 6e66ddcd-4c1a-4cb5-97a1-1d05849f3cd3
+    runtimeHandlers:
+    - features:
+        recursiveReadOnlyMounts: true
+        userNamespaces: true
+      name: runc
+    - features:
+        recursiveReadOnlyMounts: true
+        userNamespaces: true
+      name: ""
+    - features:
+        recursiveReadOnlyMounts: true
+        userNamespaces: true
+      name: test-handler
+kind: List
+metadata:
+  resourceVersion: ""

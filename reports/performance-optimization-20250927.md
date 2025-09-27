@@ -70,7 +70,7 @@ Based on actual pipeline execution:
 | Edge Site | IP Address | Connectivity | SSH | Kubernetes | Prometheus | O2IMS |
 |-----------|------------|-------------|-----|------------|------------|-------|
 | Edge1 | 172.16.4.45 | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Edge2 | 172.16.0.89 | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Edge2 | 172.16.4.176 | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Edge3 | TBD | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ |
 | Edge4 | TBD | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ |
 

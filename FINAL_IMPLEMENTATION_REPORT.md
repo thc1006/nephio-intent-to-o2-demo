@@ -131,7 +131,7 @@ The system's primary innovation lies in the integration of:
 │  │ └─────────────┘ │  │ └─────────────┘ │  │ └─────────────┘ └────────┘ │  │
 │  │ ┌─────────────┐ │  │ ┌─────────────┐ │  │ ┌─────────────┐ ┌────────┐ │  │
 │  │ │O2IMS API    │ │  │ │O2IMS API    │ │  │ │O2IMS API    │ │O2IMS   │ │  │
-│  │ │:30205       │ │  │ │:30205       │ │  │ │:30205       │ │:30205  │ │  │
+│  │ │:31280       │ │  │ │:31280       │ │  │ │:31280       │ │:31280  │ │  │
 │  │ └─────────────┘ │  │ └─────────────┘ │  │ └─────────────┘ └────────┘ │  │
 │  └─────────────────┘  └─────────────────┘  └─────────────────────────────┘  │
 └─────────────────────────────────────────────────────────────────────────────┘
@@ -249,7 +249,7 @@ curl -X POST "http://172.16.0.78:8002/api/v1/intent" \
 
 **O2IMS Interface Compliance**
 - **Standards Version**: O-RAN Alliance O2IMS v3.0 (2025)
-- **Standard NodePort**: 30205 (updated from legacy 31280)
+- **Standard NodePort**: 31280
 - **API Endpoints**:
   - `/o2ims_infrastructureInventory/v1/deploymentManagers`
   - `/o2ims_infrastructureInventory/v1/resourcePools`
@@ -327,12 +327,12 @@ ERRORS: 0
 
 **SLO Gate Implementation** (`scripts/postcheck.sh v2.0.0`)
 
-**Performance SLO Thresholds**:
+**Performance SLO Thresholds (API Latency - Milliseconds)**:
 ```bash
-LATENCY_P95_THRESHOLD_MS=15          # 95th percentile latency < 15ms
-LATENCY_P99_THRESHOLD_MS=25          # 99th percentile latency < 25ms
-SUCCESS_RATE_THRESHOLD=0.995         # Success rate > 99.5%
-THROUGHPUT_P95_THRESHOLD_MBPS=200    # Throughput > 200 Mbps
+LATENCY_P95_THRESHOLD_MS=15          # 95th percentile API latency < 15ms
+LATENCY_P99_THRESHOLD_MS=25          # 99th percentile API latency < 25ms
+SUCCESS_RATE_THRESHOLD=0.995         # API success rate > 99.5%
+THROUGHPUT_P95_THRESHOLD_MBPS=200    # Network throughput > 200 Mbps
 ```
 
 **Resource SLO Thresholds**:
@@ -412,7 +412,7 @@ fi
 
 **Test Framework**: pytest with comprehensive test automation
 **Total Test Count**: 555 test functions
-**Test File Count**: 107 Python test files
+**Test File Count**: 77 Python test files (51 active test cases)
 **Lines of Test Code**: 8,217 lines
 **Test Coverage**: 94.2% (438/465 lines covered)
 
@@ -455,14 +455,14 @@ Stage Breakdown (Dry-Run Mode):
 Total: 93ms (dry-run mode)
 ```
 
-**Production E2E Timeline Estimation**:
+**Production E2E Pipeline Timeline (Seconds)**:
 - Intent processing: <1s
 - KRM generation: <1s
 - Git operations: 2-5s
 - Config Sync pull: 15s (next sync cycle)
 - Kubernetes apply: 10-30s (depends on image pull)
 - SLO validation: 5-10s
-- **Total E2E Time**: 45-75s (cold start)
+- **Total E2E Pipeline Time**: 45-75s (cold start)
 
 ### 4.3 SLO Validation Results
 
@@ -535,7 +535,7 @@ test_integration.py::TestPrometheusMonitoring::test_edge4_prom PASSED[ 72%]
 
 **Required Software Versions**:
 ```yaml
-kubernetes: ">=1.28"
+kubernetes: ">=1.28" (v1.34.0 in current deployment)
 kpt: "v1.0.0-beta.49"
 gitea: "v1.24.6"
 config-sync: "v1.17.0"
@@ -555,7 +555,7 @@ edge_nodes:
   - 22: SSH
   - 6443: Kubernetes API
   - 30090: Prometheus NodePort
-  - 30205: O2IMS API NodePort
+  - 31280: O2IMS API NodePort
 ```
 
 ### 5.2 Installation Procedures
@@ -613,7 +613,7 @@ ssh edge3 "kubectl get rootsync -n config-management-system"
 ./scripts/deploy-o2ims.sh edge4
 
 # Verify O2IMS accessibility
-curl http://172.16.5.81:30205/o2ims_infrastructureInventory/v1/resourcePools
+curl http://172.16.5.81:31280/o2ims_infrastructureInventory/v1/resourcePools
 ```
 
 **Step 5: Monitoring Setup**
@@ -644,7 +644,7 @@ edge_sites:
       kubeconfig: "/home/ubuntu/.kube/edge1-config"
     services:
       prometheus: "http://172.16.4.45:30090"
-      o2ims: "http://172.16.4.45:30205"
+      o2ims: "http://172.16.4.45:31280"
   edge2:
     host: "172.16.4.176"
     user: "ubuntu"
@@ -653,7 +653,7 @@ edge_sites:
       kubeconfig: "/home/ubuntu/.kube/edge2-config"
     services:
       prometheus: "http://172.16.4.176:30090"
-      o2ims: "http://172.16.4.176:30205"
+      o2ims: "http://172.16.4.176:31280"
   edge3:
     host: "172.16.5.81"
     user: "thc1006"
@@ -663,7 +663,7 @@ edge_sites:
       kubeconfig: "/home/ubuntu/.kube/edge3-config"
     services:
       prometheus: "http://172.16.5.81:30090"
-      o2ims: "http://172.16.5.81:30205"
+      o2ims: "http://172.16.5.81:31280"
   edge4:
     host: "172.16.1.252"
     user: "thc1006"
@@ -673,7 +673,7 @@ edge_sites:
       kubeconfig: "/home/ubuntu/.kube/edge4-config"
     services:
       prometheus: "http://172.16.1.252:30090"
-      o2ims: "http://172.16.1.252:30205"
+      o2ims: "http://172.16.1.252:31280"
 ```
 
 **SLO Thresholds Configuration**:
@@ -893,7 +893,7 @@ ssh edge3 "kubectl rollout restart deployment prometheus -n monitoring"
 **Issue 4: O2IMS API Not Accessible**
 ```bash
 # Symptoms
-curl http://172.16.5.81:30205/o2ims_infrastructureInventory/v1/resourcePools
+curl http://172.16.5.81:31280/o2ims_infrastructureInventory/v1/resourcePools
 # Connection timeout
 
 # Diagnosis
@@ -902,12 +902,12 @@ ssh edge3 "kubectl get pods -n o2ims"
 ssh edge3 "kubectl describe svc o2ims-api -n o2ims"
 
 # Check NodePort configuration
-ssh edge3 "kubectl get svc -n o2ims | grep 30205"
+ssh edge3 "kubectl get svc -n o2ims | grep 31280"
 
 # Resolution
 # Verify service configuration
 ssh edge3 "kubectl edit svc o2ims-api -n o2ims"
-# Ensure NodePort: 30205 is configured
+# Ensure NodePort: 31280 is configured
 
 # Check pod logs
 ssh edge3 "kubectl logs -n o2ims -l app=o2ims-api"
@@ -916,7 +916,7 @@ ssh edge3 "kubectl logs -n o2ims -l app=o2ims-api"
 ssh edge3 "kubectl rollout restart deployment o2ims-api -n o2ims"
 
 # Verification
-curl http://172.16.5.81:30205/o2ims_infrastructureInventory/v1/resourcePools
+curl http://172.16.5.81:31280/o2ims_infrastructureInventory/v1/resourcePools
 # Expected: JSON response with resource pools
 ```
 
@@ -1079,7 +1079,7 @@ ssh edge3 "kubectl get networkpolicy -n o2ims"
   - Fix API endpoint accessibility
   - Test resource pool queries
   - Update postcheck.sh integration
-- **Success Criteria**: `curl http://edge:30205/o2ims.../resourcePools` returns valid JSON
+- **Success Criteria**: `curl http://edge:31280/o2ims.../resourcePools` returns valid JSON
 
 **2. Network Routing for Central Monitoring** (4-8 hours)
 - **Objective**: Enable cross-subnet communication for monitoring aggregation
@@ -1363,7 +1363,7 @@ edge_sites:
         endpoint: "http://172.16.5.81:30090"
         metrics_path: "/metrics"
       o2ims:
-        endpoint: "http://172.16.5.81:30205"
+        endpoint: "http://172.16.5.81:31280"
         api_version: "v1"
     gitops:
       repository: "http://172.16.0.78:8888/admin1/edge3-config.git"
@@ -1418,7 +1418,7 @@ endpoints:
 
 **O2IMS API Specification**:
 ```yaml
-# Base URL: http://{edge_host}:30205
+# Base URL: http://{edge_host}:31280
 # Standard: O-RAN Alliance O2IMS v3.0
 endpoints:
   - path: /o2ims_infrastructureInventory/v1/deploymentManagers
@@ -1592,22 +1592,22 @@ edge_sites:
     cpu_utilization: 28%
     memory_utilization: 52%
     pods_running: 23
-    kubernetes_version: "v1.28.2"
+    kubernetes_version: "v1.34.0"
   edge2:
     cpu_utilization: 31%
     memory_utilization: 48%
     pods_running: 19
-    kubernetes_version: "v1.28.2"
+    kubernetes_version: "v1.34.0"
   edge3:
     cpu_utilization: 26%
     memory_utilization: 44%
     pods_running: 21
-    kubernetes_version: "v1.28.2"
+    kubernetes_version: "v1.34.0"
   edge4:
     cpu_utilization: 29%
     memory_utilization: 46%
     pods_running: 18
-    kubernetes_version: "v1.28.2"
+    kubernetes_version: "v1.34.0"
 ```
 
 **Network Performance Metrics**:
