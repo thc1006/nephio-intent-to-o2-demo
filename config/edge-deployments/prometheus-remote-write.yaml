@@ -1,0 +1,34 @@
+# Prometheus Remote Write Configuration for Edge Sites
+# This ConfigMap patches Prometheus to send metrics to VM-1
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-remote-write-config
+  namespace: monitoring
+data:
+  remote_write.yml: |
+    remote_write:
+      - url: http://172.16.0.78:9090/api/v1/write  # VM-1 Prometheus/Thanos
+        queue_config:
+          capacity: 10000
+          max_shards: 10
+          min_shards: 1
+          max_samples_per_send: 1000
+          batch_send_deadline: 5s
+          min_backoff: 30ms
+          max_backoff: 100ms
+        write_relabel_configs:
+          # Add edge site label
+          - source_labels: [__name__]
+            regex: '.*'
+            target_label: edge_site
+            replacement: 'EDGE_SITE_NAME'  # Will be replaced per site
+          # Add cluster label
+          - source_labels: [__name__]
+            regex: '.*'
+            target_label: cluster
+            replacement: 'EDGE_CLUSTER_NAME'  # Will be replaced per site
+        metadata_config:
+          send: true
+          send_interval: 1m

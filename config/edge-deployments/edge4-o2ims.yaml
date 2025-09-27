@@ -1,0 +1,63 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: o2ims-system
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: o2ims-mock
+  namespace: o2ims-system
+  labels:
+    app: o2ims
+    site: edge4
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: o2ims
+  template:
+    metadata:
+      labels:
+        app: o2ims
+        site: edge4
+    spec:
+      containers:
+      - name: o2ims
+        image: nginx:alpine
+        ports:
+        - containerPort: 80
+          name: http
+        - containerPort: 31280
+          name: o2ims
+        env:
+        - name: SITE_NAME
+          value: "edge4"
+        - name: O2IMS_PORT
+          value: "31280"
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: o2ims-api
+  namespace: o2ims-system
+  labels:
+    app: o2ims
+spec:
+  type: NodePort
+  selector:
+    app: o2ims
+  ports:
+  - port: 80
+    targetPort: 80
+    nodePort: 31280
+    name: o2ims-api
+    protocol: TCP

@@ -1,0 +1,17 @@
+apiVersion: configsync.gke.io/v1beta1
+kind: RootSync
+metadata:
+  name: edge4-sync
+  namespace: config-management-system
+  annotations:
+    deployment-date: "2025-09-27"
+    managed-by: "claude-code-vm1"
+spec:
+  sourceType: git
+  sourceFormat: unstructured
+  git:
+    repo: https://github.com/thc1006/nephio-intent-to-o2-demo.git
+    branch: main
+    dir: sites/edge4
+    period: 15s
+    auth: none
