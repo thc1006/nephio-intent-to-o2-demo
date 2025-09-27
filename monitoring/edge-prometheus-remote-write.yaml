@@ -1,0 +1,20 @@
+---
+# Prometheus remote_write configuration for edge sites
+# Sends metrics to VM-1 VictoriaMetrics
+# Apply to each edge: kubectl apply -f edge-prometheus-remote-write.yaml -n monitoring
+
+# Add this to prometheus.yml global section or as a separate config
+remote_write:
+  - url: http://172.16.0.78:8428/api/v1/write
+    queue_config:
+      capacity: 10000
+      max_shards: 5
+      min_shards: 1
+      max_samples_per_send: 1000
+      batch_send_deadline: 5s
+      min_backoff: 30ms
+      max_backoff: 100ms
+    write_relabel_configs:
+      - source_labels: [__name__]
+        regex: 'up|node_.*|container_.*|kube_.*'
+        action: keep
