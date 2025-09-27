@@ -1,0 +1,58 @@
+{
+  "pipeline_id": "e2e-1758954782",
+  "start_time": "2025-09-27T06:33:02+00:00",
+  "status": "running",
+  "stages": [
+    {
+      "name": "intent_generation",
+      "start_time": "2025-09-27T06:33:02+00:00",
+      "status": "success",
+      "message": "",
+      "end_time": "2025-09-27T06:33:02+00:00",
+      "duration_ms": 8
+    },
+    {
+      "name": "krm_translation",
+      "start_time": "2025-09-27T06:33:02+00:00",
+      "status": "success",
+      "message": "",
+      "end_time": "2025-09-27T06:33:02+00:00",
+      "duration_ms": 64
+    },
+    {
+      "name": "kpt_validation",
+      "start_time": "2025-09-27T06:33:03+00:00",
+      "status": "success",
+      "message": "",
+      "end_time": "2025-09-27T06:33:22+00:00",
+      "duration_ms": 19299
+    },
+    {
+      "name": "kpt_pipeline",
+      "start_time": "2025-09-27T06:33:22+00:00",
+      "status": "success",
+      "message": "",
+      "end_time": "2025-09-27T06:33:34+00:00",
+      "duration_ms": 11592
+    },
+    {
+      "name": "git_operations",
+      "start_time": "2025-09-27T06:33:34+00:00",
+      "status": "skipped",
+      "message": "No changes to commit",
+      "end_time": "2025-09-27T06:33:34+00:00",
+      "duration_ms": 0
+    },
+    {
+      "name": "rootsync_wait",
+      "start_time": "2025-09-27T06:33:34+00:00",
+      "status": "running",
+      "message": ""
+    }
+  ],
+  "metrics": {
+    "total_duration_ms": 0,
+    "stages_completed": 4,
+    "stages_failed": 0
+  }
+}

@@ -1,0 +1,38 @@
+{
+        "timestamp": "2025-09-27T06:24:13+00:00",
+        "pipeline_id": "e2e-1758954233",
+        "target_site": "edge3",
+        "overall_status": "PASS",
+        "duration_ms": 18860,
+        "summary": {
+            "total_validators": 4,
+            "passed_validators": 4,
+            "failed_validators": 0,
+            "sites_validated": 1
+        },
+        "results": [{
+  "site": "edge3",
+  "validators": [
+    {
+      "name": "kubeval",
+      "status": "PASS",
+      "output": "PASS: All resources validated successfully"
+    },
+    {
+      "name": "yaml-syntax",
+      "status": "PASS",
+      "output": "PASS: All YAML files have valid syntax"
+    },
+    {
+      "name": "naming-convention",
+      "status": "PASS",
+      "output": "PASS: All resources follow intent naming conventions"
+    },
+    {
+      "name": "config-consistency",
+      "status": "PASS",
+      "output": "PASS: Site configuration is consistent"
+    }
+  ]
+}]
+    }

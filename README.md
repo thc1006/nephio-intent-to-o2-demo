@@ -1,7 +1,7 @@
 # Nephio Intent-to-O2IMS Demo
 
-**Version**: v1.1.1 (Production Ready)
-**Last Updated**: 2025-09-27
+**Version**: v1.2.0 (Production Ready - Full Automation)
+**Last Updated**: 2025-09-27T07:30:00Z
 
 An intent-driven orchestration system for O-RAN network deployment using Claude AI, Nephio, and O2IMS standards. This production-ready system enables telecommunications operators to deploy and manage multi-site O-RAN networks using natural language intent, with automatic SLO validation, rollback capabilities, and full standards compliance.
 
@@ -12,20 +12,26 @@ An intent-driven orchestration system for O-RAN network deployment using Claude 
 ### For Operators (5 Commands)
 
 ```bash
-# 1. Access Claude AI Web UI
-open http://172.16.0.78:8002/
+# 1. Start all services (WebSocket + TMF921 + O2IMS)
+./scripts/start-websocket-services.sh
 
-# 2. Enter your intent in natural language
-# Example: "Deploy 5G UPF with latency <10ms to edge1"
+# 2. Access Claude AI Web UI
+open http://localhost:8002/
 
-# 3. Monitor in Grafana
-open http://172.16.0.78:3000/
+# 3. Or use automated TMF921 API (no passwords required)
+curl -X POST http://localhost:8889/api/v1/intent/transform \
+  -H "Content-Type: application/json" \
+  -d '{"natural_language": "Deploy eMBB service on edge3", "target_site": "edge3"}'
 
-# 4. View configurations in Gitea
+# 4. Monitor real-time pipeline
+open http://localhost:8003/  # Realtime Monitor
+
+# 5. View configurations in Gitea
 open http://172.16.0.78:8888/
 
-# 5. Verify deployment
-curl http://172.16.4.45:31280/o2ims-infrastructureInventory/v1/api_versions
+# 6. Check O2IMS on all edge sites
+curl http://172.16.4.45:31280/health    # Edge1
+curl http://172.16.4.176:31281/health   # Edge2
 ```
 
 ### For Developers

@@ -1,0 +1,12 @@
+{
+  "pipeline_id": "e2e-1758955197",
+  "status": "completed",
+  "target_site": "edge3",
+  "service_type": "enhanced-mobile-broadband",
+  "use_porch": true,
+  "start_time": "2025-09-27T06:39:57Z",
+  "end_time": "2025-09-27T06:39:59Z",
+  "reports": {
+    "trace": "reports/traces/pipeline-e2e-1758955197.json"
+  }
+}

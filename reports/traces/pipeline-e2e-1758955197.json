@@ -1,0 +1,61 @@
+{
+  "pipeline_id": "e2e-1758955197",
+  "start_time": "2025-09-27T06:39:57+00:00",
+  "status": "completed",
+  "stages": [
+    {
+      "name": "intent_generation",
+      "start_time": "2025-09-27T06:39:58+00:00",
+      "status": "success",
+      "message": "",
+      "end_time": "2025-09-27T06:39:58+00:00",
+      "duration_ms": 7
+    },
+    {
+      "name": "krm_translation",
+      "start_time": "2025-09-27T06:39:58+00:00",
+      "status": "success",
+      "message": "",
+      "end_time": "2025-09-27T06:39:58+00:00",
+      "duration_ms": 59
+    },
+    {
+      "name": "kpt_validation",
+      "start_time": "2025-09-27T06:39:58+00:00",
+      "status": "success",
+      "message": "",
+      "end_time": "2025-09-27T06:39:58+00:00",
+      "duration_ms": 3
+    },
+    {
+      "name": "kpt_pipeline",
+      "start_time": "2025-09-27T06:39:58+00:00",
+      "status": "success",
+      "message": "",
+      "end_time": "2025-09-27T06:39:59+00:00",
+      "duration_ms": 3
+    },
+    {
+      "name": "porch_operations",
+      "start_time": "2025-09-27T06:39:59+00:00",
+      "status": "failed",
+      "message": "PackageRevision creation failed",
+      "end_time": "2025-09-27T06:39:59+00:00",
+      "duration_ms": 0
+    },
+    {
+      "name": "porch_package_creation",
+      "start_time": "2025-09-27T06:39:59+00:00",
+      "status": "failed",
+      "message": "Failed to create PackageRevision",
+      "end_time": "2025-09-27T06:39:59+00:00",
+      "duration_ms": 0
+    }
+  ],
+  "metrics": {
+    "total_duration_ms": 2631,
+    "stages_completed": 4,
+    "stages_failed": 2
+  },
+  "end_time": "2025-09-27T06:39:59+00:00"
+}
