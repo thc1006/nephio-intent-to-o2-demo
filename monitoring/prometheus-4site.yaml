@@ -1,0 +1,93 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: monitoring
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+      evaluation_interval: 15s
+      external_labels:
+        cluster: 'vm1-orchestrator'
+        region: 'central'
+
+    # VictoriaMetrics for central TSDB (receives remote_write from edges)
+    # No need to scrape VM itself as edges push to it
+
+    # Scrape VM-1 local services
+    scrape_configs:
+      # VM-1 Kubernetes
+      - job_name: 'vm1-kubernetes'
+        kubernetes_sd_configs:
+          - role: node
+        relabel_configs:
+          - source_labels: [__address__]
+            regex: '(.+):.*'
+            target_label: __address__
+            replacement: '${1}:10250'
+
+      # VM-1 Services (Claude, Adapter, etc)
+      - job_name: 'vm1-services'
+        static_configs:
+          - targets:
+              - 'localhost:8002'  # Claude Headless
+              - 'localhost:8889'  # TMF921 Adapter
+              - 'localhost:8003'  # Realtime Monitor
+            labels:
+              service: 'vm1-orchestrator'
+
+      # Edge1 (VM-2) - Direct scrape of node exporter
+      - job_name: 'edge1-node'
+        static_configs:
+          - targets:
+              - '172.16.4.45:30090'
+            labels:
+              site: 'edge1'
+              cluster: 'edge1'
+              region: 'edge'
+
+      # Edge2 (VM-4) - Direct scrape of node exporter
+      - job_name: 'edge2-node'
+        static_configs:
+          - targets:
+              - '172.16.4.176:30090'
+            labels:
+              site: 'edge2'
+              cluster: 'edge2'
+              region: 'edge'
+
+      # Edge3 - Direct scrape of node exporter
+      - job_name: 'edge3-node'
+        static_configs:
+          - targets:
+              - '172.16.5.81:30090'
+            labels:
+              site: 'edge3'
+              cluster: 'edge3'
+              region: 'edge'
+
+      # Edge4 - Direct scrape of node exporter
+      - job_name: 'edge4-node'
+        static_configs:
+          - targets:
+              - '172.16.1.252:30090'
+            labels:
+              site: 'edge4'
+              cluster: 'edge4'
+              region: 'edge'
+
+      # Gitea
+      - job_name: 'gitea'
+        static_configs:
+          - targets:
+              - '172.16.0.78:8888'
+            labels:
+              service: 'gitea'
+
+    # Alert rules
+    alerting:
+      alertmanagers:
+        - static_configs:
+            - targets:
+                - 'localhost:9093'

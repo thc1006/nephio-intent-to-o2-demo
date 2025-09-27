@@ -25,13 +25,15 @@ for config_file in "./config/demo.conf" "$HOME/.nephio/demo.conf" "/etc/nephio/d
 done
 
 # Configuration with environment variable support (no hardcoded IPs)
-TARGET_SITE="${TARGET_SITE:-edge1}"  # edge1|edge2|both
+TARGET_SITE="${TARGET_SITE:-edge1}"  # edge1|edge2|edge3|edge4|both|all
 DEMO_MODE="${DEMO_MODE:-interactive}"  # interactive|automated|debug
 
 # Network configuration - use variables, not hardcoded IPs
 VM2_IP="${VM2_IP:-}"
 VM1_IP="${VM1_IP:-}"
 VM4_IP="${VM4_IP:-}"
+EDGE3_IP="${EDGE3_IP:-172.16.5.81}"
+EDGE4_IP="${EDGE4_IP:-172.16.1.252}"
 
 # Validate required IPs are provided
 if [[ -z "$VM2_IP" || -z "$VM1_IP" ]]; then
@@ -63,6 +65,8 @@ ROLLBACK_SNAPSHOT_DIR="${ARTIFACTS_DIR}/rollback-snapshots"
 GITOPS_BASE_DIR="${GITOPS_BASE_DIR:-./gitops}"
 EDGE1_CONFIG_DIR="${GITOPS_BASE_DIR}/edge1-config"
 EDGE2_CONFIG_DIR="${GITOPS_BASE_DIR}/edge2-config"
+EDGE3_CONFIG_DIR="${GITOPS_BASE_DIR}/edge3-config"
+EDGE4_CONFIG_DIR="${GITOPS_BASE_DIR}/edge4-config"
 ROOTSYNC_NAME="${ROOTSYNC_NAME:-intent-to-o2-rootsync}"
 ROOTSYNC_NAMESPACE="${ROOTSYNC_NAMESPACE:-config-management-system}"
 REPOSYNC_NAME="${REPOSYNC_NAME:-intent-to-o2-reposync}"
@@ -71,6 +75,8 @@ REPOSYNC_NAMESPACE="${REPOSYNC_NAMESPACE:-config-management-system}"
 # O2IMS Configuration
 O2IMS_EDGE1_ENDPOINT="${O2IMS_EDGE1_ENDPOINT:-http://${VM2_IP}:31280/o2ims}"
 O2IMS_EDGE2_ENDPOINT="${O2IMS_EDGE2_ENDPOINT:-http://${VM4_IP}:31280/o2ims}"
+O2IMS_EDGE3_ENDPOINT="${O2IMS_EDGE3_ENDPOINT:-http://${EDGE3_IP}:31280/o2ims}"
+O2IMS_EDGE4_ENDPOINT="${O2IMS_EDGE4_ENDPOINT:-http://${EDGE4_IP}:31280/o2ims}"
 PROVISIONING_REQUEST_TIMEOUT="${PROVISIONING_REQUEST_TIMEOUT:-$O2IMS_TIMEOUT}"
 
 # Exponential backoff configuration

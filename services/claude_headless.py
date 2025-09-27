@@ -64,7 +64,7 @@ manager = ConnectionManager()
 class IntentRequest(BaseModel):
     text: str
     context: Optional[Dict[str, Any]] = None
-    target_sites: Optional[List[str]] = ["edge01", "edge02"]
+    target_sites: Optional[List[str]] = ["edge1", "edge2", "edge3", "edge4"]
 
 class ClaudeHeadlessService:
     """Claude CLI wrapper for headless operation"""
@@ -207,13 +207,17 @@ class ClaudeHeadlessService:
         # Extract target sites
         sites = []
         if "edge1" in prompt.lower() or "edge01" in prompt.lower():
-            sites.append("edge01")
+            sites.append("edge1")
         if "edge2" in prompt.lower() or "edge02" in prompt.lower():
-            sites.append("edge02")
-        if "all" in prompt.lower() or "both" in prompt.lower():
-            sites = ["edge01", "edge02"]
+            sites.append("edge2")
+        if "edge3" in prompt.lower() or "edge03" in prompt.lower():
+            sites.append("edge3")
+        if "edge4" in prompt.lower() or "edge04" in prompt.lower():
+            sites.append("edge4")
+        if "all" in prompt.lower() or "multiple" in prompt.lower():
+            sites = ["edge1", "edge2", "edge3", "edge4"]
 
-        intent["targetSites"] = sites if sites else ["edge01"]
+        intent["targetSites"] = sites if sites else ["edge1"]
 
         # Extract bandwidth if specified
         import re
@@ -295,7 +299,7 @@ Generate a valid JSON response with these exact fields:
   "intentId": "unique identifier",
   "intentType": "eMBB|URLLC|mMTC",
   "description": "human readable description",
-  "targetSites": ["edge01", "edge02"],
+  "targetSites": ["edge1", "edge2", "edge3", "edge4"],
   "serviceProfile": {{
     "bandwidth": "value in Mbps/Gbps",
     "latency": "value in ms",

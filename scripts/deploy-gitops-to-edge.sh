@@ -9,10 +9,12 @@ BLUE='\033[0;34m'
 CYAN='\033[0;36m'
 NC='\033[0m'
 
-# Configuration
-VM1_IP="172.16.0.78"
-VM2_IP="172.16.4.45"
-VM4_IP="172.16.4.176"
+# Configuration - Load from environment or use defaults
+VM1_IP="${VM1_IP:-172.16.0.78}"
+VM2_IP="${VM2_IP:-172.16.4.45}"
+VM4_IP="${VM4_IP:-172.16.4.176}"
+EDGE3_IP="${EDGE3_IP:-172.16.5.81}"
+EDGE4_IP="${EDGE4_IP:-172.16.1.252}"
 GITEA_NODEPORT="30924"
 GITEA_USER="${GITEA_USER:-gitea_admin}"
 GITEA_PASS="${GITEA_PASS:-r8sA8CPHD9!bt6d}"
@@ -224,11 +226,14 @@ main() {
     echo -e "\n${CYAN}Select deployment target:${NC}"
     echo "1) Edge-1 (VM-2: $VM2_IP)"
     echo "2) Edge-2 (VM-4: $VM4_IP)"
-    echo "3) Both Edge clusters"
-    echo "4) Setup SSH tunnels only"
-    echo "5) Verify existing deployments"
+    echo "3) Edge-3 (Remote: $EDGE3_IP)"
+    echo "4) Edge-4 (Remote: $EDGE4_IP)"
+    echo "5) All Edge clusters (1-4)"
+    echo "6) Edge1+Edge2 only (legacy)"
+    echo "7) Setup SSH tunnels"
+    echo "8) Verify existing deployments"
     echo ""
-    read -p "Enter choice [1-5]: " CHOICE
+    read -p "Enter choice [1-8]: " CHOICE
 
     case $CHOICE in
         1)
@@ -248,7 +253,38 @@ main() {
             fi
             ;;
         3)
-            echo -e "\n${BLUE}Deploying to Both Edge Clusters${NC}"
+            echo -e "\n${BLUE}Deploying to Edge-3${NC}"
+            if check_prerequisites "edge3" "edge3-context"; then
+                deploy_credentials "edge3" "edge3-context"
+                deploy_rootsync "edge3" "edge3-context" "edge3"
+                verify_sync "edge3" "edge3-context" "edge3"
+            fi
+            ;;
+        4)
+            echo -e "\n${BLUE}Deploying to Edge-4${NC}"
+            if check_prerequisites "edge4" "edge4-context"; then
+                deploy_credentials "edge4" "edge4-context"
+                deploy_rootsync "edge4" "edge4-context" "edge4"
+                verify_sync "edge4" "edge4-context" "edge4"
+            fi
+            ;;
+        5)
+            echo -e "\n${BLUE}Deploying to All Edge Clusters (1-4)${NC}"
+            for site_num in 1 2 3 4; do
+                local site="edge${site_num}"
+                local context="edge${site_num}-context"
+                echo -e "\n${CYAN}Processing ${site}...${NC}"
+                if check_prerequisites "$site" "$context"; then
+                    deploy_credentials "$site" "$context"
+                    deploy_rootsync "$site" "$context" "$site"
+                    verify_sync "$site" "$context" "$site"
+                else
+                    echo -e "${YELLOW}Skipping $site due to prerequisites failure${NC}"
+                fi
+            done
+            ;;
+        6)
+            echo -e "\n${BLUE}Deploying to Legacy Edge Clusters (1+2)${NC}"
             if check_prerequisites "edge1" "edge1-context"; then
                 deploy_credentials "edge1" "edge1-context"
                 deploy_rootsync "edge1" "edge1-context" "edge1"
@@ -260,15 +296,19 @@ main() {
                 verify_sync "edge2" "edge2-context" "edge2"
             fi
             ;;
-        4)
+        7)
             echo -e "\n${BLUE}Setting up SSH Tunnels${NC}"
             setup_ssh_tunnel "VM-2" "$VM2_IP"
             setup_ssh_tunnel "VM-4" "$VM4_IP"
+            setup_ssh_tunnel "Edge-3" "$EDGE3_IP"
+            setup_ssh_tunnel "Edge-4" "$EDGE4_IP"
             ;;
-        5)
+        8)
             echo -e "\n${BLUE}Verifying Existing Deployments${NC}"
             verify_sync "edge1" "edge1-context" "edge1"
             verify_sync "edge2" "edge2-context" "edge2"
+            verify_sync "edge3" "edge3-context" "edge3"
+            verify_sync "edge4" "edge4-context" "edge4"
             ;;
         *)
             echo -e "${RED}Invalid choice${NC}"
@@ -291,8 +331,11 @@ main() {
     echo "# Test Gitea connectivity:"
     echo "curl http://${VM1_IP}:${GITEA_NODEPORT}/api/v1/version"
     echo ""
-    echo "# Manual sync trigger:"
+    echo "# Manual sync trigger for each site:"
     echo "kubectl annotate rootsync -n config-management-system edge1-root-sync sync.gke.io/force-sync=\$(date +%s) --overwrite"
+    echo "kubectl annotate rootsync -n config-management-system edge2-root-sync sync.gke.io/force-sync=\$(date +%s) --overwrite"
+    echo "kubectl annotate rootsync -n config-management-system edge3-root-sync sync.gke.io/force-sync=\$(date +%s) --overwrite"
+    echo "kubectl annotate rootsync -n config-management-system edge4-root-sync sync.gke.io/force-sync=\$(date +%s) --overwrite"
     echo ""
 
     echo -e "${GREEN}Deployment script completed!${NC}"

@@ -97,7 +97,7 @@ with open(SCHEMA_PATH, "r") as f:
 # Request/Response models
 class IntentRequest(BaseModel):
     natural_language: str = Field(..., min_length=1, max_length=1000)
-    target_site: Optional[str] = Field(None, pattern="^(edge1|edge2|both)$")
+    target_site: Optional[str] = Field(None, pattern="^(edge1|edge2|edge3|edge4|both)$")
 
 class IntentResponse(BaseModel):
     intent: Dict[str, Any]
@@ -266,7 +266,7 @@ def call_claude_with_retry(prompt: str, config: RetryConfig = retry_config) -> T
 
 def determine_target_site(nl_text: str, override: Optional[str]) -> str:
     """Determine target site from text or use override"""
-    if override and override in ["edge1", "edge2", "both"]:
+    if override and override in ["edge1", "edge2", "edge3", "edge4", "both"]:
         return override
 
     # Infer from natural language
@@ -276,7 +276,11 @@ def determine_target_site(nl_text: str, override: Optional[str]) -> str:
         return "edge1"
     elif any(x in text_lower for x in ["edge2", "edge 2", "edge-2", "site 2", "second edge"]):
         return "edge2"
-    elif any(x in text_lower for x in ["both", "all edge", "multiple", "two edge", "edges"]):
+    elif any(x in text_lower for x in ["edge3", "edge 3", "edge-3", "site 3", "third edge"]):
+        return "edge3"
+    elif any(x in text_lower for x in ["edge4", "edge 4", "edge-4", "site 4", "fourth edge"]):
+        return "edge4"
+    elif any(x in text_lower for x in ["both", "all edge", "multiple", "all sites", "edges"]):
         return "both"
 
     # Default to both if ambiguous
@@ -294,7 +298,7 @@ def enforce_tmf921_structure(intent: Dict[str, Any], target_site: str, nl_text: 
     service_type, sst, qos_defaults = infer_service_and_qos(nl_text)
 
     # Ensure targetSite
-    if "targetSite" not in intent or intent["targetSite"] not in ["edge1", "edge2", "both"]:
+    if "targetSite" not in intent or intent["targetSite"] not in ["edge1", "edge2", "edge3", "edge4", "both"]:
         intent["targetSite"] = target_site
 
     # Ensure intentId
@@ -394,7 +398,7 @@ def validate_intent(intent: Dict[str, Any]) -> None:
         raise HTTPException(status_code=400, detail=f"Schema validation failed: {e.message}")
 
     # Additional targetSite validation
-    if intent.get("targetSite") not in ["edge1", "edge2", "both"]:
+    if intent.get("targetSite") not in ["edge1", "edge2", "edge3", "edge4", "both"]:
         raise HTTPException(status_code=400, detail=f"Invalid targetSite: {intent.get('targetSite')}")
 
 @app.post("/generate_intent", response_model=IntentResponse)
@@ -714,12 +718,14 @@ Example: Deploy a 5G network slice with low latency for gaming at edge site 1"><
             </div>
 
             <div>
-                <label for="targetSite"><strong>Target Site:</strong> (Phase 17 - UI Selector)</label>
+                <label for="targetSite"><strong>Target Site:</strong> (4-Site Support)</label>
                 <select id="targetSite">
                     <option value="">🔍 Auto-detect from text</option>
-                    <option value="edge1">📍 Edge Site 1</option>
-                    <option value="edge2">📍 Edge Site 2</option>
-                    <option value="both">🌐 Both Sites</option>
+                    <option value="edge1">📍 Edge Site 1 (VM-2)</option>
+                    <option value="edge2">📍 Edge Site 2 (VM-4)</option>
+                    <option value="edge3">📍 Edge Site 3 (New)</option>
+                    <option value="edge4">📍 Edge Site 4 (New)</option>
+                    <option value="both">🌐 All Sites</option>
                 </select>
             </div>
 
@@ -731,8 +737,14 @@ Example: Deploy a 5G network slice with low latency for gaming at edge site 1"><
                 <div class="example-item" onclick="setExample('Configure IoT monitoring for edge site 2')">
                     IoT monitoring at edge2 <span class="badge badge-edge2">edge2</span>
                 </div>
-                <div class="example-item" onclick="setExample('Setup video streaming CDN across both edge sites')">
-                    Video CDN at both sites <span class="badge badge-both">both</span>
+                <div class="example-item" onclick="setExample('Deploy eMBB service on edge3 with 200Mbps bandwidth')">
+                    eMBB service at edge3 <span class="badge badge-edge1">edge3</span>
+                </div>
+                <div class="example-item" onclick="setExample('Setup URLLC for industrial automation on edge4')">
+                    URLLC at edge4 <span class="badge badge-edge2">edge4</span>
+                </div>
+                <div class="example-item" onclick="setExample('Setup video streaming CDN across all edge sites')">
+                    Video CDN at all sites <span class="badge badge-both">all</span>
                 </div>
             </div>
 

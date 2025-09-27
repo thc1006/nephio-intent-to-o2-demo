@@ -20,22 +20,28 @@ ROOTSYNC_NAMESPACE="${ROOTSYNC_NAMESPACE:-config-management-system}"
 VM2_IP="${VM2_IP:-172.16.4.45}"
 VM4_IP="${VM4_IP:-172.16.0.89}"
 
-# Multi-site configuration
+# Multi-site configuration (support for 4 edge sites)
 declare -A SITES=(
     [edge1]="${VM2_IP}:30090/metrics/api/v1/slo"
     [edge2]="${VM4_IP}:30090/metrics/api/v1/slo"
+    [edge3]="${EDGE3_IP:-172.16.5.81}:30090/metrics/api/v1/slo"
+    [edge4]="${EDGE4_IP:-172.16.1.252}:30090/metrics/api/v1/slo"
 )
 
 # O2IMS Measurement API endpoints
 declare -A O2IMS_SITES=(
     [edge1]="http://${VM2_IP}:31280/o2ims/measurement/v1/slo"
     [edge2]="http://${VM4_IP}:31280/o2ims/measurement/v1/slo"
+    [edge3]="http://${EDGE3_IP:-172.16.5.81}:31280/o2ims/measurement/v1/slo"
+    [edge4]="http://${EDGE4_IP:-172.16.1.252}:31280/o2ims/measurement/v1/slo"
 )
 
 # Prometheus endpoints for advanced metrics
 declare -A PROMETHEUS_SITES=(
     [edge1]="http://${VM2_IP}:30090"
     [edge2]="http://${VM4_IP}:30090"
+    [edge3]="http://${EDGE3_IP:-172.16.5.81}:30090"
+    [edge4]="http://${EDGE4_IP:-172.16.1.252}:30090"
 )
 
 # Enhanced SLO Thresholds with defaults
@@ -66,7 +72,7 @@ COLLECT_EVIDENCE="${COLLECT_EVIDENCE:-true}"
 GENERATE_CHARTS="${GENERATE_CHARTS:-true}"
 
 # Multi-site target configuration
-TARGET_SITE="${TARGET_SITE:-both}"  # edge1|edge2|both
+TARGET_SITE="${TARGET_SITE:-all}"  # edge1|edge2|edge3|edge4|both|all
 
 # Directory configuration
 TIMESTAMP="${TIMESTAMP:-$EXECUTION_ID}"
@@ -426,32 +432,52 @@ validate_comprehensive_slo() {
 
 # Multi-site consistency validation
 validate_multi_site_consistency() {
-    if [[ "$TARGET_SITE" == "both" ]]; then
+    if [[ "$TARGET_SITE" == "both" || "$TARGET_SITE" == "all" ]]; then
         log_info "Performing multi-site consistency validation"
 
-        local edge1_metrics="${METRICS_DIR}/edge1_*_metrics.json"
-        local edge2_metrics="${METRICS_DIR}/edge2_*_metrics.json"
+        local target_sites=($(get_target_sites))
+        local site_latencies=()
+        local site_files=()
 
-        if [[ -f $(ls $edge1_metrics 2>/dev/null | head -1) && -f $(ls $edge2_metrics 2>/dev/null | head -1) ]]; then
-            local edge1_file=$(ls $edge1_metrics 2>/dev/null | head -1)
-            local edge2_file=$(ls $edge2_metrics 2>/dev/null | head -1)
+        # Collect metrics from all target sites
+        for site in "${target_sites[@]}"; do
+            local site_metrics="${METRICS_DIR}/${site}_*_metrics.json"
+            local site_file=$(ls $site_metrics 2>/dev/null | head -1)
 
-            local edge1_latency=$(jq -r '.slo.latency_p95_ms // 0' "$edge1_file")
-            local edge2_latency=$(jq -r '.slo.latency_p95_ms // 0' "$edge2_file")
+            if [[ -f "$site_file" ]]; then
+                local latency=$(jq -r '.slo.latency_p95_ms // 0' "$site_file")
+                site_latencies+=("$latency")
+                site_files+=("$site_file")
+                log_info "[$site] Latency: ${latency}ms"
+            fi
+        done
 
-            local latency_diff=$(echo "scale=2; ($edge1_latency - $edge2_latency)" | bc -l 2>/dev/null || echo "0")
-            local latency_diff_abs=$(echo "$latency_diff" | sed 's/-//')
+        # Calculate variance across all sites
+        if [[ ${#site_latencies[@]} -ge 2 ]]; then
+            local max_latency=0
+            local min_latency=999999
 
-            log_info "Multi-site latency comparison: edge1=${edge1_latency}ms, edge2=${edge2_latency}ms, diff=${latency_diff}ms"
+            for latency in "${site_latencies[@]}"; do
+                if (( $(echo "$latency > $max_latency" | bc -l) )); then
+                    max_latency="$latency"
+                fi
+                if (( $(echo "$latency < $min_latency" | bc -l) )); then
+                    min_latency="$latency"
+                fi
+            done
+
+            local variance=$(echo "scale=2; ($max_latency - $min_latency)" | bc -l 2>/dev/null || echo "0")
+
+            log_info "Multi-site latency variance: max=${max_latency}ms, min=${min_latency}ms, variance=${variance}ms"
 
             # Check for excessive cross-site variance
-            if (( $(echo "$latency_diff_abs > 50" | bc -l) )); then
-                log_warn "Large latency variance detected between sites: ${latency_diff}ms"
+            if (( $(echo "$variance > 50" | bc -l) )); then
+                log_warn "Large latency variance detected across ${#site_latencies[@]} sites: ${variance}ms"
             else
-                log_info "✅ Multi-site latency consistency acceptable"
+                log_info "✅ Multi-site latency consistency acceptable across ${#site_latencies[@]} sites"
             fi
         else
-            log_warn "Cannot perform multi-site consistency validation - missing metrics files"
+            log_warn "Cannot perform multi-site consistency validation - insufficient metrics files"
         fi
     fi
 }
@@ -675,11 +701,20 @@ get_target_sites() {
         "edge2")
             echo "edge2"
             ;;
+        "edge3")
+            echo "edge3"
+            ;;
+        "edge4")
+            echo "edge4"
+            ;;
         "both")
             echo "edge1 edge2"
             ;;
+        "all")
+            echo "edge1 edge2 edge3 edge4"
+            ;;
         *)
-            log_error "Invalid TARGET_SITE: $TARGET_SITE (must be: edge1|edge2|both)"
+            log_error "Invalid TARGET_SITE: $TARGET_SITE (must be: edge1|edge2|edge3|edge4|both|all)"
             exit $EXIT_CONFIG_ERROR
             ;;
     esac
@@ -853,16 +888,18 @@ Usage: $SCRIPT_NAME [OPTIONS]
 
 Options:
   -h, --help                Show this help message
-  --target-site SITE        Target site(s): edge1|edge2|both (default: both)
+  --target-site SITE        Target site(s): edge1|edge2|edge3|edge4|both|all (default: all)
   --collect-evidence        Enable evidence collection (default: true)
   --generate-charts         Enable chart generation (default: true)
   --log-json                Enable JSON logging format
   --dry-run                 Perform validation without side effects
 
 Environment Variables:
-  TARGET_SITE              Target site(s): edge1|edge2|both
+  TARGET_SITE              Target site(s): edge1|edge2|edge3|edge4|both|all
   VM2_IP                   Edge1 site IP address
   VM4_IP                   Edge2 site IP address
+  EDGE3_IP                 Edge3 site IP address (default: 172.16.5.81)
+  EDGE4_IP                 Edge4 site IP address (default: 172.16.1.252)
   REPORT_DIR               Output directory for reports
   LOG_JSON                 Enable JSON logging (true/false)
   COLLECT_EVIDENCE         Collect comprehensive evidence (true/false)
@@ -873,8 +910,11 @@ SLO Threshold Overrides:
   THROUGHPUT_P95_THRESHOLD_MBPS  Throughput threshold (default: 200)
 
 Examples:
-  $SCRIPT_NAME                                    # Validate both sites
+  $SCRIPT_NAME                                    # Validate all sites
   TARGET_SITE=edge1 $SCRIPT_NAME                  # Validate edge1 only
+  TARGET_SITE=edge3 $SCRIPT_NAME                  # Validate edge3 only
+  TARGET_SITE=both $SCRIPT_NAME                   # Validate edge1 and edge2
+  TARGET_SITE=all $SCRIPT_NAME                    # Validate all 4 sites
   LOG_JSON=true $SCRIPT_NAME                      # JSON output format
   COLLECT_EVIDENCE=false $SCRIPT_NAME             # Skip evidence collection
 

@@ -16,7 +16,7 @@ TRACE_FILE="${TRACE_FILE:-reports/traces/pipeline-${PIPELINE_ID}.json}"
 REPORT_DIR="${REPORT_DIR:-reports/$(date +%Y%m%d_%H%M%S)}"
 
 # Target configuration
-TARGET_SITE="${TARGET_SITE:-both}"  # edge1, edge2, or both
+TARGET_SITE="${TARGET_SITE:-all}"  # edge1, edge2, edge3, edge4, both, or all
 SERVICE_TYPE="${SERVICE_TYPE:-enhanced-mobile-broadband}"
 RESOURCE_PROFILE="${RESOURCE_PROFILE:-standard}"
 
@@ -151,11 +151,17 @@ run_kpt_pipeline() {
 
     # Run kpt fn render for each site
     local sites=()
-    if [[ "$TARGET_SITE" == "both" ]]; then
-        sites=("edge1" "edge2")
-    else
-        sites=("$TARGET_SITE")
-    fi
+    case "$TARGET_SITE" in
+        "both")
+            sites=("edge1" "edge2")
+            ;;
+        "all")
+            sites=("edge1" "edge2" "edge3" "edge4")
+            ;;
+        *)
+            sites=("$TARGET_SITE")
+            ;;
+    esac
 
     local all_success=true
     for site in "${sites[@]}"; do
@@ -271,15 +277,23 @@ poll_o2ims_status() {
     # O2IMS endpoints
     declare -A O2IMS_ENDPOINTS=(
         [edge1]="http://172.16.4.45:31280/o2ims/provisioning/v1/status"
-        [edge2]="http://172.16.0.89:31280/o2ims/provisioning/v1/status"
+        [edge2]="http://172.16.4.176:31280/o2ims/provisioning/v1/status"
+        [edge3]="http://172.16.5.81:31280/o2ims/provisioning/v1/status"
+        [edge4]="http://172.16.1.252:31280/o2ims/provisioning/v1/status"
     )
 
     local sites=()
-    if [[ "$TARGET_SITE" == "both" ]]; then
-        sites=("edge1" "edge2")
-    else
-        sites=("$TARGET_SITE")
-    fi
+    case "$TARGET_SITE" in
+        "both")
+            sites=("edge1" "edge2")
+            ;;
+        "all")
+            sites=("edge1" "edge2" "edge3" "edge4")
+            ;;
+        *)
+            sites=("$TARGET_SITE")
+            ;;
+    esac
 
     local all_ready=false
     local poll_count=0
@@ -390,7 +404,9 @@ PIPELINE_ID="${PIPELINE_ID:-unknown}"
 # Validation endpoints
 declare -A EDGE_ENDPOINTS=(
     [edge1]="172.16.4.45"
-    [edge2]="172.16.0.89"
+    [edge2]="172.16.4.176"
+    [edge3]="172.16.5.81"
+    [edge4]="172.16.1.252"
 )
 
 # Validation checks
@@ -455,11 +471,17 @@ validate_site() {
 # Main validation
 main() {
     local sites=()
-    if [[ "$TARGET_SITE" == "both" ]]; then
-        sites=("edge1" "edge2")
-    else
-        sites=("$TARGET_SITE")
-    fi
+    case "$TARGET_SITE" in
+        "both")
+            sites=("edge1" "edge2")
+            ;;
+        "all")
+            sites=("edge1" "edge2" "edge3" "edge4")
+            ;;
+        *)
+            sites=("$TARGET_SITE")
+            ;;
+    esac
 
     local validations=()
     local all_pass=true
@@ -616,7 +638,7 @@ Usage: $0 [OPTIONS]
 Phase 19-B: One-Click End-to-End Pipeline with On-Site Validation
 
 Options:
-    --target SITE       Target site (edge1|edge2|both) [default: both]
+    --target SITE       Target site (edge1|edge2|edge3|edge4|both|all) [default: all]
     --service TYPE      Service type (enhanced-mobile-broadband|ultra-reliable-low-latency|massive-machine-type)
     --dry-run          Execute in dry-run mode (no actual deployments)
     --skip-validation  Skip on-site validation
@@ -680,7 +702,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Validate inputs
-if [[ ! "$TARGET_SITE" =~ ^(edge1|edge2|both)$ ]]; then
+if [[ ! "$TARGET_SITE" =~ ^(edge1|edge2|edge3|edge4|both|all)$ ]]; then
     log_error "Invalid target site: $TARGET_SITE"
     exit 1
 fi

@@ -357,24 +357,27 @@
                     <input type="text"
                            id="commandInput"
                            class="input-field"
-                           placeholder="輸入自然語言指令 (例如: Deploy eMBB service on edge01 with 100Mbps)"
+                           placeholder="輸入自然語言指令 (例如: Deploy eMBB service on edge1 with 100Mbps)"
                            autofocus>
                     <button class="send-button" onclick="sendCommand()">發送</button>
                 </div>
                 <div class="quick-actions">
-                    <button class="quick-action" onclick="quickCommand('Deploy eMBB service on edge01 with 100Mbps bandwidth')">
-                        📡 eMBB Edge01
+                    <button class="quick-action" onclick="quickCommand('Deploy eMBB service on edge1 with 100Mbps bandwidth')">
+                        📡 eMBB Edge1
                     </button>
-                    <button class="quick-action" onclick="quickCommand('Deploy URLLC service with 1ms latency requirement')">
-                        ⚡ URLLC 低延遲
+                    <button class="quick-action" onclick="quickCommand('Deploy URLLC service on edge2 with 1ms latency requirement')">
+                        ⚡ URLLC Edge2
                     </button>
-                    <button class="quick-action" onclick="quickCommand('Deploy mMTC for 10000 IoT devices on edge02')">
-                        🌐 mMTC IoT
+                    <button class="quick-action" onclick="quickCommand('Deploy eMBB service on edge3 with 200Mbps bandwidth')">
+                        🚀 eMBB Edge3
+                    </button>
+                    <button class="quick-action" onclick="quickCommand('Deploy mMTC for 10000 IoT devices on edge4')">
+                        🌐 mMTC Edge4
                     </button>
                     <button class="quick-action" onclick="quickCommand('Show current pipeline status')">
                         📊 查看狀態
                     </button>
-                    <button class="quick-action" onclick="quickCommand('Check SLO compliance for all services')">
+                    <button class="quick-action" onclick="quickCommand('Check SLO compliance for all edge sites')">
                         ✅ 檢查 SLO
                     </button>
                     <button class="quick-action" onclick="clearTerminal()">

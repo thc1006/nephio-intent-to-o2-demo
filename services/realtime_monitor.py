@@ -69,7 +69,9 @@ class PipelineMonitor:
         }
         self.edge_status = {
             "edge01": {"status": "unknown", "last_sync": None, "deployments": 0},
-            "edge02": {"status": "unknown", "last_sync": None, "deployments": 0}
+            "edge02": {"status": "unknown", "last_sync": None, "deployments": 0},
+            "edge03": {"status": "unknown", "last_sync": None, "deployments": 0},
+            "edge04": {"status": "unknown", "last_sync": None, "deployments": 0}
         }
 
     async def start_pipeline(self, intent_id: str, intent_text: str) -> Dict[str, Any]:
@@ -188,7 +190,14 @@ class PipelineMonitor:
             services["gitea"] = "offline"
 
         # Check Edge sites
-        for edge_ip, edge_name in [("172.16.4.45", "edge01"), ("172.16.4.176", "edge02")]:
+        edge_sites = [
+            ("172.16.4.45", "edge01"),
+            ("172.16.4.176", "edge02"),
+            ("172.16.5.81", "edge03"),
+            ("172.16.1.252", "edge04")
+        ]
+
+        for edge_ip, edge_name in edge_sites:
             try:
                 result = subprocess.run(
                     ["curl", "-s", f"http://{edge_ip}:31280"],
@@ -419,14 +428,16 @@ async def get_visualization_ui():
                             <div><span class="status-indicator status-offline"></span>Gitea</div>
                             <div><span class="status-indicator status-offline"></span>Edge1 (VM-2)</div>
                             <div><span class="status-indicator status-offline"></span>Edge2 (VM-4)</div>
+                            <div><span class="status-indicator status-offline"></span>Edge3 (New)</div>
+                            <div><span class="status-indicator status-offline"></span>Edge4 (New)</div>
                         </div>
                     </div>
                 </div>
             </div>
 
             <div class="card">
-                <h2>Edge Sites</h2>
-                <div class="edge-status">
+                <h2>Edge Sites (4-Site Support)</h2>
+                <div class="edge-status" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
                     <div class="edge-card">
                         <h3>Edge01 (VM-2)</h3>
                         <div>Status: <span id="edge01-status">Unknown</span></div>
@@ -438,6 +449,18 @@ async def get_visualization_ui():
                         <div>Status: <span id="edge02-status">Unknown</span></div>
                         <div>Last Sync: <span id="edge02-sync">Never</span></div>
                         <div>Deployments: <span id="edge02-deployments">0</span></div>
+                    </div>
+                    <div class="edge-card">
+                        <h3>Edge03 (New Site)</h3>
+                        <div>Status: <span id="edge03-status">Unknown</span></div>
+                        <div>Last Sync: <span id="edge03-sync">Never</span></div>
+                        <div>Deployments: <span id="edge03-deployments">0</span></div>
+                    </div>
+                    <div class="edge-card">
+                        <h3>Edge04 (New Site)</h3>
+                        <div>Status: <span id="edge04-status">Unknown</span></div>
+                        <div>Last Sync: <span id="edge04-sync">Never</span></div>
+                        <div>Deployments: <span id="edge04-deployments">0</span></div>
                     </div>
                 </div>
             </div>
@@ -547,6 +570,14 @@ async def get_visualization_ui():
                 if (services.edge02) {
                     serviceElements[3].querySelector('.status-indicator').className =
                         'status-indicator ' + statusMap[services.edge02];
+                }
+                if (services.edge03) {
+                    serviceElements[4].querySelector('.status-indicator').className =
+                        'status-indicator ' + statusMap[services.edge03];
+                }
+                if (services.edge04) {
+                    serviceElements[5].querySelector('.status-indicator').className =
+                        'status-indicator ' + statusMap[services.edge04];
                 }
             }
 

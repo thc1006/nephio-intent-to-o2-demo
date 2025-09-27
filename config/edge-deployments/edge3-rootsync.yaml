@@ -1,0 +1,25 @@
+apiVersion: configsync.gke.io/v1beta1
+kind: RootSync
+metadata:
+  name: root-sync
+  namespace: config-management-system
+spec:
+  sourceType: git
+  sourceFormat: unstructured
+  git:
+    repo: http://172.16.0.78:8888/admin1/edge3-config.git
+    branch: main
+    dir: /
+    period: 15s
+    auth: token
+    secretRef:
+      name: gitea-credentials
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: gitea-credentials
+  namespace: config-management-system
+type: Opaque
+stringData:
+  token: eae77e87315b5c2aba6f43ebaa169f4315ebb244
