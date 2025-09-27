@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: embb-edge3-001-service
+  namespace: ran-workloads
+  labels:
+    service-type: eMBB
+    target-site: edge3
+    generated-by: render-krm
+    generated-at: "2025-09-13T07:11:24Z"
+  annotations:
+    intent.nephio.org/expectation-id: "embb-edge3-001"
+    intent.nephio.org/expectation-type: "ServicePerformance"
+spec:
+  type: ClusterIP
+  selector:
+    app: embb-edge3-001-service
+    target-site: edge3
+  ports:
+  - name: control
+    port: 8080
+    targetPort: 8080
+    protocol: TCP
+  - name: data
+    port: 9090
+    targetPort: 9090
+    protocol: TCP

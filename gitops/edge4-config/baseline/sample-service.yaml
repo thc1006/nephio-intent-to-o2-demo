@@ -1,0 +1,60 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: edge4-health
+  namespace: edge4-system
+  labels:
+    site: edge4
+    app: health-check
+    managed-by: gitops
+spec:
+  type: ClusterIP
+  selector:
+    app: edge4-health
+  ports:
+  - name: http
+    port: 8080
+    targetPort: 8080
+    protocol: TCP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: edge4-health
+  namespace: edge4-system
+  labels:
+    site: edge4
+    app: health-check
+    managed-by: gitops
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: edge4-health
+  template:
+    metadata:
+      labels:
+        app: edge4-health
+        site: edge4
+    spec:
+      containers:
+      - name: health
+        image: busybox:1.36
+        command: ["/bin/sh"]
+        args:
+        - -c
+        - |
+          while true; do
+            echo "Edge3 cluster health check: OK - $(date)"
+            echo "HTTP/1.1 200 OK\nContent-Type: text/plain\n\nEdge3 Healthy" | nc -l -p 8080 -w 1
+          done
+        ports:
+        - containerPort: 8080
+          name: http
+        resources:
+          requests:
+            cpu: 10m
+            memory: 16Mi
+          limits:
+            cpu: 50m
+            memory: 64Mi

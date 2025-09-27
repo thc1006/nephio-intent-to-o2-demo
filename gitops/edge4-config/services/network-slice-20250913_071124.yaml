@@ -1,0 +1,29 @@
+apiVersion: ran.nephio.org/v1alpha1
+kind: NetworkSlice
+metadata:
+  name: embb-slice-edge4
+  namespace: ran-workloads
+  labels:
+    service-type: eMBB
+    target-site: edge4
+    generated-by: render-krm
+    generated-at: "2025-09-13T07:11:24Z"
+  annotations:
+    intent.nephio.org/expectation-id: "embb-edge4-001"
+    intent.nephio.org/expectation-type: "ServicePerformance"
+spec:
+  sliceId: embb-slice-edge4
+  serviceType: eMBB
+  targetSite: edge4
+  requirements:
+    downlinkThroughput: "1Gbps"
+    uplinkThroughput: "100Mbps"
+    latency: "10ms"
+status:
+  phase: Pending
+  conditions:
+  - type: Ready
+    status: "False"
+    reason: PendingDeployment
+    message: "Waiting for deployment to target site: edge4"
+    lastTransitionTime: "2025-09-13T07:11:24Z"

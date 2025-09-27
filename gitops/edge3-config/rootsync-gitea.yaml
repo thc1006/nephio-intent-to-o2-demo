@@ -1,0 +1,97 @@
+# RootSync configuration for Edge3 cluster with Gitea
+# This connects to the local Gitea instance on VM-1
+# Deploy this to the edge3 cluster (VM-2: 172.16.4.45)
+---
+apiVersion: configsync.gke.io/v1beta1
+kind: RootSync
+metadata:
+  name: edge3-root-sync
+  namespace: config-management-system
+spec:
+  sourceType: git
+  sourceFormat: unstructured
+  git:
+    # Using VM-1 IP with port 8888 (forwarded to Gitea)
+    repo: http://172.16.0.78:8888/admin1/edge3-config.git
+    branch: main
+    dir: /
+    period: 30s
+    auth: token  # Using token authentication
+    secretRef:
+      name: gitea-credentials  # Secret with Gitea token
+    # Proxy configuration if needed for internal network
+    # proxy: http://proxy.example.com:8080
+    # noProxy: "172.16.0.0/16,10.0.0.0/8"
+  override:
+    # Edge3 cluster API endpoint
+    apiServerEndpoint: https://172.16.5.81:6443
+    clusterName: edge3
+    metadata:
+      labels:
+        site: edge3
+        managed-by: config-sync
+        gitops-source: gitea
+      annotations:
+        config.nephio.org/sync-time: "30s"
+        config.nephio.org/site: "edge3"
+        config.nephio.org/git-source: "gitea-vm1"
+---
+# Alternative configuration using SSH tunnel
+# Use this if direct NodePort access is blocked
+apiVersion: configsync.gke.io/v1beta1
+kind: RootSync
+metadata:
+  name: edge3-root-sync-tunnel
+  namespace: config-management-system
+spec:
+  sourceType: git
+  sourceFormat: unstructured
+  git:
+    # Using localhost with SSH tunnel
+    # Requires: ssh -L 8888:172.18.0.2:30924 ubuntu@172.16.0.78
+    repo: http://localhost:8888/admin1/edge3-config.git
+    branch: main
+    dir: /
+    period: 30s
+    auth: token
+    secretRef:
+      name: gitea-credentials
+  override:
+    apiServerEndpoint: https://172.16.5.81:6443
+    clusterName: edge3
+    metadata:
+      labels:
+        site: edge3
+        managed-by: config-sync
+        gitops-source: gitea-tunnel
+---
+# ClusterRole for edge3 sync permissions
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: edge3-sync-role
+rules:
+- apiGroups: ["*"]
+  resources: ["*"]
+  verbs: ["*"]
+---
+# ClusterRoleBinding for edge3 sync
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: edge3-sync-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: edge3-sync-role
+subjects:
+- kind: ServiceAccount
+  name: root-reconciler
+  namespace: config-management-system
+---
+# ServiceAccount for root-reconciler if not exists
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: root-reconciler
+  namespace: config-management-system
