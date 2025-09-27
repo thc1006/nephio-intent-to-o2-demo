@@ -466,21 +466,36 @@ tail -f ~/.ssh_access.log
 # 1. Generate new key
 ssh-keygen -t ed25519 -C "vm1-edge-management-$(date +%Y%m)" -f ~/.ssh/edge_sites_key.new -N ""
 
-# 2. Add new public key to all edge sites
-for edge in edge1 edge2 edge3 edge4; do
+# 2. Add new public key to all edge sites (account for different keys)
+# For Edge1/Edge2 (using id_ed25519)
+for edge in edge1 edge2; do
+    ssh $edge "echo '$(cat ~/.ssh/id_ed25519.new.pub)' >> ~/.ssh/authorized_keys"
+done
+
+# For Edge3/Edge4 (using edge_sites_key)
+for edge in edge3 edge4; do
     ssh $edge "echo '$(cat ~/.ssh/edge_sites_key.new.pub)' >> ~/.ssh/authorized_keys"
 done
 
-# 3. Test new key
+# 3. Test new keys
+ssh -i ~/.ssh/id_ed25519.new edge1 "hostname"
+ssh -i ~/.ssh/id_ed25519.new edge2 "hostname"
 ssh -i ~/.ssh/edge_sites_key.new edge3 "hostname"
+ssh -i ~/.ssh/edge_sites_key.new edge4 "hostname"
 
 # 4. Replace old key
 mv ~/.ssh/edge_sites_key ~/.ssh/edge_sites_key.old
 mv ~/.ssh/edge_sites_key.new ~/.ssh/edge_sites_key
 mv ~/.ssh/edge_sites_key.new.pub ~/.ssh/edge_sites_key.pub
 
-# 5. Remove old public key from edge sites
-for edge in edge1 edge2 edge3 edge4; do
+# 5. Remove old public keys from edge sites
+# For Edge1/Edge2
+for edge in edge1 edge2; do
+    ssh $edge "grep -v '$(cat ~/.ssh/id_ed25519.old.pub)' ~/.ssh/authorized_keys > ~/.ssh/authorized_keys.new && mv ~/.ssh/authorized_keys.new ~/.ssh/authorized_keys"
+done
+
+# For Edge3/Edge4
+for edge in edge3 edge4; do
     ssh $edge "grep -v '$(cat ~/.ssh/edge_sites_key.old.pub)' ~/.ssh/authorized_keys > ~/.ssh/authorized_keys.new && mv ~/.ssh/authorized_keys.new ~/.ssh/authorized_keys"
 done
 ```

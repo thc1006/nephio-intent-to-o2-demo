@@ -71,13 +71,15 @@ This project demonstrates a complete automation flow from natural language inten
    └─────────┘
 ```
 
-### 2.3 Virtual Machine Roles and Responsibilities
+### 2.3 Enhanced 4-Site Topology (Zero-Trust Mesh)
 
-| VM | Role | IP Address | Main Functions | Key Services |
-|----|------|------------|----------------|--------------|
-| VM-1 | SMO/Orchestrator + LLM | 172.16.0.78 | Central orchestration & Intent processing | • Gitea (8888)<br>• LLM Adapter (8002)<br>• KRM Renderer<br>• Config Sync<br>• SLO Controller |
-| VM-2 | Edge Site 1 | 172.16.4.45 | Edge cluster 1 | • Kubernetes API (6443)<br>• O2 IMS (31280)<br>• HTTP/HTTPS (31080/31443) |
-| VM-4 | Edge Site 2 | 172.16.4.176 | Edge cluster 2 | • Kubernetes API<br>• O2 IMS<br>• Network Functions |
+| Site | Role | IP Address | AI Capabilities | Key Services v1.2.0 |
+|------|------|------------|-----------------|----------------------|
+| VM-1 | GenAI Orchestrator Hub | 172.16.0.78 | 175B Claude-4, Real-time AI | • Gitea (8888)<br>• GenAI Service (8002)<br>• WebSocket Monitor (8003/8004)<br>• OrchestRAN Renderer<br>• AI-Enhanced SLO Controller |
+| Edge1 | Primary Edge Site | 172.16.4.45 | Local AI validation, Config Sync | • Kubernetes API (6443)<br>• O2 IMS v3.0 (31280)<br>• Zero-Trust mTLS<br>• Real-time Metrics |
+| Edge2 | Secondary Edge Site | 172.16.4.176 | AI-assisted deployment | • Kubernetes API<br>• O2 IMS v3.0<br>• Autonomous Operations<br>• Self-Healing |
+| Edge3 | Tertiary Edge Site | 172.16.5.81 | Distributed AI inference | • Kubernetes API<br>• O2 IMS v3.0<br>• Federated Learning<br>• Edge AI Processing |
+| Edge4 | Quaternary Edge Site | 172.16.1.252 | Edge AI optimization | • Kubernetes API<br>• O2 IMS v3.0<br>• Predictive Scaling<br>• Quantum-Ready Security |
 
 ## 3. Core Workflows
 

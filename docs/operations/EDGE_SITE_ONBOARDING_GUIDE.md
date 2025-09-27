@@ -1,17 +1,28 @@
 # Edge Site Onboarding Guide
 
-**Purpose**: Configure this edge site to be managed by VM-1 (Orchestrator)
-
-**Audience**: Claude Code running on edge sites (edge3, edge4, ...)
+**Version**: 1.2.0
+**Last Updated**: 2025-09-27
+**Status**: Production Ready - 4 Edge Sites Operational
+**Purpose**: Configure edge sites to be managed by VM-1 (Orchestrator)
+**Audience**: Claude Code running on edge sites (edge1, edge2, edge3, edge4)
 
 ---
 
 ## 🎯 Overview
 
-You are running on an **edge site**. VM-1 (Orchestrator at `172.16.0.78`) will manage you via:
+You are running on an **edge site** in the 4-site deployment. VM-1 (Orchestrator at `172.16.0.78`) will manage you via:
 - **SSH**: For setup and emergency operations
+- **TMF921 Adapter**: Intent processing at `http://172.16.0.78:8889`
 - **GitOps Pull**: For normal configuration deployment (Config Sync)
-- **Prometheus Remote Write**: For metrics aggregation
+- **Prometheus Remote Write**: For metrics aggregation to VM-1
+- **WebSocket Services**: Real-time monitoring (ports 8002-8004)
+
+**Current 4-Site Network (v1.2.0)**:
+- VM-1 (SMO): 172.16.0.78 - TMF921 (8889), Gitea (8888), WebSockets (8002-8004)
+- Edge1: 172.16.4.45 - O2IMS (31280), Prometheus (30090)
+- Edge2: 172.16.4.176 - O2IMS (31281), Prometheus (30090)
+- Edge3: 172.16.5.81 - O2IMS (32080), Prometheus (30090)
+- Edge4: 172.16.1.252 - O2IMS (32080), Prometheus (30090)
 
 ---
 
@@ -20,11 +31,13 @@ You are running on an **edge site**. VM-1 (Orchestrator at `172.16.0.78`) will m
 ### Information Needed from VM-1 Admin
 
 VM-1 admin will provide:
-1. **Edge site name**: `edge3`, `edge4`, etc.
+1. **Edge site name**: `edge1`, `edge2`, `edge3`, or `edge4`
 2. **VM-1 SSH public key**: To add to `~/.ssh/authorized_keys`
-3. **Gitea repository URL**: For GitOps sync
-4. **Gitea token**: For repository access
-5. **Prometheus remote write endpoint**: For metrics
+3. **User credentials**: `ubuntu` (Edge1/Edge2) or `thc1006` (Edge3/Edge4)
+4. **Gitea repository URL**: `http://172.16.0.78:8888/nephio/deployments`
+5. **Gitea token**: For repository access
+6. **Prometheus remote write endpoint**: `http://172.16.0.78:8428/api/v1/write`
+7. **Site-specific ports**: O2IMS port assignment for your site
 
 ### What You Need on This Edge Site
 
@@ -40,9 +53,16 @@ VM-1 admin will provide:
 
 ### Step 1: Receive SSH Public Key from VM-1
 
-VM-1 admin will provide a public key like:
+VM-1 admin will provide different public keys based on your site:
+
+**For Edge1/Edge2 (ubuntu user)**:
 ```
-ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx vm1-edge-management
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHDQU9lTLh32IP7UR3/Ab1BRbFMOO/Mlu0qNuUg07Jai ubuntu@vm1
+```
+
+**For Edge3/Edge4 (thc1006 user)**:
+```
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHDQU9lTLh32IP7UR3/Ab1BRbFMOO/Mlu0qNuUg07Jai vm1-edge-management
 ```
 
 ### Step 2: Install SSH Public Key
@@ -52,9 +72,15 @@ ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx vm1-edge-man
 mkdir -p ~/.ssh
 chmod 700 ~/.ssh
 
-# Add VM-1 public key (replace with actual key from VM-1)
+# Add VM-1 public key (use appropriate key for your site)
+# For Edge1/Edge2:
 cat >> ~/.ssh/authorized_keys << 'EOF'
-ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx vm1-edge-management
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHDQU9lTLh32IP7UR3/Ab1BRbFMOO/Mlu0qNuUg07Jai ubuntu@vm1
+EOF
+
+# For Edge3/Edge4:
+cat >> ~/.ssh/authorized_keys << 'EOF'
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHDQU9lTLh32IP7UR3/Ab1BRbFMOO/Mlu0qNuUg07Jai vm1-edge-management
 EOF
 
 # Set correct permissions
@@ -98,6 +124,9 @@ VM-1 admin will provide Gitea details. Create Config Sync setup:
 ```bash
 # Create config-management-system namespace
 kubectl create namespace config-management-system
+
+# Site-specific configuration (replace EDGE_SITE_NAME with your site)
+EDGE_SITE_NAME="edge1"  # Change to edge2, edge3, or edge4 as appropriate
 
 # Create Gitea token secret (replace TOKEN with actual token)
 kubectl create secret generic gitea-token \

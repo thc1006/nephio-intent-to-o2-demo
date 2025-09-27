@@ -6,12 +6,14 @@ metadata:
   annotations:
     deployment-date: "2025-09-27"
     managed-by: "claude-code-vm1"
+    version: "v1.2.0"
 spec:
   sourceType: git
   sourceFormat: unstructured
   git:
     repo: https://github.com/thc1006/nephio-intent-to-o2-demo.git
     branch: main
-    dir: sites/edge4
+    dir: gitops/edge4-config
     period: 15s
     auth: none
+    noSSLVerify: false

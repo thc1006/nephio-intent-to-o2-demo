@@ -1,5 +1,5 @@
-# Prometheus Remote Write Configuration for Edge Sites
-# This ConfigMap patches Prometheus to send metrics to VM-1
+# Prometheus Remote Write Configuration v1.2.0 for Edge Sites
+# Central monitoring aggregation to VM-1 orchestrator
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -9,7 +9,7 @@ metadata:
 data:
   remote_write.yml: |
     remote_write:
-      - url: http://172.16.0.78:9090/api/v1/write  # VM-1 Prometheus/Thanos
+      - url: http://172.16.4.45:9090/api/v1/write  # VM-1 orchestrator Prometheus
         queue_config:
           capacity: 10000
           max_shards: 10
@@ -29,6 +29,12 @@ data:
             regex: '.*'
             target_label: cluster
             replacement: 'EDGE_CLUSTER_NAME'  # Will be replaced per site
+          # Add version label
+          - source_labels: [__name__]
+            regex: '.*'
+            target_label: version
+            replacement: 'v1.2.0'
         metadata_config:
           send: true
           send_interval: 1m
+        retry_on_http_429: true

@@ -1,8 +1,10 @@
 # Edge3 Onboarding Package
 
+**Version**: 1.2.0
 **For**: Claude Code on edge3
 **From**: VM-1 Orchestrator (172.16.0.78)
-**Date**: 2025-09-26
+**Date**: 2025-09-27
+**Status**: Production Ready - Part of 4-Site Deployment
 
 ---
 
@@ -16,7 +18,18 @@ edgeSite:
   vm1_ip: 172.16.0.78
   vm1_floating_ip: 147.251.115.143
   gitea_url: http://172.16.0.78:8888
+  tmf921_adapter: http://172.16.0.78:8889
   metrics_endpoint: http://172.16.0.78:8428
+  websocket_services:
+    claude_headless: http://172.16.0.78:8002
+    realtime_monitor: http://172.16.0.78:8003
+    tmux_bridge: http://172.16.0.78:8004
+  site_config:
+    ip: 172.16.5.81
+    o2ims_port: 32080
+    prometheus_port: 30090
+    user: thc1006
+    ssh_key: edge_sites_key
 ```
 
 ### VM-1 SSH Public Key
@@ -372,16 +385,30 @@ kubectl rollout restart deployment prometheus -n monitoring
 
 ## 📞 Contact VM-1
 
-**VM-1 Information**:
+**VM-1 Information (v1.2.0)**:
 - Internal IP: `172.16.0.78`
 - Floating IP: `147.251.115.143`
+- TMF921 Adapter: `http://172.16.0.78:8889` (automated)
 - Gitea: `http://172.16.0.78:8888`
 - Metrics: `http://172.16.0.78:8428`
+- Claude Headless: `http://172.16.0.78:8002`
+- Realtime Monitor: `http://172.16.0.78:8003`
+- TMux Bridge: `http://172.16.0.78:8004`
+
+**Edge3 Configuration**:
+- IP: `172.16.5.81`
+- User: `thc1006` (password: 1006)
+- O2IMS Port: `32080`
+- Prometheus Port: `30090`
+- SSH Key: `edge_sites_key`
 
 **What VM-1 Needs from You**:
-1. Your IP address
-2. Confirmation SSH key is installed
-3. Status report after setup
+1. Your IP address (should be 172.16.5.81)
+2. Confirmation SSH key is installed for user thc1006
+3. Confirmation user thc1006 password works (1006)
+4. Status report after setup
+5. Verification of O2IMS on port 32080
+6. Verification of Prometheus on port 30090
 
 ---
 

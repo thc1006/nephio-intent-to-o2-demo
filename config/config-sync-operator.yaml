@@ -1,4 +1,4 @@
-# Config Sync Operator for GitOps automation
+# Config Sync Operator v1.2.0 for GitOps automation
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -45,10 +45,11 @@ data:
       name: config-management
     spec:
       git:
-        syncRepo: http://172.16.4.45:3000/gitea/nephio-demo
+        syncRepo: https://github.com/thc1006/nephio-intent-to-o2-demo.git
         syncBranch: main
         secretType: none
-        policyDir: gitops/edge3-config
+        policyDir: gitops
+        version: v1.2.0
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -69,6 +70,13 @@ spec:
       containers:
       - name: manager
         image: gcr.io/config-management-release/config-management-operator:20241119-1729088659
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
         ports:
         - containerPort: 8080
           name: metrics

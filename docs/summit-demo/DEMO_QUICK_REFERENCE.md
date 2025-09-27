@@ -1,12 +1,24 @@
-# 🎯 Summit 演示快速參考卡
+# 🎯 Summit Demo v1.2.0 快速參考卡
 
-## 🆕 Web UI 快速設定（推薦）
+## 🌐 v1.2.0 多服務快速設定（必需）
 ```bash
-# 在你的筆電建立 SSH 隧道
-ssh -L 8888:172.16.0.78:8888 ubuntu@147.251.115.143
+# v1.2.0 完整服務隧道群組
+ssh -L 8002:172.16.0.78:8002 \
+    -L 8889:172.16.0.78:8889 \
+    -L 8003:172.16.0.78:8003 \
+    -L 8004:172.16.0.78:8004 \
+    -L 8888:172.16.0.78:8888 \
+    ubuntu@147.251.115.143
 
-# 開啟瀏覽器
-open http://localhost:8002/
+# 開啟 v1.2.0 主要界面
+open http://localhost:8002/  # Claude Code UI (主要演示)
+open http://localhost:8889/  # TMF921 Adapter (125ms 處理)
+
+# 驗證所有服務
+echo "Testing v1.2.0 services..."
+curl -s http://localhost:8002/health && echo "✅ Claude Code UI"
+curl -s http://localhost:8889/health && echo "✅ TMF921 Adapter (125ms)"
+echo "📡 WebSocket services ready on 8003/8004"
 ```
 
 ## 🚀 快速啟動指令

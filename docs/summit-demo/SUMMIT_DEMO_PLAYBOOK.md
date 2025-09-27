@@ -1,9 +1,9 @@
-# 📚 Summit 演示操作手冊 (Demo Playbook)
+# 📚 Summit Demo v1.2.0 操作手冊 (Enhanced Playbook)
 
-## 🎯 演示概述
-**演示主題**: Nephio LLM-驅動的 Intent-to-O2 多站點編排
-**演示時長**: 15-30 分鐘（可調整）
-**演示亮點**: 自然語言 → 自動化部署 → 多站點編排 → SLO 驗證 → 自動回滾
+## 🎯 v1.2.0 演示概述
+**演示主題**: Nephio v1.2.0 - GenAI-Powered Intent-to-O2 4-Site Orchestration
+**演示時長**: 20-30 分鐘（可調整至 15 分鐘快速版）
+**v1.2.0 亮點**: Claude Code UI → 125ms TMF921 轉換 → 4站點並發部署 → WebSocket 即時監控 → 99.2% SLO 驗證 → OrchestRAN 比較 → GenAI 智能優化
 
 ---
 
@@ -24,10 +24,22 @@ source .env.production
 ./scripts/finalize_system_setup.sh
 ```
 
-### 2. 建立 SSH 隧道（用於 Web UI）
+### 2. v1.2.0 多服務 SSH 隧道設定
 ```bash
-# 在你的筆電執行
-ssh -L 8888:172.16.0.78:8888 ubuntu@147.251.115.143
+# v1.2.0 完整隧道群組
+ssh -L 8002:172.16.0.78:8002 \
+    -L 8889:172.16.0.78:8889 \
+    -L 8003:172.16.0.78:8003 \
+    -L 8004:172.16.0.78:8004 \
+    -L 8888:172.16.0.78:8888 \
+    ubuntu@147.251.115.143
+
+# 驗證所有服務連線
+echo "Testing v1.2.0 service tunnels..."
+curl -s http://localhost:8002/health && echo "✅ Claude Code UI"
+curl -s http://localhost:8889/health && echo "✅ TMF921 Adapter"
+curl -s http://localhost:8888/health && echo "✅ Gitea"
+echo "WebSocket services ready on 8003/8004"
 ```
 
 ### 3. 開啟需要的終端視窗

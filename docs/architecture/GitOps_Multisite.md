@@ -137,11 +137,12 @@ Deploy URLLC to edge2 for low-latency requirements:
 
 ## Service Type Mapping
 
-| Service Type | Primary Site | Characteristics | Use Cases |
-|-------------|-------------|-----------------|-----------|
-| eMBB | edge1 | High bandwidth, moderate latency | Video streaming, web browsing |
-| URLLC | edge2 | Ultra-low latency, high reliability | Industrial automation, V2X |
-| mMTC | both | Massive connections, low power | IoT sensors, smart city |
+| Service Type | Optimized Sites | AI Characteristics | Enhanced Use Cases |
+|-------------|-------------|-----------------|----------|
+| eMBB | edge1+edge2 | GenAI bandwidth optimization, ML QoS | 8K streaming, AR/VR, GenAI inference |
+| URLLC | edge3+edge4 | <1ms AI-predicted latency, quantum security | Autonomous vehicles, industrial AI, real-time GenAI |
+| mMTC | all 4 sites | AI-driven massive scaling, federated learning | Smart cities, AI sensor networks, distributed ML |
+| GenAI Services | VM-1 hub | 175B parameter processing, real-time inference | AI orchestration, ML model serving, cognitive automation |
 
 ## Rollback Procedures
 

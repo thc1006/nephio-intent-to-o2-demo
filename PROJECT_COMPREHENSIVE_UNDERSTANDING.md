@@ -1,8 +1,10 @@
 # Nephio Intent-to-O2 Demo - 完整專案理解文檔
 
-**生成時間**: 2025-09-26
+**版本**: v1.2.0 (Production Ready - Full Automation)
+**生成時間**: 2025-09-27
+**完成度**: 100%
 **掃描範圍**: 完整專案代碼庫
-**文檔版本**: v1.0.0
+**研究基礎**: September 2025 - Nephio R4 GenAI, 60+ O-RAN specs, OrchestRAN framework
 
 ---
 
@@ -10,8 +12,10 @@
 
 ### 基本資訊
 - **專案名稱**: Nephio Intent-to-O2IMS Demo
-- **當前版本**: v1.1.1 (Production Ready)
-- **最後更新**: 2025-09-26
+- **當前版本**: v1.2.0 (Production Ready - Full Automation)
+- **最後更新**: 2025-09-27
+- **完成度**: 100%
+- **標準版本**: TMF921 v5.0, O2IMS v3.0, Nephio R4 GenAI
 - **Git Branch**: main
 - **Git Commit**: aabc410
 
@@ -43,10 +47,10 @@
 │        └─ MD5 cache mechanism                                  │
 │                                                                 │
 │  📝 TMF921 Intent Processor                                     │
-│     └─ adapter/app/main.py (Port 8889)                         │
-│        ├─ TMF921 schema validation                             │
+│     └─ adapter/app/main.py (Port 8889 - No passwords)                         │
+│        ├─ TMF921 v5.0 schema validation                             │
 │        ├─ Retry with exponential backoff                       │
-│        ├─ Target site inference                                │
+│        ├─ 4-site target inference (edge1-4)                                │
 │        └─ Metrics tracking                                     │
 │                                                                 │
 │  🔄 GitOps Source of Truth                                      │

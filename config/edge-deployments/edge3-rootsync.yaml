@@ -1,19 +1,20 @@
 apiVersion: configsync.gke.io/v1beta1
 kind: RootSync
 metadata:
-  name: root-sync
+  name: edge3-root-sync
   namespace: config-management-system
+  annotations:
+    version: "v1.2.0"
+    deployment-date: "2025-09-27"
 spec:
   sourceType: git
   sourceFormat: unstructured
   git:
-    repo: http://172.16.0.78:8888/admin1/edge3-config.git
+    repo: https://github.com/thc1006/nephio-intent-to-o2-demo.git
     branch: main
-    dir: /
+    dir: gitops/edge3-config
     period: 15s
-    auth: token
-    secretRef:
-      name: gitea-credentials
+    auth: none
 ---
 apiVersion: v1
 kind: Secret

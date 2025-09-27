@@ -1,8 +1,19 @@
 # Security Documentation
 
+**Version**: 1.2.0
+**Last Updated**: 2025-09-27
+**Status**: Production Ready - 4 Edge Sites Operational
+
 ## Overview
 
-This document outlines comprehensive security measures, access controls, and compliance requirements for the multi-site O-RAN L Release deployment with Nephio R5 GitOps orchestration across VM-1 (SMO), VM-2 (Edge1), VM-1, and VM-4 (Edge2).
+This document outlines comprehensive security measures, access controls, and compliance requirements for the multi-site O-RAN deployment with Nephio GitOps orchestration across VM-1 (SMO/Orchestrator) and 4 operational edge sites.
+
+**Security Architecture v1.2.0:**
+- VM-1 (SMO): 172.16.0.78 - Zero-trust orchestrator with TMF921 Adapter, Gitea, WebSocket services
+- Edge1: 172.16.4.45 - SSH key-based authentication (ubuntu user)
+- Edge2: 172.16.4.176 - SSH key-based authentication (ubuntu user)
+- Edge3: 172.16.5.81 - Enhanced SSH authentication (thc1006 user + password)
+- Edge4: 172.16.1.252 - Enhanced SSH authentication (thc1006 user + password)
 
 ---
 
@@ -10,48 +21,72 @@ This document outlines comprehensive security measures, access controls, and com
 
 ### 1.1 LLM Adapter IP Whitelist Configuration
 
-**Critical Ports Security Matrix:**
+**Critical Ports Security Matrix (v1.2.0):**
 | Port | Service | Protocol | Security Level | Access Control |
 |------|---------|----------|----------------|----------------|
-| 6443 | K8s API | HTTPS | Critical | mTLS + RBAC |
-| 31080 | HTTP Service | HTTP | Medium | IP Whitelist |
-| 31443 | HTTPS Service | HTTPS | High | TLS 1.3 + IP Whitelist |
-| 31280 | O2IMS API | HTTP | High | OAuth2 + IP Whitelist |
-| 8888 | LLM Adapter | HTTP | Critical | Strict IP Whitelist |
+| 6443 | K8s API | HTTPS | Critical | mTLS + RBAC (all sites) |
+| 8889 | TMF921 Adapter | HTTP | Critical | Automated authentication bypass |
+| 8888 | Gitea Repository | HTTP | High | SSH key + IP whitelist |
+| 8002 | Claude Headless | WebSocket | Medium | Internal network only |
+| 8003 | Realtime Monitor | WebSocket | Medium | Internal network only |
+| 8004 | TMux Bridge | WebSocket | Medium | Internal network only |
+| 31280 | Edge1 O2IMS | HTTP | High | Zero-trust networking |
+| 31281 | Edge2 O2IMS | HTTP | High | Zero-trust networking |
+| 32080 | Edge3/4 O2IMS | HTTP | High | Zero-trust networking |
+| 30090 | Prometheus | HTTP | Medium | Metrics collection (all sites) |
+| 22 | SSH | SSH | Critical | Multi-key authentication strategy |
 
-**Whitelist Implementation:**
+**Whitelist Implementation (v1.2.0):**
 ```bash
-# /etc/security/llm-adapter-whitelist.conf
-# VM-1 SMO Controller
-172.16.4.44/32
-# VM-2 Edge1 Cluster
+# /etc/security/tmf921-adapter-whitelist.conf
+# VM-1 SMO Controller (self)
+172.16.0.78/32
+# Edge1 Cluster (VM-2)
 172.16.4.45/32
-# VM-4 Edge2 Cluster
-172.16.0.89/32
+# Edge2 Cluster (VM-4) - CORRECTED IP
+172.16.4.176/32
+# Edge3 Cluster
+172.16.5.81/32
+# Edge4 Cluster
+172.16.1.252/32
 # Internal cluster networks
 10.244.0.0/16
 # Service mesh networks
 172.17.0.0/16
+# Management networks
+192.168.1.0/24
 ```
 
-**iptables Rules for LLM Adapter (VM-1):**
+**iptables Rules for 4-Site Security (VM-1):**
 ```bash
 #!/bin/bash
-# Apply LLM adapter security rules for port 8888
-iptables -A INPUT -p tcp --dport 8888 -s 172.16.4.44 -j ACCEPT  # VM-1
-iptables -A INPUT -p tcp --dport 8888 -s 172.16.4.45 -j ACCEPT  # VM-2
-iptables -A INPUT -p tcp --dport 8888 -s 172.16.0.89 -j ACCEPT  # VM-4
-iptables -A INPUT -p tcp --dport 8888 -j DROP  # Deny all others
+# Apply TMF921 adapter security rules for port 8889 (automated mode)
+iptables -A INPUT -p tcp --dport 8889 -s 172.16.0.78 -j ACCEPT   # VM-1 (self)
+iptables -A INPUT -p tcp --dport 8889 -s 172.16.4.45 -j ACCEPT   # Edge1
+iptables -A INPUT -p tcp --dport 8889 -s 172.16.4.176 -j ACCEPT  # Edge2 (corrected IP)
+iptables -A INPUT -p tcp --dport 8889 -s 172.16.5.81 -j ACCEPT   # Edge3
+iptables -A INPUT -p tcp --dport 8889 -s 172.16.1.252 -j ACCEPT  # Edge4
+iptables -A INPUT -p tcp --dport 8889 -j DROP  # Deny all others
 
-# Secure O2IMS endpoint (port 31280)
-iptables -A INPUT -p tcp --dport 31280 -s 172.16.0.0/16 -j ACCEPT
-iptables -A INPUT -p tcp --dport 31280 -j DROP
+# Secure Gitea repository (port 8888)
+iptables -A INPUT -p tcp --dport 8888 -s 172.16.0.0/16 -j ACCEPT
+iptables -A INPUT -p tcp --dport 8888 -j DROP
 
-# Secure NodePort services (31080/31443)
-iptables -A INPUT -p tcp --dport 31080 -s 172.16.0.0/16 -j ACCEPT
-iptables -A INPUT -p tcp --dport 31443 -s 172.16.0.0/16 -j ACCEPT
-iptables -A INPUT -p tcp --dport 31080 -j DROP
-iptables -A INPUT -p tcp --dport 31443 -j DROP
+# WebSocket services (internal only)
+iptables -A INPUT -p tcp --dport 8002 -s 127.0.0.1 -j ACCEPT
+iptables -A INPUT -p tcp --dport 8003 -s 127.0.0.1 -j ACCEPT
+iptables -A INPUT -p tcp --dport 8004 -s 127.0.0.1 -j ACCEPT
+iptables -A INPUT -p tcp --dport 8002:8004 -j DROP
+
+# Secure O2IMS endpoints (multiple ports per site)
+iptables -A INPUT -p tcp --dport 31280 -s 172.16.0.0/16 -j ACCEPT  # Edge1
+iptables -A INPUT -p tcp --dport 31281 -s 172.16.0.0/16 -j ACCEPT  # Edge2
+iptables -A INPUT -p tcp --dport 32080 -s 172.16.0.0/16 -j ACCEPT  # Edge3/4
+iptables -A INPUT -p tcp --dport 31280:32080 -j DROP
+
+# Secure Prometheus metrics (port 30090 on all sites)
+iptables -A INPUT -p tcp --dport 30090 -s 172.16.0.0/16 -j ACCEPT
+iptables -A INPUT -p tcp --dport 30090 -j DROP
 
 # Allow internal cluster communication
 iptables -A INPUT -s 10.244.0.0/16 -j ACCEPT
@@ -67,37 +102,45 @@ iptables-save > /etc/iptables/rules.v4
 
 ### 1.2 Rate Limiting Implementation
 
-**LLM Adapter Rate Limiting (requests/minute):**
+**TMF921 Adapter Rate Limiting (requests/minute):**
 ```yaml
-# /etc/nginx/sites-available/llm-adapter-proxy
-upstream llm_backend {
-    server localhost:8888;
+# /etc/nginx/sites-available/tmf921-adapter-proxy
+upstream tmf921_backend {
+    server localhost:8889;
 }
 
 server {
     listen 80;
-    server_name llm-adapter.local;
+    server_name tmf921-adapter.local;
 
-    # Rate limiting zones
-    limit_req_zone $remote_addr zone=vm1:10m rate=30r/m;
-    limit_req_zone $remote_addr zone=vm2:10m rate=20r/m;
-    limit_req_zone $remote_addr zone=vm4:10m rate=20r/m;
+    # Rate limiting zones (4 sites)
+    limit_req_zone $remote_addr zone=vm1:10m rate=50r/m;     # VM-1 self
+    limit_req_zone $remote_addr zone=edge1:10m rate=30r/m;   # Edge1
+    limit_req_zone $remote_addr zone=edge2:10m rate=30r/m;   # Edge2
+    limit_req_zone $remote_addr zone=edge3:10m rate=25r/m;   # Edge3
+    limit_req_zone $remote_addr zone=edge4:10m rate=25r/m;   # Edge4
     limit_req_zone $remote_addr zone=general:10m rate=10r/m;
 
-    location /api/intent-to-28312 {
-        # Apply different limits based on source
-        if ($remote_addr = "172.16.4.44") {
-            limit_req zone=vm1 burst=10 nodelay;
+    location /api/v1/intent/transform {
+        # Apply different limits based on source (4 sites)
+        if ($remote_addr = "172.16.0.78") {
+            limit_req zone=vm1 burst=15 nodelay;
         }
         if ($remote_addr = "172.16.4.45") {
-            limit_req zone=vm2 burst=5 nodelay;
+            limit_req zone=edge1 burst=10 nodelay;
         }
-        if ($remote_addr = "<VM4_IP>") {
-            limit_req zone=vm4 burst=5 nodelay;
+        if ($remote_addr = "172.16.4.176") {
+            limit_req zone=edge2 burst=10 nodelay;
+        }
+        if ($remote_addr = "172.16.5.81") {
+            limit_req zone=edge3 burst=8 nodelay;
+        }
+        if ($remote_addr = "172.16.1.252") {
+            limit_req zone=edge4 burst=8 nodelay;
         }
         limit_req zone=general burst=2 nodelay;
 
-        proxy_pass http://llm_backend;
+        proxy_pass http://tmf921_backend;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     }
@@ -109,8 +152,8 @@ server {
 apiVersion: networking.istio.io/v1alpha3
 kind: EnvoyFilter
 metadata:
-  name: llm-adapter-rate-limit
-  namespace: llm-system
+  name: tmf921-adapter-rate-limit
+  namespace: tmf921-system
 spec:
   configPatches:
   - applyTo: HTTP_FILTER
@@ -126,13 +169,13 @@ spec:
         name: envoy.filters.http.local_ratelimit
         typed_config:
           "@type": type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
-          stat_prefix: llm_adapter_rate_limiter
+          stat_prefix: tmf921_adapter_rate_limiter
           token_bucket:
-            max_tokens: 50
-            tokens_per_fill: 30
+            max_tokens: 100
+            tokens_per_fill: 60
             fill_interval: 60s
           filter_enabled:
-            runtime_key: llm_adapter_rate_limit_enabled
+            runtime_key: tmf921_adapter_rate_limit_enabled
             default_value:
               numerator: 100
               denominator: HUNDRED

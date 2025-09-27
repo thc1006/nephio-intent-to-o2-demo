@@ -12,6 +12,7 @@ metadata:
   labels:
     app: o2ims
     site: edge3
+    version: v3.0
 spec:
   replicas: 1
   selector:
@@ -29,13 +30,23 @@ spec:
         ports:
         - containerPort: 80
           name: http
-        - containerPort: 30205
+        - containerPort: 31280
           name: o2ims
+        - containerPort: 8889
+          name: tmf921
+        - containerPort: 8003
+          name: websocket
         env:
         - name: SITE_NAME
           value: "edge3"
         - name: O2IMS_PORT
-          value: "30205"
+          value: "31280"
+        - name: TMF921_PORT
+          value: "8889"
+        - name: WEBSOCKET_PORT
+          value: "8003"
+        - name: O2IMS_VERSION
+          value: "v3.0"
         resources:
           requests:
             cpu: 100m
@@ -58,6 +69,16 @@ spec:
   ports:
   - port: 80
     targetPort: 80
-    nodePort: 30205
+    nodePort: 31280
     name: o2ims-api
+    protocol: TCP
+  - port: 8889
+    targetPort: 8889
+    nodePort: 32080
+    name: tmf921-api
+    protocol: TCP
+  - port: 8003
+    targetPort: 8003
+    nodePort: 30803
+    name: websocket-api
     protocol: TCP

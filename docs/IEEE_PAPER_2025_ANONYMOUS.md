@@ -5,7 +5,7 @@
 
 **Authors:** [ANONYMIZED FOR DOUBLE-BLIND REVIEW]
 **Affiliation:** [ANONYMIZED FOR DOUBLE-BLIND REVIEW]
-**Conference:** IEEE International Conference on Communications (ICC) 2025
+**Conference:** IEEE International Conference on Communications (ICC) 2026
 **Category:** Network Automation and Orchestration
 
 ---

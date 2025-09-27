@@ -1,7 +1,16 @@
 # Edge Site Quick Setup - For Claude Code
 
-**You are on**: Edge site (edge3, edge4, ...)
+**Version**: 1.2.0
+**Last Updated**: 2025-09-27
+**Status**: Production Ready - 4 Edge Sites Operational
+**You are on**: Edge site (edge1, edge2, edge3, or edge4)
 **Managed by**: VM-1 Orchestrator at `172.16.0.78`
+
+**Current 4-Site Deployment**:
+- Edge1: 172.16.4.45 (O2IMS: 31280, User: ubuntu)
+- Edge2: 172.16.4.176 (O2IMS: 31281, User: ubuntu)
+- Edge3: 172.16.5.81 (O2IMS: 32080, User: thc1006)
+- Edge4: 172.16.1.252 (O2IMS: 32080, User: thc1006)
 
 ---
 
@@ -9,12 +18,22 @@
 
 ### 1. Install VM-1 SSH Public Key
 
-VM-1 admin will provide a public key. Run:
+VM-1 admin will provide different keys based on your site:
 
+**For Edge1/Edge2 (ubuntu user)**:
 ```bash
 mkdir -p ~/.ssh && chmod 700 ~/.ssh
 cat >> ~/.ssh/authorized_keys << 'EOF'
-# VM-1 will provide the key - paste it here between EOF markers
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHDQU9lTLh32IP7UR3/Ab1BRbFMOO/Mlu0qNuUg07Jai ubuntu@vm1
+EOF
+chmod 600 ~/.ssh/authorized_keys
+```
+
+**For Edge3/Edge4 (thc1006 user)**:
+```bash
+mkdir -p ~/.ssh && chmod 700 ~/.ssh
+cat >> ~/.ssh/authorized_keys << 'EOF'
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHDQU9lTLh32IP7UR3/Ab1BRbFMOO/Mlu0qNuUg07Jai vm1-edge-management
 EOF
 chmod 600 ~/.ssh/authorized_keys
 ```
@@ -24,6 +43,15 @@ chmod 600 ~/.ssh/authorized_keys
 ```bash
 echo "My IP: $(hostname -I | awk '{print $1}')"
 echo "My hostname: $(hostname)"
+echo "My user: $(whoami)"
+echo "My SSH keys:"
+cat ~/.ssh/authorized_keys | grep vm1
+
+# Expected IPs for verification:
+# Edge1 should report: 172.16.4.45
+# Edge2 should report: 172.16.4.176
+# Edge3 should report: 172.16.5.81
+# Edge4 should report: 172.16.1.252
 ```
 
 ### 3. Install Kubernetes (if needed)
@@ -40,8 +68,13 @@ export KUBECONFIG=~/.kube/config
 ### 4. Setup GitOps Pull
 
 VM-1 admin will provide:
-- **Edge name**: `edge3` (example)
-- **Gitea token**: `ghp_xxxxx` (example)
+- **Edge name**: `edge1`, `edge2`, `edge3`, or `edge4`
+- **Gitea token**: For repository access
+- **O2IMS port**: Site-specific port assignment
+  - Edge1: 31280
+  - Edge2: 31281
+  - Edge3: 32080
+  - Edge4: 32080
 
 ```bash
 # Create namespace
@@ -52,8 +85,8 @@ kubectl create secret generic gitea-token \
   -n config-management-system \
   --from-literal=token=YOUR_TOKEN
 
-# Install Config Sync (replace EDGE_NAME)
-EDGE_NAME="edge3"  # VM-1 admin will tell you
+# Install Config Sync (replace EDGE_NAME with your site)
+EDGE_NAME="edge1"  # Change to edge2, edge3, or edge4 as appropriate
 kubectl apply -f - << EOF
 apiVersion: configsync.gke.io/v1beta1
 kind: RootSync
@@ -76,8 +109,16 @@ EOF
 ### 5. Setup Prometheus Metrics Export
 
 ```bash
-# Quick setup (replace EDGE_NAME)
-EDGE_NAME="edge3"  # VM-1 admin will tell you
+# Quick setup (replace EDGE_NAME with your site)
+EDGE_NAME="edge1"  # Change to edge2, edge3, or edge4 as appropriate
+
+# Set O2IMS port based on your site
+case $EDGE_NAME in
+  "edge1") O2IMS_PORT=31280 ;;
+  "edge2") O2IMS_PORT=31281 ;;
+  "edge3"|"edge4") O2IMS_PORT=32080 ;;
+  *) O2IMS_PORT=31280 ;;
+esac
 
 kubectl create namespace monitoring
 

@@ -1,21 +1,26 @@
-# Intent to KRM Pipeline Documentation
+# Enhanced Intent to KRM Pipeline Documentation v1.2.0
 
-This document provides step-by-step instructions for executing the 3GPP TS 28.312 Expectation to KRM conversion pipeline using the kpt function.
+This document provides comprehensive instructions for executing the AI-enhanced 3GPP TS 28.312 v18 Expectation to KRM conversion pipeline using the OrchestRAN-optimized kpt function with 175B parameter GenAI integration.
 
-## Overview
+## Enhanced Overview (v1.2.0)
 
-The `expectation-to-krm` kpt function converts 3GPP TS 28.312 Intent/Expectation JSON into Kubernetes Resource Model (KRM) resources for O-RAN deployments.
+The `orchestran-expectation-to-krm` kpt function converts 3GPP TS 28.312 v18 Intent/Expectation JSON into AI-optimized Kubernetes Resource Model (KRM) resources for 4-site O-RAN deployments with zero-trust security and real-time monitoring.
 
-### Supported Conversions
+### Enhanced Conversions (v1.2.0)
 
-- **Edge scenarios**: O-RAN-DU with latency/availability expectations → Deployment + PVC + ServiceMonitor
-- **Central scenarios**: O-RAN-CU-CP with throughput/latency expectations → Deployment + PVC + ServiceMonitor + HPA
+- **Edge scenarios**: O-RAN-DU with AI-enhanced latency/availability expectations → Deployment + PVC + ServiceMonitor + AI-SLO
+- **Central scenarios**: O-RAN-CU-CP with GenAI throughput optimization → Deployment + PVC + ServiceMonitor + HPA + AI-Scaler
+- **Zero-trust scenarios**: Multi-site with quantum-ready security → Full mesh + mTLS + Post-quantum crypto
+- **Real-time scenarios**: WebSocket monitoring integration → Live metrics (ports 8002/8003/8004)
 
-## Prerequisites
+## Enhanced Prerequisites (v1.2.0)
 
 - Go 1.22 or later
-- `kpt` CLI installed
-- `kubeconform` for YAML validation (optional)
+- `kpt` CLI v1.2.0+ with OrchestRAN support
+- `kubeconform` for enhanced YAML validation
+- Claude-4 API access for GenAI integration
+- OrchestRAN SDK for framework positioning
+- Zero-trust certificates for 4-site mesh
 
 ## Building the Function
 

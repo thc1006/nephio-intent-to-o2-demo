@@ -3,7 +3,7 @@
 **Paper Title**: Intent-Driven O-RAN Network Orchestration: A Production-Ready Multi-Site System Integrating Large Language Models with GitOps for Autonomous Infrastructure Management
 
 **Proofreading Date**: 2025-09-26
-**Target Conference**: IEEE ICC 2025
+**Target Conference**: IEEE ICC 2026
 
 ---
 

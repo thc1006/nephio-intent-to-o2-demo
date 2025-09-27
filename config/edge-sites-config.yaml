@@ -46,6 +46,8 @@ edge_sites:
       kubernetes_api: 6443
       prometheus: 30090
       o2ims_api: 31280
+      tmf921_api: 8889
+      websocket_api: 8003
       slo_service: 30090
     status:
       connectivity: "testing"
@@ -63,6 +65,8 @@ edge_sites:
       kubernetes_api: 6443
       prometheus: 30090
       o2ims_api: 31280
+      tmf921_api: 8889
+      websocket_api: 8004
       slo_service: 30090
     status:
       connectivity: "testing"

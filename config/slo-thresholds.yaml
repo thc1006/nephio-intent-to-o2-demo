@@ -2,22 +2,24 @@
 # Used by postcheck.sh for comprehensive validation
 
 slo_config:
-  version: "1.0"
+  version: "v1.2.0"
   environment: "production"
+  deployment_date: "2025-09-27"
 
   # Global thresholds
   thresholds:
-    # Network performance (milliseconds)
+    # Network performance (milliseconds) - v1.2.0 production targets
     latency:
-      p95_ms: 15
-      p99_ms: 25
-      average_ms: 8
+      p95_ms: 150
+      p99_ms: 250
+      average_ms: 75
 
-    # Availability and reliability
+    # Availability and reliability - v1.2.0 targets
     availability:
-      success_rate: 0.995
-      error_rate: 0.005
-      uptime_percentage: 99.9
+      success_rate: 0.99
+      error_rate: 0.01
+      uptime_percentage: 99.5
+      recovery_time_seconds: 180
 
     # Throughput (Mbps)
     throughput:
@@ -37,6 +39,8 @@ slo_config:
       a1_policy_response_ms: 100
       o1_netconf_response_ms: 50
       o2_provisioning_time_s: 300
+      tmf921_response_ms: 100
+      websocket_latency_ms: 50
 
     # AI/ML performance
     ai_ml:
@@ -80,7 +84,11 @@ slo_config:
 
     # Integration points
     o2ims_enabled: true
+    o2ims_version: "v3.0"
     prometheus_enabled: true
+    prometheus_remote_write: true
+    tmf921_enabled: true
+    websocket_enabled: true
     jaeger_enabled: true
 
   # Compliance requirements

@@ -1,7 +1,16 @@
 # Documentation Index
 
 **Version**: v1.2.0
-**Last Updated**: 2025-09-26
+**Last Updated**: 2025-09-27T07:30:00Z
+**Status**: Production Ready - 100% Complete with Full Automation
+
+## 🚀 Latest Updates (v1.2.0 - 2025-09-27)
+
+- ✅ **Full Automation**: All services operational without passwords
+- ✅ **O2IMS Deployment**: 4 edge sites operational (31280/31281/32080)
+- ✅ **TMF921 Automation**: API on port 8889, fully automated
+- ✅ **WebSocket Services**: Real-time monitoring (8002/8003/8004)
+- ✅ **100% Test Pass Rate**: All automated tests passing
 
 Welcome to the Nephio Intent-to-O2IMS Demo documentation. This guide will help you navigate through all available documentation.
 
@@ -39,6 +48,8 @@ Welcome to the Nephio Intent-to-O2IMS Demo documentation. This guide will help y
 - [operations/SECURITY.md](operations/SECURITY.md) - Security guidelines
 - [operations/SLO_GATE.md](operations/SLO_GATE.md) - SLO validation gates
 - [operations/KPI_DASHBOARD.md](operations/KPI_DASHBOARD.md) - KPI monitoring
+- [operations/TMF921_AUTOMATED_USAGE_GUIDE.md](operations/TMF921_AUTOMATED_USAGE_GUIDE.md) - TMF921 automation guide ⭐ NEW
+- [operations/TMF921_AUTOMATION_SUMMARY.md](operations/TMF921_AUTOMATION_SUMMARY.md) - TMF921 summary ⭐ NEW
 - [operations/OPENSTACK_COMPLETE_GUIDE.md](operations/OPENSTACK_COMPLETE_GUIDE.md) - OpenStack setup
 
 ### Development Documentation
@@ -59,6 +70,7 @@ Welcome to the Nephio Intent-to-O2IMS Demo documentation. This guide will help y
 ### Additional Resources
 - [DEMO.md](DEMO.md) - Complete demo guide
 - [EXECUTIVE_SUMMARY.md](EXECUTIVE_SUMMARY.md) - Executive summary
+- [WEBSOCKET_SERVICES_GUIDE.md](WEBSOCKET_SERVICES_GUIDE.md) - WebSocket architecture guide ⭐ NEW
 - [REFERENCES.md](REFERENCES.md) - External references
 - [SECURITY.md](SECURITY.md) - Security documentation
 

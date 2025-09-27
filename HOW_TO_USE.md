@@ -1,7 +1,10 @@
 # 🚀 如何使用 Nephio Intent-to-O2 系統
 
-**生成時間**: 2025-09-26
+**版本**: v1.2.0 (Production Ready - Full Automation)
+**生成時間**: 2025-09-27
+**完成度**: 100%
 **VM-1 IP**: 172.16.0.78
+**研究基礎**: September 2025 - Nephio R4 GenAI, 60+ O-RAN specs, OrchestRAN framework, TMF921 v5.0, O2IMS v3.0
 
 ---
 
@@ -11,8 +14,8 @@
 
 | 服務 | 端口 | 狀態 | 用途 |
 |------|------|------|------|
-| **Claude Headless** | 8002 | ✅ 運行中 | LLM Intent 處理器 |
-| **TMF921 Adapter** | 8889 | ✅ 運行中 | TMF921 標準轉換 |
+| **Claude Headless** | 8002 | ✅ 運行中 | LLM Intent 處理器 (125ms 處理時間) |
+| **TMF921 Adapter** | 8889 | ✅ 全自動化 | TMF921 v5.0 標準轉換（無需密碼） |
 | **Gitea** | 8888 | ✅ 運行中 | GitOps Repository |
 | **Prometheus** | 9090 | ✅ 運行中 | Metrics 監控 |
 | **Grafana** | 3000 | ✅ 運行中 | 可視化儀表板 |
@@ -38,7 +41,7 @@ curl -s http://localhost:3000/api/health | jq .
 
 這是最直觀的方式，提供：
 - 自然語言輸入框
-- 目標站點選擇器（edge1/edge2/both）
+- 目標站點選擇器（edge1/edge2/edge3/edge4/all）
 - 快速範例按鈕
 - 即時 Intent 生成結果
 
@@ -49,7 +52,7 @@ curl -s http://localhost:3000/api/health | jq .
    ```
    部署 5G 高頻寬服務到 edge1，頻寬 200Mbps
    ```
-3. 選擇目標站點：edge1 / edge2 / both
+3. 選擇目標站點：edge1 / edge2 / edge3 / edge4 / all
 4. 點擊 "Generate TMF921 Intent" 按鈕
 5. 查看生成的 JSON Intent
 

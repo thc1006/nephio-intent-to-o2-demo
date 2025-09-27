@@ -173,11 +173,14 @@ kubectl get pods -n demo-backup
 echo "ℹ Showing pre-deployed backup environment"
 ```
 
-#### SLO Metrics Unavailable
+#### v1.2.0 SLO Metrics Unavailable
 ```bash
-# Use synthetic metrics
-cp artifacts/backup/good-metrics.json artifacts/metrics.json
-echo "ℹ Using synthetic metrics for demo"
+# Use synthetic 99.2% success rate metrics
+cp artifacts/backup/v1.2.0-slo-metrics.json artifacts/metrics.json
+echo "ℹ Using synthetic v1.2.0 metrics (99.2% success rate demo)"
+
+# Show OrchestRAN comparison even without live metrics
+cat artifacts/orchestran-comparison/static-comparison.json | jq '.performance_advantages'
 ```
 
 ### Recovery Phrases

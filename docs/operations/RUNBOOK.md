@@ -1,16 +1,30 @@
 # RUNBOOK.md — Operational Runbook for Nephio Intent-to-O2 Demo Platform
 
-## Quick Reference Card
+**Version**: 1.2.0
+**Last Updated**: 2025-09-27
+**Status**: Production Ready - 4 Edge Sites Operational
+
+## Quick Reference Card (v1.2.0)
 
 | Component | Location | Primary Port | Health Check |
 |-----------|----------|--------------|--------------|
-| SMO/GitOps | VM-1 | N/A | `git status` |
-| Edge1 API | VM-2 (172.16.4.45) | 6443 | `kubectl --kubeconfig edge1 get nodes` |
-| Edge1 HTTP | VM-2 (172.16.4.45) | 31080 | `curl http://172.16.4.45:31080/health` |
-| Edge1 HTTPS | VM-2 (172.16.4.45) | 31443 | `curl -k https://172.16.4.45:31443/health` |
-| O2IMS | VM-2 (172.16.4.45) | 31280 | `curl http://172.16.4.45:31280/o2ims/api/v1/health` |
-| LLM Adapter | VM-1 | 8888 | `curl http://<VM1_IP>:8888/health` |
-| Edge2 API | VM-4 | TBD | `kubectl --kubeconfig edge2 get nodes` |
+| SMO/GitOps | VM-1 (172.16.0.78) | 8888 | `curl http://172.16.0.78:8888/health` |
+| TMF921 Adapter | VM-1 (172.16.0.78) | 8889 | `curl http://172.16.0.78:8889/health` |
+| Edge1 API | VM-2 (172.16.4.45) | 6443 | `ssh edge1 kubectl get nodes` |
+| Edge1 O2IMS | VM-2 (172.16.4.45) | 31280 | `curl http://172.16.4.45:31280/health` |
+| Edge1 Prometheus | VM-2 (172.16.4.45) | 30090 | `curl http://172.16.4.45:30090/metrics` |
+| Edge2 API | VM-4 (172.16.4.176) | 6443 | `ssh edge2 kubectl get nodes` |
+| Edge2 O2IMS | VM-4 (172.16.4.176) | 31281 | `curl http://172.16.4.176:31281/health` |
+| Edge2 Prometheus | VM-4 (172.16.4.176) | 30090 | `curl http://172.16.4.176:30090/metrics` |
+| Edge3 API | New (172.16.5.81) | 6443 | `ssh edge3 kubectl get nodes` |
+| Edge3 O2IMS | New (172.16.5.81) | 32080 | `curl http://172.16.5.81:32080/health` |
+| Edge3 Prometheus | New (172.16.5.81) | 30090 | `curl http://172.16.5.81:30090/metrics` |
+| Edge4 API | New (172.16.1.252) | 6443 | `ssh edge4 kubectl get nodes` |
+| Edge4 O2IMS | New (172.16.1.252) | 32080 | `curl http://172.16.1.252:32080/health` |
+| Edge4 Prometheus | New (172.16.1.252) | 30090 | `curl http://172.16.1.252:30090/metrics` |
+| Claude Headless | VM-1 (172.16.0.78) | 8002 | `netstat -tlnp \| grep 8002` |
+| Realtime Monitor | VM-1 (172.16.0.78) | 8003 | `netstat -tlnp \| grep 8003` |
+| TMux WebSocket | VM-1 (172.16.0.78) | 8004 | `netstat -tlnp \| grep 8004` |
 
 ---
 

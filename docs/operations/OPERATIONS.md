@@ -2,20 +2,25 @@
 
 ## Overview
 
-This operations manual provides comprehensive procedures for managing the Nephio Intent-to-O2 multi-site platform across VM-1 (SMO/GitOps Orchestrator), VM-2 (Edge1), VM-1, and VM-4 (Edge2).
+This operations manual provides comprehensive procedures for managing the Nephio Intent-to-O2 multi-site platform across VM-1 (SMO/GitOps Orchestrator) and 4 active edge sites.
 
-**Network Configuration:**
+**Network Configuration (v1.2.0):**
 - VM-1 (SMO): Orchestrator with Gitea at port 8888
-- VM-2 (Edge1): API `https://172.16.4.45:6443`, NodePorts `31080/31443`, O2IMS `http://172.16.4.45:31280`
-- VM-1 (LLM): Adapter at `http://<VM1_IP>:8888` (default: 172.16.0.78)
-- VM-4 (Edge2): API `https://172.16.4.55:6443`, NodePorts `31080/31443`, O2IMS `http://172.16.4.55:31280`
+- Edge1 (VM-2): API `https://172.16.4.45:6443`, O2IMS `http://172.16.4.45:31280`, Prometheus `http://172.16.4.45:30090`
+- Edge2 (VM-4): API `https://172.16.4.176:6443`, O2IMS `http://172.16.4.176:31281`, Prometheus `http://172.16.4.176:30090`
+- Edge3: API `https://172.16.5.81:6443`, O2IMS `http://172.16.5.81:32080`, Prometheus `http://172.16.5.81:30090`
+- Edge4: API `https://172.16.1.252:6443`, O2IMS `http://172.16.1.252:32080`, Prometheus `http://172.16.1.252:30090`
+- LLM/TMF921 Adapter: `http://172.16.0.78:8889` (automated, no passwords)
 
 **Critical Ports Reference:**
 - **6443**: Kubernetes API Server (HTTPS)
-- **31080**: HTTP service endpoint (NodePort)
-- **31443**: HTTPS service endpoint (NodePort)
-- **31280**: O2IMS API endpoint (NodePort)
-- **8888**: LLM Adapter / Gitea services
+- **30090**: Prometheus metrics (NodePort)
+- **31280/31281/32080**: O2IMS API endpoints (NodePort)
+- **8889**: TMF921 Adapter (automated)
+- **8888**: Gitea repository
+- **8002**: Claude Headless WebSocket
+- **8003**: Realtime Monitor WebSocket
+- **8004**: TMux WebSocket Bridge
 
 ---
 
@@ -26,11 +31,13 @@ This operations manual provides comprehensive procedures for managing the Nephio
 #### Site Status Check
 ```bash
 # Check all sites health
-./scripts/postcheck.sh --target=both
+./scripts/postcheck.sh --target=all
 
 # Individual site check
 ./scripts/o2ims_probe.sh --site=edge1
 ./scripts/o2ims_probe.sh --site=edge2
+./scripts/o2ims_probe.sh --site=edge3
+./scripts/o2ims_probe.sh --site=edge4
 ```
 
 #### Site Switching Procedures
@@ -63,16 +70,17 @@ kubectl --kubeconfig ~/.kube/edge2-config get nodes
 
 #### Load Balancing Between Sites
 ```bash
-# Deploy to both sites simultaneously
-./scripts/demo_llm.sh --target=both --intent="load_balanced_deployment"
+# Deploy to all sites simultaneously
+./scripts/demo_llm.sh --target=all --intent="load_balanced_deployment"
 
-# Configure weighted routing (70% edge1, 30% edge2)
-./scripts/render_krm.sh --template=weighted-routing --edge1-weight=70 --edge2-weight=30
+# Configure weighted routing across 4 sites
+./scripts/render_krm.sh --template=weighted-routing \
+  --edge1-weight=30 --edge2-weight=25 --edge3-weight=25 --edge4-weight=20
 
 # Apply routing configuration
-git add gitops/edge1-config/network/ gitops/edge2-config/network/
-git commit -m "Configure weighted traffic routing"
-git push origin summit-llm-e2e
+git add gitops/edge*-config/network/
+git commit -m "Configure 4-site weighted traffic routing"
+git push origin main
 ```
 
 #### Emergency Traffic Redirection
@@ -237,10 +245,12 @@ kubectl --context=edge1 -n config-management-system annotate rootsync intent-to-
 ### 3.1 Prometheus/Grafana Access
 
 #### Service Endpoints
-- **Edge1 Prometheus**: `http://172.16.4.45:31090/prometheus`
-- **Edge1 Grafana**: `http://172.16.4.45:31091/grafana` (admin/admin)
-- **Edge2 Prometheus**: `http://172.16.4.55:31090/prometheus`
-- **Edge2 Grafana**: `http://172.16.4.55:31091/grafana`
+- **Edge1 Prometheus**: `http://172.16.4.45:30090/metrics`
+- **Edge2 Prometheus**: `http://172.16.4.176:30090/metrics`
+- **Edge3 Prometheus**: `http://172.16.5.81:30090/metrics`
+- **Edge4 Prometheus**: `http://172.16.1.252:30090/metrics`
+- **Central Grafana**: `http://172.16.0.78:3000` (admin/admin)
+- **TMF921 API**: `http://172.16.0.78:8889`
 
 #### Access Setup
 ```bash

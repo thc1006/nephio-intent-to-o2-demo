@@ -1,13 +1,22 @@
 # OpenStack Security Group Configuration Guide
 
-**Last Updated**: 2025-09-14
-**Purpose**: Configure network security for Kubernetes edge clusters
+**Version**: 1.2.0
+**Last Updated**: 2025-09-27
+**Status**: Production Ready - 4 Edge Sites Operational
+**Purpose**: Configure network security for 4-site Kubernetes edge deployment
 
 ---
 
 ## What This Guide Does
 
-This guide helps you set up network security rules in OpenStack so your edge clusters can communicate properly. Think of Security Groups as firewalls that control which network traffic is allowed.
+This guide helps you set up network security rules in OpenStack for the 4-site Nephio Intent-to-O2 deployment so your edge clusters can communicate properly. Think of Security Groups as firewalls that control which network traffic is allowed.
+
+**4-Site Deployment Architecture (v1.2.0):**
+- **VM-1 (SMO)**: 172.16.0.78 - Orchestrator with TMF921 Adapter (8889), Gitea (8888), WebSockets (8002-8004)
+- **Edge1 (VM-2)**: 172.16.4.45 - O2IMS (31280), Prometheus (30090), K8s API (6443)
+- **Edge2 (VM-4)**: 172.16.4.176 - O2IMS (31281), Prometheus (30090), K8s API (6443)
+- **Edge3**: 172.16.5.81 - O2IMS (32080), Prometheus (30090), K8s API (6443)
+- **Edge4**: 172.16.1.252 - O2IMS (32080), Prometheus (30090), K8s API (6443)
 
 ---
 
@@ -54,27 +63,49 @@ Why: Required for kubectl commands and cluster operations
 Example: kubectl get nodes
 ```
 
-### 4. NodePort Services (Ports 30000-32767) - Application Access
-**Purpose**: Access applications running in Kubernetes
+### 4. NodePort Services - 4-Site Specific Ports
+**Purpose**: Access applications running in Kubernetes across all 4 edge sites
 ```
 Protocol: TCP
-Port Range: 30000-32767
 Direction: Ingress
 Why: Kubernetes exposes services on these high ports
-Common ports:
-  - 30090: SLO monitoring service
-  - 31280: O2IMS API service
-  - 30000-32767: Other services
+
+4-Site Port Mapping (v1.2.0):
+  - 30090: Prometheus metrics (all sites)
+  - 31280: Edge1 O2IMS API
+  - 31281: Edge2 O2IMS API (different port to avoid conflict)
+  - 32080: Edge3/Edge4 O2IMS API
+  - 30000-32767: General NodePort range
 ```
 
-### 5. Gitea (Port 8888) - GitOps Repository
+### 5. TMF921 Adapter (Port 8889) - Intent Processing
+**Purpose**: TMF921 adapter for automated intent processing
+```
+Protocol: TCP
+Port: 8889
+Direction: Ingress
+Why: Processes natural language intents into KRM manifests
+Example: curl http://172.16.0.78:8889/health
+```
+
+### 6. Gitea (Port 8888) - GitOps Repository
 **Purpose**: Git repository for configuration management
 ```
 Protocol: TCP
 Port: 8888
 Direction: Ingress
 Why: Stores and serves configuration files for GitOps
-Example: git clone http://gitea-server:8888/config-repo
+Example: git clone http://172.16.0.78:8888/nephio/deployments
+```
+
+### 7. WebSocket Services (Ports 8002-8004) - Real-time Communication
+**Purpose**: Real-time monitoring and control services
+```
+Protocol: TCP
+Ports: 8002 (Claude Headless), 8003 (Realtime Monitor), 8004 (TMux Bridge)
+Direction: Ingress
+Why: Enables real-time monitoring and remote terminal access
+Example: WebSocket connections for live monitoring
 ```
 
 ---
@@ -114,62 +145,119 @@ Rule: Custom TCP Rule
 Direction: Ingress
 Port: 6443
 Remote: CIDR
-CIDR: 10.0.0.0/16  (your cluster network)
+CIDR: 172.16.0.0/16  (4-site network range)
 ```
 
 ### Using Command Line (OpenStack CLI)
 
 ```bash
-# Allow ICMP from management network
+# 4-Site Security Group Configuration
+
+# Allow ICMP from all sites
 openstack security group rule create \
   --protocol icmp \
   --ingress \
-  --remote-ip 10.0.0.0/24 \
+  --remote-ip 172.16.0.0/16 \
   <SECURITY_GROUP_NAME>
 
-# Allow SSH from specific admin machine
+# Allow SSH from VM-1 (orchestrator)
 openstack security group rule create \
   --protocol tcp \
   --dst-port 22 \
   --ingress \
-  --remote-ip 10.0.0.10/32 \
+  --remote-ip 172.16.0.78/32 \
   <SECURITY_GROUP_NAME>
 
-# Allow Kubernetes API from cluster network
+# Allow Kubernetes API from all sites
 openstack security group rule create \
   --protocol tcp \
   --dst-port 6443 \
   --ingress \
-  --remote-ip 10.0.0.0/16 \
+  --remote-ip 172.16.0.0/16 \
   <SECURITY_GROUP_NAME>
 
-# Allow NodePort range
+# Allow specific NodePorts for 4-site deployment
+# Prometheus on all sites
 openstack security group rule create \
   --protocol tcp \
-  --dst-port 30000:32767 \
+  --dst-port 30090 \
   --ingress \
-  --remote-ip 10.0.0.0/16 \
+  --remote-ip 172.16.0.0/16 \
+  <SECURITY_GROUP_NAME>
+
+# O2IMS ports (site-specific)
+openstack security group rule create \
+  --protocol tcp \
+  --dst-port 31280:31281 \
+  --ingress \
+  --remote-ip 172.16.0.0/16 \
+  <SECURITY_GROUP_NAME>
+
+openstack security group rule create \
+  --protocol tcp \
+  --dst-port 32080 \
+  --ingress \
+  --remote-ip 172.16.0.0/16 \
+  <SECURITY_GROUP_NAME>
+
+# TMF921 Adapter on VM-1
+openstack security group rule create \
+  --protocol tcp \
+  --dst-port 8889 \
+  --ingress \
+  --remote-ip 172.16.0.0/16 \
+  <SECURITY_GROUP_NAME>
+
+# Gitea on VM-1
+openstack security group rule create \
+  --protocol tcp \
+  --dst-port 8888 \
+  --ingress \
+  --remote-ip 172.16.0.0/16 \
+  <SECURITY_GROUP_NAME>
+
+# WebSocket services on VM-1
+openstack security group rule create \
+  --protocol tcp \
+  --dst-port 8002:8004 \
+  --ingress \
+  --remote-ip 172.16.0.0/16 \
   <SECURITY_GROUP_NAME>
 ```
 
 ---
 
-## Network Architecture Example
+## 4-Site Network Architecture (v1.2.0)
 
 ```
-Management Network (10.0.0.0/24)
+Nephio Intent-to-O2 Network (172.16.0.0/16)
     │
-    ├── Admin Workstation (10.0.0.10)
-    │   └── Needs: SSH, K8s API access
+    ├── VM-1 SMO/Orchestrator (172.16.0.78)
+    │   ├── TMF921 Adapter: 8889
+    │   ├── Gitea Repository: 8888
+    │   ├── Claude Headless: 8002
+    │   ├── Realtime Monitor: 8003
+    │   └── TMux Bridge: 8004
     │
-    ├── GitOps Server (10.0.0.20)
-    │   └── Provides: Gitea on port 8888
+    ├── Edge1 (VM-2): 172.16.4.45
+    │   ├── Kubernetes API: 6443
+    │   ├── O2IMS API: 31280
+    │   └── Prometheus: 30090
     │
-    └── Edge Clusters (10.0.1.0/24)
-        ├── Edge-1 (10.0.1.10)
-        │   └── Needs: All ports listed above
-        └── Edge-2 (10.0.1.20)
-            └── Needs: All ports listed above
+    ├── Edge2 (VM-4): 172.16.4.176
+    │   ├── Kubernetes API: 6443
+    │   ├── O2IMS API: 31281 (different port)
+    │   └── Prometheus: 30090
+    │
+    ├── Edge3: 172.16.5.81
+    │   ├── Kubernetes API: 6443
+    │   ├── O2IMS API: 32080
+    │   └── Prometheus: 30090
+    │
+    └── Edge4: 172.16.1.252
+        ├── Kubernetes API: 6443
+        ├── O2IMS API: 32080
+        └── Prometheus: 30090
 ```
 
 ---
@@ -246,15 +334,19 @@ Essential ports for GitOps workflow:
 
 ## Quick Reference
 
-| Service | Port | Protocol | Purpose |
-|---------|------|----------|---------|
-| SSH | 22 | TCP | Remote management |
-| Kubernetes API | 6443 | TCP | Cluster control |
-| SLO Monitor | 30090 | TCP | Performance metrics |
-| O2IMS API | 31280 | TCP | O-RAN interface |
-| Gitea | 8888 | TCP | Git repository |
-| NodePorts | 30000-32767 | TCP | General services |
-| Ping | - | ICMP | Network testing |
+| Service | Port | Protocol | Purpose | Site |
+| SSH | 22 | TCP | Remote management | All sites |
+| Kubernetes API | 6443 | TCP | Cluster control | Edge1-4 |
+| TMF921 Adapter | 8889 | TCP | Intent processing | VM-1 only |
+| Gitea | 8888 | TCP | Git repository | VM-1 only |
+| Prometheus | 30090 | TCP | Metrics collection | All edge sites |
+| Edge1 O2IMS | 31280 | TCP | O-RAN interface | Edge1 only |
+| Edge2 O2IMS | 31281 | TCP | O-RAN interface | Edge2 only |
+| Edge3/4 O2IMS | 32080 | TCP | O-RAN interface | Edge3/4 only |
+| Claude Headless | 8002 | TCP | WebSocket service | VM-1 only |
+| Realtime Monitor | 8003 | TCP | WebSocket service | VM-1 only |
+| TMux Bridge | 8004 | TCP | WebSocket service | VM-1 only |
+| Ping | - | ICMP | Network testing | All sites |
 
 ---
 

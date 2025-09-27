@@ -224,20 +224,27 @@ paths:
   - /usr/local/bin/kpt
 ```
 
-## Quality Gates
+## Quality Gates v1.2.0
 
-### Mandatory Gates (Block Deployment)
+### Mandatory Gates (100% Pass Required)
 
-1. **Golden Tests**: Must pass - validates intent compilation correctness
-2. **Security Compliance**: No high/critical vulnerabilities
-3. **Multi-Site Validation**: All target sites must validate successfully
-4. **Policy Compliance**: Kubernetes security policies must pass
+1. **Golden Tests**: 100% pass rate - validates intent compilation correctness
+2. **Security Compliance**: Zero high/critical vulnerabilities with automated remediation
+3. **Multi-Site Validation**: All 4 edge sites must validate successfully
+4. **Policy Compliance**: Full Kubernetes security policies + OPA/Kyverno validation
+5. **E2E Testing**: Complete workflow validation across Intent → KRM → GitOps → Deployment
+6. **SLO Compliance**: Real-time performance metrics within defined thresholds
+7. **Code Coverage**: Minimum 90% test coverage across all components
+8. **GenAI Validation**: Claude Code CLI integration tests and configuration accuracy
 
-### Advisory Gates (Warning Only)
+### Performance Gates (Real-time Monitoring)
 
-1. **Performance Benchmarks**: May degrade but don't block
-2. **Coverage Targets**: Encouraged but not mandatory
-3. **Documentation Updates**: Recommended for changes
+1. **Intent Processing**: <200ms latency (p95)
+2. **KRM Rendering**: <2s for complex configurations
+3. **GitOps Sync**: <30s across all sites
+4. **Deployment Time**: <5min for full multi-site rollout
+5. **SLO Validation**: Continuous monitoring with automated alerts
+6. **Resource Utilization**: Optimized for edge deployment constraints
 
 ## Branch Protection
 
