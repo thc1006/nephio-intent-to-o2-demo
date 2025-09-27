@@ -1,0 +1,21 @@
+FROM python:3.9-slim
+
+WORKDIR /app
+
+# Install dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application
+COPY app/ ./app/
+COPY *.py ./
+
+# Set environment for automation
+ENV CLAUDE_SKIP_AUTH=true
+ENV TMF921_ADAPTER_MODE=automated
+ENV TMF921_FALLBACK_ENABLED=true
+ENV PYTHONPATH=/app
+
+EXPOSE 8889
+
+CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8889"]

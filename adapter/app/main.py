@@ -401,6 +401,7 @@ def validate_intent(intent: Dict[str, Any]) -> None:
     if intent.get("targetSite") not in ["edge1", "edge2", "edge3", "edge4", "both"]:
         raise HTTPException(status_code=400, detail=f"Invalid targetSite: {intent.get('targetSite')}")
 
+@app.post("/api/v1/intent/transform", response_model=IntentResponse)
 @app.post("/generate_intent", response_model=IntentResponse)
 async def generate_intent(request: IntentRequest):
     """Generate TMF921 intent with retry logic and mandatory targetSite field"""

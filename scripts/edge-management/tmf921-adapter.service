@@ -1,0 +1,18 @@
+[Unit]
+Description=TMF921 Intent Adapter Service
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/nephio-intent-to-o2-demo/adapter
+Environment=CLAUDE_SKIP_AUTH=true
+Environment=TMF921_ADAPTER_MODE=automated
+Environment=TMF921_FALLBACK_ENABLED=true
+Environment=PYTHONPATH=/home/ubuntu/nephio-intent-to-o2-demo/adapter/app
+ExecStart=/usr/bin/python3 -m uvicorn app.main:app --host 0.0.0.0 --port 8889
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

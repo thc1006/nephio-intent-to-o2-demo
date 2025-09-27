@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  tmf921-adapter:
+    build:
+      context: .
+      dockerfile: Dockerfile.automated
+    ports:
+      - "8889:8889"
+    environment:
+      - CLAUDE_SKIP_AUTH=true
+      - TMF921_ADAPTER_MODE=automated
+      - TMF921_FALLBACK_ENABLED=true
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8889/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3

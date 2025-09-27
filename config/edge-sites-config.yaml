@@ -27,12 +27,13 @@ edge_sites:
     services:
       kubernetes_api: 6443
       prometheus: 30090
-      o2ims_api: 31280
+      o2ims_api: 31281  # Updated to actual deployed port
       slo_service: 30090
     status:
-      connectivity: "testing"
-      last_verified: "2025-09-27T05:27:19Z"
+      connectivity: "operational"  # Successfully deployed and verified
+      last_verified: "2025-09-27T07:04:13Z"
       performance_optimized: true
+      o2ims_deployed: true
 
   edge3:
     name: "Edge Site 3"
