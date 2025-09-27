@@ -2,7 +2,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: mmtc-service
-  namespace: oran-services
+  namespace: default
 spec:
   selector:
     app: mmtc

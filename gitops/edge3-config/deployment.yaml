@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: mmtc-deployment
-  namespace: oran-services
+  namespace: default
 spec:
   replicas: 1
   selector:

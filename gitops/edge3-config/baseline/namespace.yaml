@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: ran-workloads
+  name: default
   labels:
     site: edge3
     environment: production
@@ -14,7 +14,7 @@ metadata:
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: edge3-system
+  name: default
   labels:
     site: edge3
     environment: production
@@ -25,7 +25,7 @@ apiVersion: v1
 kind: ResourceQuota
 metadata:
   name: edge3-quota
-  namespace: ran-workloads
+  namespace: default
 spec:
   hard:
     requests.cpu: "100"
@@ -37,7 +37,7 @@ apiVersion: v1
 kind: LimitRange
 metadata:
   name: edge3-limits
-  namespace: ran-workloads
+  namespace: default
 spec:
   limits:
   - max:

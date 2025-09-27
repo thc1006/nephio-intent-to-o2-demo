@@ -1,12 +1,8 @@
-# RootSync configuration for Edge3 cluster with Gitea
-# This connects to the local Gitea instance on VM-1
-# Deploy this to the edge3 cluster (VM-2: 172.16.4.45)
----
 apiVersion: configsync.gke.io/v1beta1
 kind: RootSync
 metadata:
   name: edge3-root-sync
-  namespace: config-management-system
+  namespace: default
 spec:
   sourceType: git
   sourceFormat: unstructured
@@ -16,12 +12,12 @@ spec:
     branch: main
     dir: /
     period: 30s
-    auth: token  # Using token authentication
+    auth: token # Using token authentication
     secretRef:
-      name: gitea-credentials  # Secret with Gitea token
-    # Proxy configuration if needed for internal network
-    # proxy: http://proxy.example.com:8080
-    # noProxy: "172.16.0.0/16,10.0.0.0/8"
+      name: gitea-credentials # Secret with Gitea token
+      # Proxy configuration if needed for internal network
+      # proxy: http://proxy.example.com:8080
+      # noProxy: "172.16.0.0/16,10.0.0.0/8"
   override:
     # Edge3 cluster API endpoint
     apiServerEndpoint: https://172.16.5.81:6443
@@ -42,7 +38,7 @@ apiVersion: configsync.gke.io/v1beta1
 kind: RootSync
 metadata:
   name: edge3-root-sync-tunnel
-  namespace: config-management-system
+  namespace: default
 spec:
   sourceType: git
   sourceFormat: unstructured
@@ -87,11 +83,11 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: root-reconciler
-  namespace: config-management-system
+  namespace: default
 ---
 # ServiceAccount for root-reconciler if not exists
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: root-reconciler
-  namespace: config-management-system
+  namespace: default

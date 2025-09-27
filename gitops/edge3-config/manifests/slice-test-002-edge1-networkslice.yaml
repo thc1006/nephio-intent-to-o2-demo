@@ -2,7 +2,7 @@ apiVersion: workload.nephio.org/v1alpha1
 kind: NetworkSlice
 metadata:
   name: slice-test-002-edge3
-  namespace: edge3
+  namespace: default
   labels:
     intent-id: test-002
     service-type: massive-machine-type

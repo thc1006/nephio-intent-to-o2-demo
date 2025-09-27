@@ -2,7 +2,7 @@ apiVersion: ran.nephio.org/v1alpha1
 kind: NetworkSlice
 metadata:
   name: embb-slice-edge3
-  namespace: ran-workloads
+  namespace: default
   labels:
     service-type: eMBB
     target-site: edge3

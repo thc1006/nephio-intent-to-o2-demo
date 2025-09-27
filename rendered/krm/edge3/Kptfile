@@ -1,0 +1,18 @@
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: edge3-deployment
+  annotations:
+    config.kubernetes.io/local-config: 'true'
+info:
+  description: Edge3 site deployment package
+pipeline:
+  mutators:
+  - image: 'gcr.io/kpt-fn/set-namespace:v0.4.1'
+    configMap:
+      namespace: ran-slice-a
+  validators:
+  - image: 'gcr.io/kpt-fn/kubeval:v0.3.0'
+    configMap:
+      ignore_missing_schemas: 'true'
+      skip_kinds: 'Kustomization,ProvisioningRequest,NetworkSlice'

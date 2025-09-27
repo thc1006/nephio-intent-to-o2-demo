@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: intent-golden-both-001-edge3
-  namespace: edge3
+  namespace: default
   labels:
     intent-id: golden-both-001
     target-site: edge3

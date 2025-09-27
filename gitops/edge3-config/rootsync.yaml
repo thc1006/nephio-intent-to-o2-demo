@@ -10,7 +10,7 @@ apiVersion: configsync.gke.io/v1beta1
 kind: RootSync
 metadata:
   name: edge3-root-sync
-  namespace: config-management-system
+  namespace: default
 spec:
   sourceType: git
   sourceFormat: unstructured
@@ -19,7 +19,7 @@ spec:
     branch: main
     dir: gitops/edge3-config
     period: 30s
-    auth: none  # Change to 'ssh' or 'token' for private repos
+    auth: none # Change to 'ssh' or 'token' for private repos
     # secretRef:
     #   name: git-creds  # Create secret with git credentials if needed
   override:
@@ -55,4 +55,4 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: root-reconciler
-  namespace: config-management-system
+  namespace: default

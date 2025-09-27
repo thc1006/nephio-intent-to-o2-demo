@@ -1,0 +1,17 @@
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: edge4-config
+  annotations:
+    config.kubernetes.io/local-config: "true"
+info:
+  description: Edge4 site configuration package
+pipeline:
+  mutators:
+  - image: gcr.io/kpt-fn/set-namespace:v0.4.1
+    configMap:
+      namespace: default
+  validators:
+  - image: gcr.io/kpt-fn/kubeval:v0.3.0
+    configMap:
+      ignore_missing_schemas: "true"

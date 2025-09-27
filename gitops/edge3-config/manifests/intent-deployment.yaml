@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: intent-embb-upf
-  namespace: ran-slice-a
+  namespace: default
   labels:
     app: upf
     site-name: edge3

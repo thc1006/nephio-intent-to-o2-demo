@@ -2,7 +2,7 @@ apiVersion: workload.nephio.org/v1alpha1
 kind: NetworkSlice
 metadata:
   name: slice-intent-e2e-1757777372-edge3
-  namespace: edge3
+  namespace: default
   labels:
     intent-id: intent-e2e-1757777372
     service-type: enhanced-mobile-broadband

@@ -2,7 +2,7 @@ apiVersion: o2ims.provisioning.oran.org/v1alpha1
 kind: ProvisioningRequest
 metadata:
   name: intent-e2e-1757777411-edge3
-  namespace: edge3
+  namespace: default
   labels:
     intent-id: intent-e2e-1757777411
     service-type: enhanced-mobile-broadband

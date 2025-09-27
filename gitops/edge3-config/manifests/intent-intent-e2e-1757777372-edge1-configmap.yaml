@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: intent-intent-e2e-1757777372-edge3
-  namespace: edge3
+  namespace: default
   labels:
     intent-id: intent-e2e-1757777372
     target-site: edge3

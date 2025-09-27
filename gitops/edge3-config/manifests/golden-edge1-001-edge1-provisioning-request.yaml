@@ -2,7 +2,7 @@ apiVersion: o2ims.provisioning.oran.org/v1alpha1
 kind: ProvisioningRequest
 metadata:
   name: golden-edge3-001-edge3
-  namespace: edge3
+  namespace: default
   labels:
     intent-id: golden-edge3-001
     service-type: enhanced-mobile-broadband

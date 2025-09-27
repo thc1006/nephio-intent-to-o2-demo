@@ -2,7 +2,7 @@ apiVersion: o2ims.provisioning.oran.org/v1alpha1
 kind: ProvisioningRequest
 metadata:
   name: test-002-edge3
-  namespace: edge3
+  namespace: default
   labels:
     intent-id: test-002
     service-type: massive-machine-type
