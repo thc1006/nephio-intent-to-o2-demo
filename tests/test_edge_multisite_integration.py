@@ -212,9 +212,26 @@ class TestGitOpsRootSyncDeployment:
                 rootsync = rootsyncs['items'][0]
                 status = rootsync.get('status', {})
 
-                # Check for sync errors
+                # Check for sync completion or errors
                 conditions = status.get('conditions', [])
-                error_conditions = [c for c in conditions if c.get('status') == 'False']
+
+                # Look for Syncing condition with "Sync Completed" message (success)
+                syncing_cond = next((c for c in conditions if c.get('type') == 'Syncing'), None)
+                if syncing_cond:
+                    message = syncing_cond.get('message', '')
+                    reason = syncing_cond.get('reason', '')
+
+                    # Success: status=False with message="Sync Completed" or reason="Sync"
+                    # Error: status=False with reason="Error" or error messages
+                    if 'Sync Completed' in message or reason == 'Sync':
+                        continue  # Success - sync completed
+                    elif 'error' in message.lower() or 'failed' in message.lower():
+                        assert False, f"RootSync sync error on {edge}: {message}"
+
+                # Check for Stalled or error conditions
+                error_conditions = [c for c in conditions
+                                  if c.get('type') in ['Stalled', 'Error']
+                                  and c.get('status') == 'True']
 
                 assert len(error_conditions) == 0, f"RootSync has errors on {edge}: {error_conditions}"
 
