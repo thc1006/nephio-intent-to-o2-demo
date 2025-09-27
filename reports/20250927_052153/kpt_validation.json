@@ -1,0 +1,38 @@
+{
+        "timestamp": "2025-09-27T05:22:16+00:00",
+        "pipeline_id": "e2e-1758950513",
+        "target_site": "edge3",
+        "overall_status": "FAIL",
+        "duration_ms": 22331,
+        "summary": {
+            "total_validators": 4,
+            "passed_validators": 3,
+            "failed_validators": 1,
+            "sites_validated": 1
+        },
+        "results": [{
+  "site": "edge3",
+  "validators": [
+    {
+      "name": "kubeval",
+      "status": "PASS",
+      "output": "PASS: All resources validated successfully"
+    },
+    {
+      "name": "yaml-syntax",
+      "status": "PASS",
+      "output": "PASS: All YAML files have valid syntax"
+    },
+    {
+      "name": "naming-convention",
+      "status": "PASS",
+      "output": "PASS: All resources follow intent naming conventions"
+    },
+    {
+      "name": "config-consistency",
+      "status": "FAIL",
+      "output": "FAIL: Resource intent-deployment.yaml has incorrect site-name: edge1 (expected: edge3)\\nResource intent-service.yaml has incorrect site-name: edge1 (expected: edge3)\\n"
+    }
+  ]
+}]
+    }

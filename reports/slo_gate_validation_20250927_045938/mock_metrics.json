@@ -1,0 +1,6 @@
+{
+  "latency_p95_ms": 12.5,
+  "success_rate": 0.998,
+  "throughput_p95_mbps": 250.0,
+  "timestamp": "2025-09-27T04:59:38+00:00"
+}

@@ -1,0 +1,31 @@
+{
+  "slo_gate": {
+    "timestamp": "2025-09-27T04:58:05+00:00",
+    "scenario": "pass",
+    "target_site": "edge1",
+    "overall_status": "PASS",
+    "thresholds": "latency_p95_ms<=15,success_rate>=0.995,throughput_p95_mbps>=200",
+    "violations": [
+  ""
+]
+  },
+  "metrics": {
+  "slo": {
+    "latency_p95_ms": 12.5,
+    "success_rate": 0.998,
+    "throughput_p95_mbps": 250.0,
+    "timestamp": "2025-09-27T04:58:04+00:00"
+  },
+  "details": {
+    "cpu_utilization": 0.65,
+    "memory_utilization": 0.72,
+    "network_rx_mbps": 156.7,
+    "network_tx_mbps": 189.2
+  }
+},
+  "validation": {
+    "latency_check": "PASS",
+    "success_rate_check": "PASS",
+    "throughput_check": "PASS"
+  }
+}

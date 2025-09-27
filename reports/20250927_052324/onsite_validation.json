@@ -1,0 +1,12 @@
+{
+  "timestamp": "2025-09-27T05:23:25+00:00",
+  "pipeline_id": "e2e-1758950604",
+  "target_site": "edge1",
+  "status": "FAIL",
+  "validations": [{"site": "edge1", "checks": {"kubernetes": "FAIL","connectivity": "PASS","service": "PASS","o2ims": "FAIL","slo": "FAIL"}}],
+  "summary": {
+    "overall": "FAIL",
+    "sites_validated": 1,
+    "message": "On-site validation fail for pipeline e2e-1758950604"
+  }
+}

@@ -1,0 +1,38 @@
+{
+        "timestamp": "2025-09-27T04:47:53+00:00",
+        "pipeline_id": "e2e-1758948455",
+        "target_site": "edge1",
+        "overall_status": "FAIL",
+        "duration_ms": 18087,
+        "summary": {
+            "total_validators": 4,
+            "passed_validators": 3,
+            "failed_validators": 1,
+            "sites_validated": 1
+        },
+        "results": [{
+  "site": "edge1",
+  "validators": [
+    {
+      "name": "kubeval",
+      "status": "PASS",
+      "output": "PASS: All resources validated successfully"
+    },
+    {
+      "name": "yaml-syntax",
+      "status": "PASS",
+      "output": "PASS: All YAML files have valid syntax"
+    },
+    {
+      "name": "naming-convention",
+      "status": "FAIL",
+      "output": "FAIL: ProvisioningRequest golden-both-001-edge1-provisioning-request.yaml should contain 'intent' in name\\nProvisioningRequest golden-edge1-001-edge1-provisioning-request.yaml should contain 'intent' in name\\nProvisioningRequest test-001-edge1-provisioning-request.yaml should contain 'intent' in name\\nProvisioningRequest test-002-edge1-provisioning-request.yaml should contain 'intent' in name\\n"
+    },
+    {
+      "name": "config-consistency",
+      "status": "PASS",
+      "output": "PASS: Site configuration is consistent"
+    }
+  ]
+}]
+    }

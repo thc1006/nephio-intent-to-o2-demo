@@ -1,0 +1,17 @@
+{
+  "rollback": {
+    "timestamp": "2025-09-27T04:58:15+00:00",
+    "reason": "slo-gate-failure",
+    "details": "SLO violations detected on edge2",
+    "strategy": "revert",
+    "status": "completed",
+    "duration_seconds": 4,
+    "commit_rolled_back": "abc123def456",
+    "rollback_commit": "fed654cba321"
+  },
+  "evidence": {
+    "pre_rollback_snapshot": "snapshots/pre_rollback_1758949095.tar.gz",
+    "git_diff": "evidence/rollback_diff.patch",
+    "metrics_at_failure": "evidence/metrics_failure.json"
+  }
+}

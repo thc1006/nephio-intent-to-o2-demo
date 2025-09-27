@@ -1,0 +1,45 @@
+{
+  "pipeline_id": "e2e-1758945840",
+  "metrics": {
+    "total_duration_ms": 2132,
+    "stages_completed": 3,
+    "stages_failed": 0
+  },
+  "stage_metrics": [
+    {
+      "name": "intent_generation",
+      "status": "success",
+      "duration_ms": 10
+    },
+    {
+      "name": "krm_translation",
+      "status": "success",
+      "duration_ms": 61
+    },
+    {
+      "name": "kpt_pipeline",
+      "status": "skipped",
+      "duration_ms": 0
+    },
+    {
+      "name": "git_operations",
+      "status": "skipped",
+      "duration_ms": 0
+    },
+    {
+      "name": "rootsync_wait",
+      "status": "skipped",
+      "duration_ms": 0
+    },
+    {
+      "name": "o2ims_poll",
+      "status": "skipped",
+      "duration_ms": 0
+    },
+    {
+      "name": "onsite_validation",
+      "status": "success",
+      "duration_ms": 22
+    }
+  ]
+}

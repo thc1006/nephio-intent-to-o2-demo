@@ -20,7 +20,7 @@ spec:
       targetPort: 8443
       protocol: TCP
     - name: o2ims
-      port: 31280
+      port: 30205
       targetPort: 8080
       protocol: TCP
 ---

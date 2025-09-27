@@ -15,10 +15,10 @@ data:
     scrape_configs:
     - job_name: 'edge1-o2ims'
       static_configs:
-      - targets: ['172.16.4.45:31280']
+      - targets: ['172.16.4.45:30205']
     - job_name: 'edge2-o2ims'
       static_configs:
-      - targets: ['172.16.4.176:31280']
+      - targets: ['172.16.4.176:30205']
 ---
 apiVersion: apps/v1
 kind: Deployment

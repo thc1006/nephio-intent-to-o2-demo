@@ -29,13 +29,13 @@ spec:
         ports:
         - containerPort: 80
           name: http
-        - containerPort: 31280
+        - containerPort: 30205
           name: o2ims
         env:
         - name: SITE_NAME
           value: "edge3"
         - name: O2IMS_PORT
-          value: "31280"
+          value: "30205"
         resources:
           requests:
             cpu: 100m
@@ -58,6 +58,6 @@ spec:
   ports:
   - port: 80
     targetPort: 80
-    nodePort: 31280
+    nodePort: 30205
     name: o2ims-api
     protocol: TCP

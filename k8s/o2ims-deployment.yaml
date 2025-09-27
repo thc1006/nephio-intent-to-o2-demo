@@ -77,6 +77,6 @@ spec:
   ports:
   - port: 80
     targetPort: 80
-    nodePort: 31280
+    nodePort: 30205
   selector:
     app: o2ims

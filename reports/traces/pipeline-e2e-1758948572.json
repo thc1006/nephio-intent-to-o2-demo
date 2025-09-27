@@ -1,0 +1,77 @@
+{
+  "pipeline_id": "e2e-1758948572",
+  "start_time": "2025-09-27T04:49:32+00:00",
+  "status": "completed",
+  "stages": [
+    {
+      "name": "intent_generation",
+      "start_time": "2025-09-27T04:49:32+00:00",
+      "status": "success",
+      "message": "",
+      "end_time": "2025-09-27T04:49:32+00:00",
+      "duration_ms": 11
+    },
+    {
+      "name": "krm_translation",
+      "start_time": "2025-09-27T04:49:32+00:00",
+      "status": "success",
+      "message": "",
+      "end_time": "2025-09-27T04:49:32+00:00",
+      "duration_ms": 53
+    },
+    {
+      "name": "kpt_validation",
+      "start_time": "2025-09-27T04:49:32+00:00",
+      "status": "skipped",
+      "message": "Dry run mode",
+      "end_time": "2025-09-27T04:49:32+00:00",
+      "duration_ms": 0
+    },
+    {
+      "name": "kpt_pipeline",
+      "start_time": "2025-09-27T04:49:32+00:00",
+      "status": "skipped",
+      "message": "Dry run mode",
+      "end_time": "2025-09-27T04:49:32+00:00",
+      "duration_ms": 0
+    },
+    {
+      "name": "git_operations",
+      "start_time": "2025-09-27T04:49:32+00:00",
+      "status": "skipped",
+      "message": "Dry run mode",
+      "end_time": "2025-09-27T04:49:32+00:00",
+      "duration_ms": 0
+    },
+    {
+      "name": "rootsync_wait",
+      "start_time": "2025-09-27T04:49:33+00:00",
+      "status": "skipped",
+      "message": "Dry run mode",
+      "end_time": "2025-09-27T04:49:33+00:00",
+      "duration_ms": 0
+    },
+    {
+      "name": "o2ims_poll",
+      "start_time": "2025-09-27T04:49:33+00:00",
+      "status": "skipped",
+      "message": "Dry run mode",
+      "end_time": "2025-09-27T04:49:33+00:00",
+      "duration_ms": 0
+    },
+    {
+      "name": "onsite_validation",
+      "start_time": "2025-09-27T04:49:33+00:00",
+      "status": "success",
+      "message": "",
+      "end_time": "2025-09-27T04:49:33+00:00",
+      "duration_ms": 260
+    }
+  ],
+  "metrics": {
+    "total_duration_ms": 1807,
+    "stages_completed": 3,
+    "stages_failed": 0
+  },
+  "end_time": "2025-09-27T04:49:33+00:00"
+}

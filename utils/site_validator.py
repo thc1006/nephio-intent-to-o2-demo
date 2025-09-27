@@ -44,7 +44,7 @@ class SiteValidator:
                         ip=site_data.get('network', {}).get('internal_ip', ''),
                         location=site_data.get('location', ''),
                         status=site_data.get('status', {}).get('connectivity', 'unknown'),
-                        ports=[30090, 31280, 6443]  # Default ports
+                        ports=[30090, 30205, 6443]  # Default ports
                     )
 
             return sites
@@ -116,7 +116,7 @@ class SiteValidator:
 
         return {
             "slo_metrics": f"http://{config.ip}:30090/metrics/api/v1/slo",
-            "o2ims_api": f"http://{config.ip}:31280",
+            "o2ims_api": f"http://{config.ip}:30205",
             "kubernetes_api": f"https://{config.ip}:6443",
             "health_check": f"http://{config.ip}:30090/health"
         }

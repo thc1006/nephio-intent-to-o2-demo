@@ -1,0 +1,59 @@
+=== SYSTEM RESOURCE BASELINE ===
+Timestamp: Sat Sep 27 05:27:04 UTC 2025
+
+CPU Information:
+CPU(s):                                  16
+On-line CPU(s) list:                     0-15
+Model name:                              Intel(R) Xeon(R) Silver 4214 CPU @ 2.20GHz
+Thread(s) per core:                      1
+NUMA node0 CPU(s):                       0-15
+
+Memory Information:
+               total        used        free      shared  buff/cache   available
+Mem:            29Gi       5.7Gi        15Gi        35Mi       8.3Gi        23Gi
+Swap:             0B          0B          0B
+
+Disk Information:
+Filesystem      Size  Used Avail Use% Mounted on
+tmpfs           3.0G  2.8M  3.0G   1% /run
+/dev/sda1       194G   36G  158G  19% /
+tmpfs            15G     0   15G   0% /dev/shm
+tmpfs           5.0M     0  5.0M   0% /run/lock
+
+Current System Load:
+ 05:27:04 up  2:45,  2 users,  load average: 4.00, 3.23, 2.77
+
+Network Interfaces:
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    inet 127.0.0.1/8 scope host lo
+2: ens3: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000
+    inet 172.16.0.78/16 metric 100 brd 172.16.255.255 scope global dynamic ens3
+3: ens4: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 8950 qdisc fq_codel state UP group default qlen 1000
+    inet 192.168.0.47/24 metric 100 brd 192.168.0.255 scope global dynamic ens4
+4: br-50dcdf865daa: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default 
+    inet 172.19.0.1/16 brd 172.19.255.255 scope global br-50dcdf865daa
+5: docker0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default 
+    inet 172.17.0.1/16 brd 172.17.255.255 scope global docker0
+6: br-b5dd0fdf8df8: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default 
+    inet 172.18.0.1/16 brd 172.18.255.255 scope global br-b5dd0fdf8df8
+7: vethe8ce074@if2: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master br-50dcdf865daa state UP group default 
+8: vethc662b2d@if2: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master br-b5dd0fdf8df8 state UP group default 
+9: veth1e11ebf@if2: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master br-50dcdf865daa state UP group default 
+11: vethf4df635@if2: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master br-b5dd0fdf8df8 state UP group default 
+12: vethaac5ff8@if2: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master br-50dcdf865daa state UP group default 
+13: veth10072f0@if2: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master br-50dcdf865daa state UP group default 
+14: veth94ba062@if2: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master br-50dcdf865daa state UP group default 
+15: flannel.1: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 8900 qdisc noqueue state UNKNOWN group default 
+    inet 10.42.0.0/32 scope global flannel.1
+16: cni0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 8900 qdisc noqueue state UP group default qlen 1000
+    inet 10.42.0.1/24 brd 10.42.0.255 scope global cni0
+17: veth67754ea3@if2: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 8900 qdisc noqueue master cni0 state UP group default qlen 1000
+18: veth9872986e@if2: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 8900 qdisc noqueue master cni0 state UP group default qlen 1000
+19: veth8b5b5947@if2: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 8900 qdisc noqueue master cni0 state UP group default qlen 1000
+20: veth1a942324@if2: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 8900 qdisc noqueue master cni0 state UP group default qlen 1000
+21: veth56d2cf56@if2: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 8900 qdisc noqueue master cni0 state UP group default qlen 1000
+27: vethc375e3c@if2: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master docker0 state UP group default 
+
+Process Count:
+611
+

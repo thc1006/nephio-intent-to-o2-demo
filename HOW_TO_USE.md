@@ -332,7 +332,7 @@ kubectl --context=edge1 get deployments -A
 kubectl --context=edge2 get deployments -A
 
 # 查看 O2IMS 狀態
-curl -s http://172.16.4.45:31280/o2ims-infrastructureInventory/v1/deploymentManagers | jq .
+curl -s http://172.16.4.45:30205/o2ims_infrastructureInventory/v1/deploymentManagers | jq .
 ```
 
 ### 查看 SLO Metrics

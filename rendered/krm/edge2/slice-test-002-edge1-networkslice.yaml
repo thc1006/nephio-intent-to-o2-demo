@@ -1,0 +1,16 @@
+apiVersion: workload.nephio.org/v1alpha1
+kind: NetworkSlice
+metadata:
+  name: slice-test-002-edge2
+  namespace: edge2
+  labels:
+    intent-id: test-002
+    service-type: massive-machine-type
+    target-site: edge2
+spec:
+  sliceType: mMTC
+  plmn:
+    mcc: '001'
+    mnc: '01'
+  qos:
+    5qi: 9

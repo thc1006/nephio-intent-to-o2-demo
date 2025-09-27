@@ -7,8 +7,16 @@ metadata:
     intent-id: test-002
     target-site: edge1
 data:
-  intent.json: "{\n  \"intentId\": \"test-002\",\n  \"serviceType\": \"massive-machine-type\"\
-    ,\n  \"targetSite\": \"both\",\n  \"resourceProfile\": \"standard\",\n  \"sla\"\
-    : {\n    \"availability\": 99.9,\n    \"connections\": 1000000\n  }\n}"
+  intent.json: |-
+    {
+      "intentId": "test-002",
+      "serviceType": "massive-machine-type",
+      "targetSite": "both",
+      "resourceProfile": "standard",
+      "sla": {
+        "availability": 99.9,
+        "connections": 1000000
+      }
+    }
   site: edge1
   serviceType: massive-machine-type

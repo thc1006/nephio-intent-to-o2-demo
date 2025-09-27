@@ -7,11 +7,22 @@ metadata:
     intent-id: intent-e2e-1757777372
     target-site: edge1
 data:
-  intent.json: "{\n  \"intentId\": \"intent-e2e-1757777372\",\n  \"serviceType\":\
-    \ \"enhanced-mobile-broadband\",\n  \"targetSite\": \"edge1\",\n  \"resourceProfile\"\
-    : \"standard\",\n  \"sla\": {\n    \"availability\": 99.99,\n    \"latency\":\
-    \ 10,\n    \"throughput\": 1000\n  },\n  \"metadata\": {\n    \"createdAt\": \"\
-    2025-09-13T15:29:32+00:00\",\n    \"pipeline\": \"e2e-1757777372\",\n    \"version\"\
-    : \"1.0.0\"\n  }\n}"
+  intent.json: |-
+    {
+      "intentId": "intent-e2e-1757777372",
+      "serviceType": "enhanced-mobile-broadband",
+      "targetSite": "edge1",
+      "resourceProfile": "standard",
+      "sla": {
+        "availability": 99.99,
+        "latency": 10,
+        "throughput": 1000
+      },
+      "metadata": {
+        "createdAt": "2025-09-13T15:29:32+00:00",
+        "pipeline": "e2e-1757777372",
+        "version": "1.0.0"
+      }
+    }
   site: edge1
   serviceType: enhanced-mobile-broadband

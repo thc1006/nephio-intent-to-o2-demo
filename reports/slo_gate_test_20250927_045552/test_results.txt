@@ -1,0 +1,6 @@
+✓ Mock servers setup: PASSED
+✗ SLO Gate direct test (PASS): FAILED
+✓ SLO Gate direct test (FAIL): PASSED
+✗ E2E Integration (PASS): FAILED
+✓ E2E Integration (FAIL): PASSED
+✓ Rollback trigger: PASSED

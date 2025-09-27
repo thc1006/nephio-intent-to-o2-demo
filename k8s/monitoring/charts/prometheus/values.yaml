@@ -85,7 +85,7 @@ prometheus:
     # Edge-1 O2IMS Service
     - job_name: 'edge1-o2ims'
       static_configs:
-        - targets: ['172.16.4.45:31280']
+        - targets: ['172.16.4.45:30205']
       metrics_path: '/metrics'
       scrape_interval: 30s
       relabel_configs:
@@ -97,7 +97,7 @@ prometheus:
     # Edge-2 O2IMS Service
     - job_name: 'edge2-o2ims'
       static_configs:
-        - targets: ['172.16.4.176:31280']
+        - targets: ['172.16.4.176:30205']
       metrics_path: '/metrics'
       scrape_interval: 30s
       relabel_configs:

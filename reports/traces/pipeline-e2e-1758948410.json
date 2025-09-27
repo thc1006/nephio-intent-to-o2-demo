@@ -1,0 +1,37 @@
+{
+  "pipeline_id": "e2e-1758948410",
+  "start_time": "2025-09-27T04:46:50+00:00",
+  "status": "completed",
+  "stages": [
+    {
+      "name": "intent_generation",
+      "start_time": "2025-09-27T04:46:50+00:00",
+      "status": "success",
+      "message": "",
+      "end_time": "2025-09-27T04:46:50+00:00",
+      "duration_ms": 9
+    },
+    {
+      "name": "krm_translation",
+      "start_time": "2025-09-27T04:46:50+00:00",
+      "status": "success",
+      "message": "",
+      "end_time": "2025-09-27T04:46:50+00:00",
+      "duration_ms": 66
+    },
+    {
+      "name": "kpt_validation",
+      "start_time": "2025-09-27T04:46:50+00:00",
+      "status": "failed",
+      "message": "Validation failed: 1/4 validators failed",
+      "end_time": "2025-09-27T04:47:08+00:00",
+      "duration_ms": 17809
+    }
+  ],
+  "metrics": {
+    "total_duration_ms": 18776,
+    "stages_completed": 2,
+    "stages_failed": 1
+  },
+  "end_time": "2025-09-27T04:47:08+00:00"
+}

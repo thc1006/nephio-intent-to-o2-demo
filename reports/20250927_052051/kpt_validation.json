@@ -1,0 +1,14 @@
+{
+        "timestamp": "2025-09-27T05:20:52+00:00",
+        "pipeline_id": "e2e-1758950451",
+        "target_site": "edge3",
+        "overall_status": "PASS",
+        "duration_ms": 3,
+        "summary": {
+            "total_validators": 0,
+            "passed_validators": 0,
+            "failed_validators": 0,
+            "sites_validated": 1
+        },
+        "results": []
+    }

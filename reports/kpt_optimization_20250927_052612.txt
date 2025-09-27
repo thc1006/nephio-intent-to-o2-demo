@@ -1,0 +1,35 @@
+kpt Performance Optimization Report
+==================================
+Date: Sat Sep 27 05:26:12 UTC 2025
+System: Linux vm-1nephio 5.15.0-156-generic #166-Ubuntu SMP Sat Aug 9 00:02:46 UTC 2025 x86_64 x86_64 x86_64 GNU/Linux
+
+Optimizations Applied:
+- ✓ Parallel function execution (4 workers)
+- ✓ Image pre-caching (6 common images)
+- ✓ Template caching enabled
+- ✓ Docker optimizations configured
+- ✓ Performance monitoring wrapper created
+
+Environment Variables:
+- KPT_FN_RUNTIME=parallel
+- KPT_FN_MAX_WORKERS=4
+- KPT_FN_NETWORK_ACCESS=false
+- KPT_FN_IMAGE_PULL_POLICY=IfNotPresent
+- KPT_TEMPLATE_CACHE=/home/ubuntu/.kpt/cache/templates
+
+Expected Performance Improvements:
+- 50-75% reduction in kpt rendering time
+- 20-30% reduction in first-run latency
+- Better resource utilization
+- Reduced network overhead
+
+Next Steps:
+1. Test optimizations with actual pipeline runs
+2. Monitor performance metrics
+3. Adjust worker count based on CPU usage
+4. Consider distributed execution for scale
+
+Files Modified:
+- ~/.bashrc (environment variables)
+- /home/ubuntu/nephio-intent-to-o2-demo/scripts/kpt_perf (wrapper script)
+

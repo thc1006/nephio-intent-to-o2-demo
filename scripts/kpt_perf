@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# kpt Performance Monitoring Wrapper
+
+COMMAND="$1"
+shift
+
+case "$COMMAND" in
+    "fn")
+        echo "[PERF] Starting kpt fn with performance monitoring..."
+        start_time=$(date +%s.%3N)
+        kpt fn "$@"
+        exit_code=$?
+        end_time=$(date +%s.%3N)
+        duration=$(echo "$end_time - $start_time" | bc)
+        echo "[PERF] kpt fn completed in ${duration}s (exit code: $exit_code)"
+        exit $exit_code
+        ;;
+    *)
+        # Pass through other commands
+        kpt "$COMMAND" "$@"
+        ;;
+esac

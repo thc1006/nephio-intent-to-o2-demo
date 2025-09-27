@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: intent-intent-e2e-1757777411-edge2
+  namespace: edge2
+  labels:
+    intent-id: intent-e2e-1757777411
+    target-site: edge2
+data:
+  intent.json: "{\n  \"intentId\": \"intent-e2e-1757777411\",\n  \"serviceType\":\
+    \ \"enhanced-mobile-broadband\",\n  \"targetSite\": \"edge2\",\n  \"resourceProfile\"\
+    : \"standard\",\n  \"sla\": {\n    \"availability\": 99.99,\n    \"latency\":\
+    \ 10,\n    \"throughput\": 1000\n  },\n  \"metadata\": {\n    \"createdAt\": \"\
+    2025-09-13T15:30:11+00:00\",\n    \"pipeline\": \"e2e-1757777411\",\n    \"version\"\
+    : \"1.0.0\"\n  }\n}"
+  site: edge2
+  serviceType: enhanced-mobile-broadband

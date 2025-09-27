@@ -1,0 +1,30 @@
+apiVersion: o2ims.provisioning.oran.org/v1alpha1
+kind: ProvisioningRequest
+metadata:
+  name: golden-both-001-edge2
+  namespace: edge2
+  labels:
+    intent-id: golden-both-001
+    service-type: massive-machine-type
+    target-site: edge2
+  annotations:
+    generated-by: intent-compiler
+    timestamp: '2025-09-13T18:56:56.024121Z'
+    resource-profile: standard
+spec:
+  description: Provisioning request for massive-machine-type service at edge2
+  targetCluster: edge-cluster-01
+  networkConfig:
+    plmnId: '00101'
+    gnbId: '00001'
+    tac: '0001'
+    sliceType: mMTC
+  resourceRequirements:
+    cpu: '4'
+    memory: 8Gi
+    storage: 50Gi
+  slaRequirements:
+    availability: 99.0%
+    maxLatency: 100ms
+    minThroughput: 100Mbps
+    maxConnections: '500000'

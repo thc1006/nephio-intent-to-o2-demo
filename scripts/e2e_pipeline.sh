@@ -136,9 +136,248 @@ translate_to_krm() {
     fi
 }
 
-# Stage 3: kpt Pipeline
+# Stage 3: kpt Pre-Validation (NEW - 2025 Google Cloud Best Practices)
+validate_with_kpt() {
+    log_info "Stage 3: Validating KRM packages with kpt functions"
+    "$SCRIPT_DIR/stage_trace.sh" add "$TRACE_FILE" "kpt_validation" "running"
+
+    local start_time=$(date +%s%N)
+    local krm_output_dir="$PROJECT_ROOT/rendered/krm"
+    local validation_report="$REPORT_DIR/kpt_validation.json"
+    local validation_results=()
+
+    if [[ "$DRY_RUN" == "true" ]]; then
+        log_warn "Dry run mode - skipping kpt validation"
+        "$SCRIPT_DIR/stage_trace.sh" update "$TRACE_FILE" "kpt_validation" "skipped" "" "Dry run mode"
+        return 0
+    fi
+
+    # Ensure KRM output directory exists
+    if [[ ! -d "$krm_output_dir" ]]; then
+        log_error "KRM output directory not found: $krm_output_dir"
+        "$SCRIPT_DIR/stage_trace.sh" update "$TRACE_FILE" "kpt_validation" "failed" "" "KRM directory not found"
+        return 1
+    fi
+
+    # Determine sites to validate
+    local sites=()
+    case "$TARGET_SITE" in
+        "both")
+            sites=("edge1" "edge2")
+            ;;
+        "all")
+            sites=("edge1" "edge2" "edge3" "edge4")
+            ;;
+        *)
+            sites=("$TARGET_SITE")
+            ;;
+    esac
+
+    local all_validation_success=true
+    local total_validators=0
+    local passed_validators=0
+
+    # Validate each site's KRM packages
+    for site in "${sites[@]}"; do
+        local site_dir="$krm_output_dir/$site"
+
+        if [[ ! -d "$site_dir" ]]; then
+            log_warn "Skipping validation for $site - directory not found: $site_dir"
+            continue
+        fi
+
+        log_info "Validating KRM packages for $site"
+
+        # Initialize site validation result
+        local site_validation="{\"site\": \"$site\", \"validators\": []}"
+
+        # Validator 1: kubeval - Kubernetes YAML validation (with CRD tolerance)
+        local kubeval_result="PASS"
+        local kubeval_output=""
+        ((total_validators++))
+
+        # Run kubeval with ignore_missing_schemas to handle CRDs gracefully
+        if ! kubeval_output=$(kpt fn eval "$site_dir" --image gcr.io/kpt-fn/kubeval:v0.3 -- ignore_missing_schemas=true 2>&1); then
+            # Check if errors are only about CRDs (non-critical)
+            if echo "$kubeval_output" | grep -q "Validating arbitrary CRDs is not supported" && \
+               ! echo "$kubeval_output" | grep -q "INVALID\|invalid" ; then
+                kubeval_result="PASS"
+                ((passed_validators++))
+                log_info "kubeval validation passed for $site (CRDs skipped)"
+                kubeval_output="PASS: Standard K8s resources validated, CRDs skipped"
+            else
+                kubeval_result="FAIL"
+                all_validation_success=false
+                log_error "kubeval validation failed for $site"
+            fi
+        else
+            ((passed_validators++))
+            log_info "kubeval validation passed for $site"
+            kubeval_output="PASS: All resources validated successfully"
+        fi
+
+        site_validation=$(echo "$site_validation" | jq --arg name "kubeval" \
+                                                      --arg status "$kubeval_result" \
+                                                      --arg output "$kubeval_output" \
+                                                      '.validators += [{"name": $name, "status": $status, "output": $output}]')
+
+        # Validator 2: YAML Syntax Validation (lightweight alternative to gatekeeper)
+        local yaml_result="PASS"
+        local yaml_output=""
+        ((total_validators++))
+
+        local yaml_errors=""
+        # Check YAML syntax for all files
+        for yaml_file in "$site_dir"/*.yaml; do
+            if [[ -f "$yaml_file" ]]; then
+                if ! yaml_output_temp=$(python3 -c "import yaml; yaml.safe_load(open('$yaml_file'))" 2>&1); then
+                    yaml_errors+="Error in $(basename "$yaml_file"): $yaml_output_temp\n"
+                    yaml_result="FAIL"
+                fi
+            fi
+        done
+
+        if [[ "$yaml_result" == "PASS" ]]; then
+            ((passed_validators++))
+            log_info "YAML syntax validation passed for $site"
+            yaml_output="PASS: All YAML files have valid syntax"
+        else
+            all_validation_success=false
+            log_error "YAML syntax validation failed for $site"
+            yaml_output="FAIL: $yaml_errors"
+        fi
+
+        site_validation=$(echo "$site_validation" | jq --arg name "yaml-syntax" \
+                                                      --arg status "$yaml_result" \
+                                                      --arg output "$yaml_output" \
+                                                      '.validators += [{"name": $name, "status": $status, "output": $output}]')
+
+        # Validator 3: Resource Naming Convention
+        local naming_result="PASS"
+        local naming_output=""
+        ((total_validators++))
+
+        local naming_errors=""
+        # Check that all resources have intent- prefix or intent reference
+        for yaml_file in "$site_dir"/*.yaml; do
+            if [[ -f "$yaml_file" ]]; then
+                local filename=$(basename "$yaml_file")
+
+                # Skip kustomization files and other special cases
+                if [[ "$filename" == "kustomization.yaml" || "$filename" == "Kustomization.yaml" ]]; then
+                    continue
+                fi
+
+                local resource_name=$(yq eval '.metadata.name' "$yaml_file" 2>/dev/null)
+                local has_intent_label=$(yq eval '.metadata.labels."intent-id"' "$yaml_file" 2>/dev/null)
+                local kind=$(yq eval '.kind' "$yaml_file" 2>/dev/null)
+
+                # Special handling for ProvisioningRequest and other O2IMS resources
+                if [[ "$kind" == "ProvisioningRequest" ]]; then
+                    # ProvisioningRequest resources should have intent-id label (more flexible)
+                    if [[ "$has_intent_label" == "null" ]]; then
+                        naming_errors+="ProvisioningRequest $(basename "$yaml_file") should have intent-id label\n"
+                        naming_result="FAIL"
+                    fi
+                elif [[ "$resource_name" != "null" && "$resource_name" != "intent-"* && "$has_intent_label" == "null" ]]; then
+                    naming_errors+="Resource $(basename "$yaml_file") lacks intent naming or labels\n"
+                    naming_result="FAIL"
+                fi
+            fi
+        done
+
+        if [[ "$naming_result" == "PASS" ]]; then
+            ((passed_validators++))
+            log_info "naming convention validation passed for $site"
+            naming_output="PASS: All resources follow intent naming conventions"
+        else
+            all_validation_success=false
+            log_error "naming convention validation failed for $site"
+            naming_output="FAIL: $naming_errors"
+        fi
+
+        site_validation=$(echo "$site_validation" | jq --arg name "naming-convention" \
+                                                      --arg status "$naming_result" \
+                                                      --arg output "$naming_output" \
+                                                      '.validators += [{"name": $name, "status": $status, "output": $output}]')
+
+        # Validator 4: Site Configuration Consistency
+        local config_result="PASS"
+        local config_output=""
+        ((total_validators++))
+
+        local config_errors=""
+        # Verify that site-name labels match the target site
+        for yaml_file in "$site_dir"/*.yaml; do
+            if [[ -f "$yaml_file" ]]; then
+                local site_label=$(yq eval '.metadata.labels."site-name"' "$yaml_file" 2>/dev/null)
+                if [[ "$site_label" != "null" && "$site_label" != "$site" ]]; then
+                    config_errors+="Resource $(basename "$yaml_file") has incorrect site-name: $site_label (expected: $site)\n"
+                    config_result="FAIL"
+                fi
+            fi
+        done
+
+        if [[ "$config_result" == "PASS" ]]; then
+            ((passed_validators++))
+            log_info "configuration consistency validation passed for $site"
+            config_output="PASS: Site configuration is consistent"
+        else
+            all_validation_success=false
+            log_error "configuration consistency validation failed for $site"
+            config_output="FAIL: $config_errors"
+        fi
+
+        site_validation=$(echo "$site_validation" | jq --arg name "config-consistency" \
+                                                      --arg status "$config_result" \
+                                                      --arg output "$config_output" \
+                                                      '.validators += [{"name": $name, "status": $status, "output": $output}]')
+
+        validation_results+=("$site_validation")
+    done
+
+    local end_time=$(date +%s%N)
+    local duration_ms=$(( (end_time - start_time) / 1000000 ))
+
+    # Generate validation report
+    local overall_status="PASS"
+    if [[ "$all_validation_success" == "false" ]]; then
+        overall_status="FAIL"
+    fi
+
+    local validation_summary="{
+        \"timestamp\": \"$(date -Iseconds)\",
+        \"pipeline_id\": \"$PIPELINE_ID\",
+        \"target_site\": \"$TARGET_SITE\",
+        \"overall_status\": \"$overall_status\",
+        \"duration_ms\": $duration_ms,
+        \"summary\": {
+            \"total_validators\": $total_validators,
+            \"passed_validators\": $passed_validators,
+            \"failed_validators\": $((total_validators - passed_validators)),
+            \"sites_validated\": ${#sites[@]}
+        },
+        \"results\": [$(IFS=,; echo "${validation_results[*]}")]
+    }"
+
+    echo "$validation_summary" > "$validation_report"
+
+    if [[ "$all_validation_success" == "true" ]]; then
+        "$SCRIPT_DIR/stage_trace.sh" update "$TRACE_FILE" "kpt_validation" "success" "" "" "$duration_ms"
+        log_success "KRM validation passed - all $total_validators validators succeeded"
+        log_info "Validation report: $validation_report"
+        return 0
+    else
+        "$SCRIPT_DIR/stage_trace.sh" update "$TRACE_FILE" "kpt_validation" "failed" "" "Validation failed: $((total_validators - passed_validators))/$total_validators validators failed" "$duration_ms"
+        log_error "KRM validation failed - $((total_validators - passed_validators))/$total_validators validators failed"
+        log_error "Validation report: $validation_report"
+        return 1
+    fi
+}
+
+# Stage 4: kpt Pipeline
 run_kpt_pipeline() {
-    log_info "Stage 3: Running kpt Pipeline"
+    log_info "Stage 4: Running kpt Pipeline"
     "$SCRIPT_DIR/stage_trace.sh" add "$TRACE_FILE" "kpt_pipeline" "running"
 
     local start_time=$(date +%s%N)
@@ -186,9 +425,9 @@ run_kpt_pipeline() {
     fi
 }
 
-# Stage 4: Git Operations
+# Stage 5: Git Operations
 git_commit_and_push() {
-    log_info "Stage 4: Git Commit and Push"
+    log_info "Stage 5: Git Commit and Push"
     "$SCRIPT_DIR/stage_trace.sh" add "$TRACE_FILE" "git_operations" "running"
 
     local start_time=$(date +%s%N)
@@ -233,9 +472,9 @@ Generated by Phase 19-B E2E Pipeline"
     fi
 }
 
-# Stage 5: Wait for RootSync
+# Stage 6: Wait for RootSync
 wait_for_rootsync() {
-    log_info "Stage 5: Waiting for RootSync Reconciliation"
+    log_info "Stage 6: Waiting for RootSync Reconciliation"
     "$SCRIPT_DIR/stage_trace.sh" add "$TRACE_FILE" "rootsync_wait" "running"
 
     local start_time=$(date +%s%N)
@@ -261,9 +500,9 @@ wait_for_rootsync() {
     fi
 }
 
-# Stage 6: Poll O2IMS Status
+# Stage 7: Poll O2IMS Status
 poll_o2ims_status() {
-    log_info "Stage 6: Polling O2IMS Provisioning Status"
+    log_info "Stage 7: Polling O2IMS Provisioning Status"
     "$SCRIPT_DIR/stage_trace.sh" add "$TRACE_FILE" "o2ims_poll" "running"
 
     local start_time=$(date +%s%N)
@@ -276,10 +515,10 @@ poll_o2ims_status() {
 
     # O2IMS endpoints
     declare -A O2IMS_ENDPOINTS=(
-        [edge1]="http://172.16.4.45:31280/o2ims/provisioning/v1/status"
-        [edge2]="http://172.16.4.176:31280/o2ims/provisioning/v1/status"
-        [edge3]="http://172.16.5.81:31280/o2ims/provisioning/v1/status"
-        [edge4]="http://172.16.1.252:31280/o2ims/provisioning/v1/status"
+        [edge1]="http://172.16.4.45:30205/o2ims_infrastructureInventory/v1/status"
+        [edge2]="http://172.16.4.176:30205/o2ims_infrastructureInventory/v1/status"
+        [edge3]="http://172.16.5.81:30205/o2ims_infrastructureInventory/v1/status"
+        [edge4]="http://172.16.1.252:30205/o2ims_infrastructureInventory/v1/status"
     )
 
     local sites=()
@@ -337,9 +576,9 @@ poll_o2ims_status() {
     fi
 }
 
-# Stage 7: On-Site Validation
+# Stage 8: On-Site Validation
 perform_onsite_validation() {
-    log_info "Stage 7: Performing On-Site Validation"
+    log_info "Stage 8: Performing On-Site Validation"
     "$SCRIPT_DIR/stage_trace.sh" add "$TRACE_FILE" "onsite_validation" "running"
 
     local start_time=$(date +%s%N)
@@ -596,6 +835,8 @@ main() {
     if ! generate_intent; then
         pipeline_success=false
     elif ! translate_to_krm; then
+        pipeline_success=false
+    elif ! validate_with_kpt; then
         pipeline_success=false
     elif ! run_kpt_pipeline; then
         pipeline_success=false

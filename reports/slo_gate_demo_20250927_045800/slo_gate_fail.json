@@ -1,0 +1,33 @@
+{
+  "slo_gate": {
+    "timestamp": "2025-09-27T04:58:11+00:00",
+    "scenario": "fail",
+    "target_site": "edge2",
+    "overall_status": "FAIL",
+    "thresholds": "latency_p95_ms<=15,success_rate>=0.995,throughput_p95_mbps>=200",
+    "violations": [
+  "Latency 18.5ms exceeds 15ms",
+  "Success rate 0.992 below 0.995",
+  "Throughput 180Mbps below 200Mbps"
+]
+  },
+  "metrics": {
+  "slo": {
+    "latency_p95_ms": 18.5,
+    "success_rate": 0.992,
+    "throughput_p95_mbps": 180.0,
+    "timestamp": "2025-09-27T04:58:11+00:00"
+  },
+  "details": {
+    "cpu_utilization": 0.85,
+    "memory_utilization": 0.90,
+    "network_rx_mbps": 120.3,
+    "network_tx_mbps": 145.8
+  }
+},
+  "validation": {
+    "latency_check": "FAIL",
+    "success_rate_check": "FAIL",
+    "throughput_check": "FAIL"
+  }
+}

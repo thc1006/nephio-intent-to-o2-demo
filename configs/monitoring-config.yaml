@@ -5,14 +5,14 @@ edge_sites:
   edge1:
     ip: "172.16.4.45"
     slo_port: 30090
-    o2ims_port: 31280
+    o2ims_port: 30205
     kubernetes_port: 6443
     description: "Edge-1 site (VM-2)"
 
   edge2:
     ip: "172.16.4.176"
     slo_port: 30090
-    o2ims_port: 31280
+    o2ims_port: 30205
     kubernetes_port: 6443
     description: "Edge-2 site (VM-4)"
 

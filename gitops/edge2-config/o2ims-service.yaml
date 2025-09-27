@@ -16,7 +16,7 @@ spec:
   - name: http
     port: 8080
     targetPort: 8080
-    nodePort: 31280
+    nodePort: 30205
     protocol: TCP
   - name: grpc
     port: 9090

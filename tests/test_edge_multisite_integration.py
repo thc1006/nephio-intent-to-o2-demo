@@ -30,7 +30,7 @@ class EdgeSite:
     ssh_alias: str
     k8s_api_port: int = 6443
     prometheus_port: int = 30090
-    o2ims_port: int = 31280
+    o2ims_port: int = 30205
 
 
 class TestEdgeSiteConnectivity:

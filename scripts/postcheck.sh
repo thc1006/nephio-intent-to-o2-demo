@@ -30,10 +30,10 @@ declare -A SITES=(
 
 # O2IMS Measurement API endpoints
 declare -A O2IMS_SITES=(
-    [edge1]="http://${VM2_IP}:31280/o2ims/measurement/v1/slo"
-    [edge2]="http://${VM4_IP}:31280/o2ims/measurement/v1/slo"
-    [edge3]="http://${EDGE3_IP:-172.16.5.81}:31280/o2ims/measurement/v1/slo"
-    [edge4]="http://${EDGE4_IP:-172.16.1.252}:31280/o2ims/measurement/v1/slo"
+    [edge1]="http://${VM2_IP}:30205/o2ims_infrastructureInventory/v1/slo"
+    [edge2]="http://${VM4_IP}:30205/o2ims_infrastructureInventory/v1/slo"
+    [edge3]="http://${EDGE3_IP:-172.16.5.81}:30205/o2ims_infrastructureInventory/v1/slo"
+    [edge4]="http://${EDGE4_IP:-172.16.1.252}:30205/o2ims_infrastructureInventory/v1/slo"
 )
 
 # Prometheus endpoints for advanced metrics

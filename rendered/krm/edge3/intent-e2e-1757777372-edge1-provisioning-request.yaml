@@ -1,0 +1,29 @@
+apiVersion: o2ims.provisioning.oran.org/v1alpha1
+kind: ProvisioningRequest
+metadata:
+  name: intent-e2e-1757777372-edge3
+  namespace: edge3
+  labels:
+    intent-id: intent-e2e-1757777372
+    service-type: enhanced-mobile-broadband
+    target-site: edge3
+  annotations:
+    generated-by: intent-compiler
+    timestamp: '2025-09-13T15:29:33.178756Z'
+    resource-profile: standard
+spec:
+  description: Provisioning request for enhanced-mobile-broadband service at edge3
+  targetCluster: edge-cluster-01
+  networkConfig:
+    plmnId: '00101'
+    gnbId: '00001'
+    tac: '0001'
+    sliceType: eMBB
+  resourceRequirements:
+    cpu: '8'
+    memory: 16Gi
+    storage: 100Gi
+  slaRequirements:
+    availability: 99.99%
+    maxLatency: 10ms
+    minThroughput: 1000Mbps

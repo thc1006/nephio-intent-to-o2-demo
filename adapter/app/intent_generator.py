@@ -87,7 +87,7 @@ def validate_and_fix_json(intent: Dict[str, Any]) -> Dict[str, Any]:
 
     # Ensure targetSite is valid
     if "targetSite" in intent:
-        if intent["targetSite"] not in ["edge1", "edge2", "both"]:
+        if intent["targetSite"] not in ["edge1", "edge2", "edge3", "edge4", "both"]:
             intent["targetSite"] = "both"  # Default to both if invalid
 
     return intent
@@ -100,7 +100,7 @@ def enforce_tmf921_structure(intent: Dict[str, Any], target_site: str, nl_text: 
     service_type, sst, qos_defaults = infer_service_and_qos(nl_text)
 
     # Ensure targetSite
-    if "targetSite" not in intent or intent["targetSite"] not in ["edge1", "edge2", "both"]:
+    if "targetSite" not in intent or intent["targetSite"] not in ["edge1", "edge2", "edge3", "edge4", "both"]:
         intent["targetSite"] = target_site
 
     # Ensure intentId - make it deterministic for testing

@@ -1,0 +1,52 @@
+[Unit]
+Description=O2IMS Mock Server - O-RAN O2IMS Interface Specification 3.0 Implementation
+Documentation=https://github.com/nephio/nephio-intent-to-o2-demo
+After=network.target network-online.target
+Wants=network-online.target
+
+[Service]
+Type=exec
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/home/ubuntu/nephio-intent-to-o2-demo/mock-services
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
+Environment=PYTHONPATH=/home/ubuntu/nephio-intent-to-o2-demo/mock-services
+Environment=LOG_LEVEL=INFO
+Environment=PORT=30205
+Environment=HOST=0.0.0.0
+
+# Main service command
+ExecStart=/usr/bin/python3 /home/ubuntu/nephio-intent-to-o2-demo/mock-services/o2ims-mock-server.py
+
+# Service management
+Restart=always
+RestartSec=10
+StartLimitInterval=60s
+StartLimitBurst=3
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/tmp /var/log
+CapabilityBoundingSet=CAP_NET_BIND_SERVICE
+
+# Resource limits
+LimitNOFILE=65536
+LimitNPROC=4096
+MemoryMax=1G
+CPUQuota=200%
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=o2ims-mock-server
+
+# Graceful shutdown
+KillMode=mixed
+KillSignal=SIGTERM
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target

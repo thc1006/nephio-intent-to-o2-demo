@@ -1,0 +1,11 @@
+component,avg_time_seconds,success_rate_percent
+Git Status,.025,100.0
+Git Log,.010,100.0
+Git Diff,.021,100.0
+kpt fn render,5.995,100.0
+Prometheus Simple Query,.038,100.0
+Prometheus Complex Query,N/A,0
+Small File Write,.003,100.0
+Small File Read,.005,100.0
+Large File Write,.056,100.0
+Large File Read,.012,100.0

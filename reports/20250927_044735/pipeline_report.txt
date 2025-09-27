@@ -1,0 +1,31 @@
+
+======================================
+Pipeline Execution Trace Report
+======================================
+Pipeline ID: e2e-1758948455
+Status: completed
+Start Time: 2025-09-27T04:47:35+00:00
+Duration: 18995ms
+
+Stages Summary:
+  Completed: 2
+  Failed: 1
+
+Stage Details:
+-------------------------------------
+intent_generation:
+  Status: success
+  Duration: 53ms
+  Message: 
+
+krm_translation:
+  Status: success
+  Duration: 53ms
+  Message: 
+
+kpt_validation:
+  Status: failed
+  Duration: 18087ms
+  Message: Validation failed: 1/4 validators failed
+
+======================================

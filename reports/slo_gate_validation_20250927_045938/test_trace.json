@@ -1,0 +1,20 @@
+{
+  "pipeline_id": "test-pipeline",
+  "start_time": "2025-09-27T04:59:40+00:00",
+  "status": "running",
+  "stages": [
+    {
+      "name": "slo_gate",
+      "start_time": "2025-09-27T04:59:40+00:00",
+      "status": "success",
+      "message": "All SLO thresholds met",
+      "end_time": "2025-09-27T04:59:40+00:00",
+      "duration_ms": 1500
+    }
+  ],
+  "metrics": {
+    "total_duration_ms": 0,
+    "stages_completed": 1,
+    "stages_failed": 0
+  }
+}

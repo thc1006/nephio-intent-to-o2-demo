@@ -1,0 +1,17 @@
+apiVersion: workload.nephio.org/v1alpha1
+kind: NetworkSlice
+metadata:
+  name: slice-intent-e2e-1757777411-edge2
+  namespace: edge2
+  labels:
+    intent-id: intent-e2e-1757777411
+    service-type: enhanced-mobile-broadband
+    target-site: edge2
+spec:
+  sliceType: eMBB
+  plmn:
+    mcc: '001'
+    mnc: '01'
+  qos:
+    5qi: 5
+    gfbr: 1000Mbps

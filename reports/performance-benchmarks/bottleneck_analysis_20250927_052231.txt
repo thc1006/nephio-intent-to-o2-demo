@@ -1,0 +1,18 @@
+=== BOTTLENECK ANALYSIS ===
+Generated: Sat Sep 27 05:22:51 UTC 2025
+
+Slowest Operations:
+==================
+kpt fn render: 5.995s (100.0% success)
+Large File Write: .056s (100.0% success)
+Prometheus Simple Query: .038s (100.0% success)
+Git Status: .025s (100.0% success)
+Git Diff: .021s (100.0% success)
+
+Failed Operations:
+==================
+Prometheus Complex Query: FAILED
+
+Optimization Recommendations:
+============================
+- kpt operations are slow (5.995s avg). Consider parallel function execution.

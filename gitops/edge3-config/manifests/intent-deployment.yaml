@@ -21,7 +21,7 @@ spec:
       - name: upf
         image: 'nginx:alpine'
         ports:
-        - containerPort: 8080
+        - containerPort: 80
         resources:
           requests:
             memory: 1Gi
