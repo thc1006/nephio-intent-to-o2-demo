@@ -1,0 +1,100 @@
+# Edge Sites Configuration - Updated Sat Sep 27 05:27:19 UTC 2025
+# Performance optimization and connectivity fixes applied
+
+edge_sites:
+  edge1:
+    name: "Edge Site 1 (VM-2)"
+    ip: "172.16.4.45"
+    internal_ip: "172.16.4.45"
+    user: "ubuntu"
+    ssh_key: "id_ed25519"
+    services:
+      kubernetes_api: 6443
+      prometheus: 30090
+      o2ims_api: 31280
+      slo_service: 30090
+    status:
+      connectivity: "operational"
+      last_verified: "2025-09-27T05:27:19Z"
+      performance_optimized: true
+
+  edge2:
+    name: "Edge Site 2 (VM-4)"
+    ip: "172.16.4.176"  # Corrected IP
+    internal_ip: "172.16.4.176"
+    user: "ubuntu"
+    ssh_key: "id_ed25519"
+    services:
+      kubernetes_api: 6443
+      prometheus: 30090
+      o2ims_api: 31280  # Updated to actual deployed port (corrected 2025-09-28)
+      slo_service: 30090
+    status:
+      connectivity: "operational"  # Successfully deployed and verified
+      last_verified: "2025-09-27T07:04:13Z"
+      performance_optimized: true
+      o2ims_deployed: true
+
+  edge3:
+    name: "Edge Site 3"
+    ip: "172.16.5.81"
+    internal_ip: "172.16.5.81"
+    user: "thc1006"
+    ssh_key: "edge_sites_key"
+    password: "1006"
+    services:
+      kubernetes_api: 6443
+      prometheus: 30090
+      o2ims_api: 30239  # Actual deployed port (corrected 2025-09-28)
+      tmf921_api: 8889
+      websocket_api: 8003
+      slo_service: 30090
+    status:
+      connectivity: "operational"
+      last_verified: "2025-09-28T09:55:00Z"
+      performance_optimized: true
+      o2ims_deployed: true
+
+  edge4:
+    name: "Edge Site 4"
+    ip: "172.16.1.252"
+    internal_ip: "172.16.1.252"
+    user: "thc1006"
+    ssh_key: "edge_sites_key"
+    password: "1006"
+    services:
+      kubernetes_api: 6443
+      prometheus: 30090
+      o2ims_api: 31901  # Actual deployed port (corrected 2025-09-28)
+      tmf921_api: 8889
+      websocket_api: 8004
+      slo_service: 30090
+    status:
+      connectivity: "operational"
+      last_verified: "2025-09-28T09:55:00Z"
+      performance_optimized: true
+      o2ims_deployed: true
+
+# Performance monitoring configuration
+monitoring:
+  enabled: true
+  scrape_interval: "15s"
+  evaluation_interval: "15s"
+  external_labels:
+    cluster: "vm1-orchestrator"
+    environment: "production"
+
+# SLO targets for performance optimization
+slo_targets:
+  pipeline_latency_p95: "60s"
+  pipeline_latency_p99: "90s"
+  success_rate_target: "99.5%"
+  edge_connectivity_uptime: "99.9%"
+
+# Optimization flags
+performance_optimizations:
+  kpt_parallel_execution: true
+  kpt_max_workers: 4
+  template_caching: true
+  image_pre_caching: true
+  rootsync_reconcile_interval: "5s"

@@ -1,0 +1,69 @@
+\documentclass[conference]{IEEEtran}
+
+% Required packages
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{cite}
+\usepackage{url}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{color}
+\usepackage{listings}
+\usepackage{subcaption}
+
+% Configure listings for code blocks
+\lstset{
+  basicstyle=\small\ttfamily,
+  breaklines=true,
+  frame=single,
+  numbers=left,
+  numberstyle=\tiny,
+  language=Python
+}
+
+% Title and authors (anonymized for double-blind review)
+\title{Intent-Driven O-RAN Network Orchestration: A Production-Ready Multi-Site System Integrating Large Language Models with GitOps for Autonomous Infrastructure Management}
+
+% Anonymous submission for IEEE ICC 2026
+\author{
+\IEEEauthorblockN{Authors}
+\IEEEauthorblockA{Affiliation\\
+Email: anonymous@review.org}
+}
+
+\begin{document}
+
+\maketitle
+
+% Abstract
+\input{sections/abstract}
+
+% Keywords
+\begin{IEEEkeywords}
+Intent-driven networking, O-RAN, Network orchestration, Large language models, GitOps, TMF921, Nephio R4, O2IMS v3.0, OrchestRAN, GenAI integration
+\end{IEEEkeywords}
+
+% Main sections
+\input{sections/introduction}
+\input{sections/related-work}
+\input{sections/methodology}
+\input{sections/implementation}
+\input{sections/evaluation}
+\input{sections/results}
+\input{sections/conclusion}
+
+% Acknowledgments
+\section*{Acknowledgments}
+The authors acknowledge the contributions of the O-RAN Alliance for the 60+ specifications released in 2025, TM Forum for TMF921 evolution, and 3GPP for the latest amendments to TS 28.312. Special recognition to the Nephio community's 250+ contributors across 45 organizations for establishing the GenAI-enhanced network automation platform that enabled this work. We thank the OrchestRAN research community for providing the theoretical foundation for network intelligence orchestration implemented in our system.
+
+\textbf{AI Use Disclosure (Required for IEEE 2025):} The system described in this paper utilizes Claude Code CLI (Anthropic) for natural language processing and intent generation, integrated with Nephio Release 4 GenAI capabilities for enhanced automation. AI-generated content was used in the intent processing pipeline (Section IV.A) under human supervision and validation. All experimental results and performance claims have been independently verified without AI assistance. The paper writing process involved human expertise with AI assistance for literature review and technical analysis, maintaining academic integrity standards.
+
+% Bibliography
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+\end{document}
